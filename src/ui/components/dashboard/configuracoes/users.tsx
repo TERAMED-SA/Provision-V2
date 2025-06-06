@@ -20,7 +20,9 @@ import {
   Settings,
   Trash2,
   MoreHorizontal,
-  Search
+  Search,
+  TriangleAlert,
+  ChevronDown
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { toast } from 'react-hot-toast';
@@ -80,15 +82,28 @@ export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editedUser, setEditedUser] = useState<User | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedUserForPermissions, setSelectedUserForPermissions] = useState<User | null>(null)
   const [userPermissions, setUserPermissions] = useState<{ [module: string]: Permission }>({})
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [selectedRole, setSelectedRole] = useState<string>("all")
 
-  const { currentUser, userRole, isBackoffice, hasPermission, setCurrentUser, setUserRole, updateUserPermissions } =
-    usePermissionStore()
+  const {
+    currentUser,
+    userRole,
+    isBackoffice,
+    isSupervisor,
+    isCoordinator,
+    hasPermission,
+    setCurrentUser,
+    setUserRole,
+    updateUserPermissions,
+    getUserPermissions,
+  } = usePermissionStore()
   const { fetchUserRole, loading: roleLoading } = useRoleApi()
 
   const [formData, setFormData] = useState({
@@ -234,24 +249,42 @@ export default function UserManagement() {
 
   const getRoleBadgeColor = (roler: number) => {
     switch (roler) {
-      case 1:
+      case 4:
         return "bg-red-100 text-red-800 border-red-200"
       case 2:
         return "bg-orange-100 text-orange-800 border-orange-200"
       case 3:
         return "bg-blue-100 text-blue-800 border-blue-200"
-      case 4:
-        return "bg-green-100 text-green-800 border-green-200"
+     
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const getRoleName = (roler: number) => {
+    switch (roler) {
+      case 4:
+        return "Backoffice"
+      case 2:
+        return "Coordinator"
+      case 3:
+        return "Supervisor"
+  
+      default:
+        return "Desconhecido"
+    }
+  }
+
+  // Filtrar usuários por termo de pesquisa e função selecionada
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesRole = selectedRole === "all" || 
+      (user.role && user.role.roler.toString() === selectedRole)
+    
+    return matchesSearch && matchesRole
+  })
 
   const handlePermissionChange = (module: string, action: keyof Permission, checked: boolean) => {
     setUserPermissions((prev) => ({
@@ -266,7 +299,6 @@ export default function UserManagement() {
   const saveUserPermissions = async () => {
     if (selectedUserForPermissions) {
       try {
-        // Call your API to update user permissions
         updateUserPermissions(selectedUserForPermissions._id, userPermissions)
         toast.success("Permissões atualizadas com sucesso")
         setSelectedUserForPermissions(null)
@@ -275,6 +307,43 @@ export default function UserManagement() {
         console.error("Erro ao salvar permissões:", error)
         toast.error("Erro ao salvar permissões")
       }
+    }
+  }
+
+  const getPermissionsForRole = (roler: number) => {
+    if (roler === 4) {
+      const allPermissions = { create: true, read: true, update: true, delete: true }
+      return {
+        users: allPermissions,
+        content: allPermissions,
+        reports: allPermissions,
+        settings: allPermissions,
+      }
+    }
+
+    if (roler === 2) {
+      return {
+        users: { create: true, read: true, update: true, delete: false },
+        content: { create: true, read: true, update: true, delete: false },
+        reports: { create: true, read: true, update: true, delete: false },
+        settings: { create: false, read: true, update: false, delete: false },
+      }
+    }
+
+    if (roler === 3) {
+      return {
+        users: { create: false, read: true, update: false, delete: false },
+        content: { create: false, read: true, update: false, delete: false },
+        reports: { create: false, read: true, update: false, delete: false },
+        settings: { create: false, read: false, update: false, delete: false },
+      }
+    }
+
+    return {
+      users: { create: false, read: false, update: false, delete: false },
+      content: { create: false, read: false, update: false, delete: false },
+      reports: { create: false, read: false, update: false, delete: false },
+      settings: { create: false, read: false, update: false, delete: false },
     }
   }
 
@@ -292,9 +361,12 @@ export default function UserManagement() {
         </Button>
       ),
       cell: ({ row }) => (
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-sm font-medium">
+            {row.getValue<string>("name").charAt(0).toUpperCase()}
+          </div>
           <div className="font-medium text-gray-900">{row.getValue("name")}</div>
-           
-      
+        </div>
       ),
     },
     {
@@ -313,29 +385,12 @@ export default function UserManagement() {
         return (
           <div className="flex items-center space-x-2">
             <Badge className={`${getRoleBadgeColor(role.roler)} font-medium`} variant="outline">
-              {role.name}
+              {getRoleName(role.roler)}
             </Badge>
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Nível {role.roler}</span>
           </div>
         )
       },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-          Ativo
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Data de Criação",
-      cell: ({ row }) => (
-        <div className="text-sm text-gray-600">{new Date(row.getValue("createdAt")).toLocaleDateString("pt-PT")}</div>
-      ),
     },
     {
       id: "actions",
@@ -349,169 +404,32 @@ export default function UserManagement() {
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <PermissionGuard module="users" action="read">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Visualizar
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="max-w-2xl">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-medium">
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="text-xl font-semibold">{user.name}</div>
-                          {user.role && (
-                            <Badge className={`${getRoleBadgeColor(user.role.roler)} mt-1`}>
-                              <Crown className="w-3 h-3 mr-1" />
-                              {user.role.name}
-                            </Badge>
-                          )}
-                        </div>
-                      </AlertDialogTitle>
-                    </AlertDialogHeader>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <Mail className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Email</p>
-                          <p className="font-medium text-gray-900">{user.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <Phone className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Telefone</p>
-                          <p className="font-medium text-gray-900">{user.phoneNumber}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <MapPin className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Endereço</p>
-                          <p className="font-medium text-gray-900">{user.address}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <Calendar className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-500">Data de Criação</p>
-                          <p className="font-medium text-gray-900">
-                            {new Date(user.createdAt).toLocaleDateString("pt-PT")}
-                          </p>
-                        </div>
-                      </div>
-                      {user.employeeId && (
-                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <UsersIcon className="w-5 h-5 text-gray-400" />
-                          <div>
-                            <p className="text-sm text-gray-500">ID do Funcionário</p>
-                            <p className="font-medium text-gray-900">{user.employeeId}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Fechar</AlertDialogCancel>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </PermissionGuard>
+            <DropdownMenuContent align="end" className="w-48">
+              {hasPermission("users", "read") && (
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setSelectedUser(user)
+                    setViewDialogOpen(true)
+                  }}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Visualizar
+                </DropdownMenuItem>
+              )}
 
-              <PermissionGuard module="users" action="update">
-                <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem
-                      onSelect={(e) => {
-                        e.preventDefault()
-                        setEditedUser(user)
-                        setEditDialogOpen(true)
-                      }}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="max-w-md">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Editar Utilizador</AlertDialogTitle>
-                      <AlertDialogDescription>Faça alterações nas informações do utilizador</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-name">Nome</Label>
-                        <Input
-                          id="edit-name"
-                          value={editedUser?.name || ""}
-                          onChange={(e) => setEditedUser(editedUser ? { ...editedUser, name: e.target.value } : null)}
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-email">Email</Label>
-                        <Input
-                          id="edit-email"
-                          type="email"
-                          value={editedUser?.email || ""}
-                          onChange={(e) => setEditedUser(editedUser ? { ...editedUser, email: e.target.value } : null)}
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-address">Endereço</Label>
-                        <Input
-                          id="edit-address"
-                          value={editedUser?.address || ""}
-                          onChange={(e) =>
-                            setEditedUser(editedUser ? { ...editedUser, address: e.target.value } : null)
-                          }
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-phone">Telefone</Label>
-                        <Input
-                          id="edit-phone"
-                          value={editedUser?.phoneNumber || ""}
-                          onChange={(e) =>
-                            setEditedUser(editedUser ? { ...editedUser, phoneNumber: e.target.value } : null)
-                          }
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-gender">Gênero</Label>
-                        <Select
-                          value={editedUser?.gender || "M"}
-                          onValueChange={(value) => setEditedUser(editedUser ? { ...editedUser, gender: value } : null)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="M">Masculino</SelectItem>
-                            <SelectItem value="F">Feminino</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel
-                        onClick={() => {
-                          setEditedUser(null)
-                          setEditDialogOpen(false)
-                        }}
-                      >
-                        Cancelar
-                      </AlertDialogCancel>
-                      <AlertDialogAction onClick={updateUser}>Salvar Alterações</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </PermissionGuard>
+              {hasPermission("users", "update") && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditedUser(user)
+                    setEditDialogOpen(true)
+                  }}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </DropdownMenuItem>
+              )}
 
-              <PermissionGuard module="users" action="delete">
+              {hasPermission("users", "delete") && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
@@ -538,7 +456,16 @@ export default function UserManagement() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              </PermissionGuard>
+              )}
+
+              {!hasPermission("users", "read") &&
+                !hasPermission("users", "update") &&
+                !hasPermission("users", "delete") && (
+                  <DropdownMenuItem disabled className="text-gray-400">
+                    <TriangleAlert className="mr-2 h-4 w-4" />
+                    Sem permissões
+                  </DropdownMenuItem>
+                )}
             </DropdownMenuContent>
           </DropdownMenu>
         )
@@ -564,145 +491,62 @@ export default function UserManagement() {
               <Shield className="w-4 h-4" />
               Funções
             </TabsTrigger>
-            <TabsTrigger value="permissions" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Permissões
-            </TabsTrigger>
+            <PermissionGuard module="settings" action="update" showFallback={false}>
+              <TabsTrigger value="permissions" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Permissões
+              </TabsTrigger>
+            </PermissionGuard>
           </TabsList>
 
           <TabsContent value="users" className="space-y-6">
             <Card>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-               
                   <div className="flex flex-col sm:flex-row gap-2">
-                   
-                    <PermissionGuard module="users" action="create">
-                      <AlertDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                        <AlertDialogTrigger asChild>
-                          <Button className="flex items-center gap-2">
-                            <UserPlus className="w-4 h-4" />
-                            Criar Utilizador
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Criar Novo Utilizador</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Preencha os dados para criar um novo utilizador
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                              <Label htmlFor="name">Nome</Label>
-                              <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Nome completo"
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="email">Email</Label>
-                              <Input
-                                id="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                placeholder="email@exemplo.com"
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="address">Endereço</Label>
-                              <Input
-                                id="address"
-                                value={formData.address}
-                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                placeholder="Endereço completo"
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="phone">Telefone</Label>
-                              <Input
-                                id="phone"
-                                value={formData.phoneNumber}
-                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                                placeholder="9xxxxxxxx"
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="gender">Gênero</Label>
-                              <Select
-                                value={formData.gender}
-                                onValueChange={(value) => setFormData({ ...formData, gender: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="M">Masculino</SelectItem>
-                                  <SelectItem value="F">Feminino</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="employeeId">ID do Funcionário</Label>
-                              <Input
-                                id="employeeId"
-                                value={formData.employeeId}
-                                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                                placeholder="ID do funcionário"
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="role">Função</Label>
-                              <Select
-                                value={formData.roler}
-                                onValueChange={(value) => setFormData({ ...formData, roler: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione uma função" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {roles.map((role) => (
-                                    <SelectItem key={role._id} value={role.roler.toString()}>
-                                      {role.name} (Nível {role.roler})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel
-                              onClick={() => {
-                                resetForm()
-                                setCreateDialogOpen(false)
-                              }}
-                            >
-                              Cancelar
-                            </AlertDialogCancel>
-                            <AlertDialogAction onClick={handleAddUser}>Criar Utilizador</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar utilizadores..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-full sm:w-64"
+                      />
+                    </div>
+                    
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder="Filtrar por função" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as funções</SelectItem>
+                        <SelectItem value="4">Backoffice</SelectItem>
+                        <SelectItem value="2">Coordinator</SelectItem>
+                        <SelectItem value="3">Supervisor</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <PermissionGuard module="users" action="create" showFallback={false}>
+                      <Button 
+                        className="flex items-center gap-2"
+                        onClick={() => setCreateDialogOpen(true)}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Criar Utilizador
+                      </Button>
                     </PermissionGuard>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <DataTable columns={userColumns}
-                 data={filteredUsers} 
+                <DataTable 
+                  columns={userColumns}
+                  data={filteredUsers}
+                  loading={isLoading}
                   filterOptions={{
                     enableSiteFilter: false,
-                    enableDateFilter: false,
-                  }}/>
-                {isLoading && (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-gray-600">Carregando utilizadores...</span>
-                  </div>
-                )}
+                  }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -718,82 +562,75 @@ export default function UserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-6">
-                  {roles.map((role) => (
-                    <Card key={role._id} className="border-l-4 border-l-blue-500">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className={`p-2 rounded-lg ${getRoleBadgeColor(role.roler)}`}>
-                              <Crown className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-lg">{role.name}</CardTitle>
-                              <CardDescription>
-                                Nível de acesso: {role.roler} • Criado em{" "}
-                                {new Date(role.createdAt).toLocaleDateString("pt-PT")}
-                              </CardDescription>
-                            </div>
-                          </div>
-                          <Badge className={`${getRoleBadgeColor(role.roler)} font-medium`}>Nível {role.roler}</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {["users", "content", "reports", "settings"].map((module) => {
-                            const permissions = {
-                              create: role.roler <= (module === "settings" ? 1 : module === "users" ? 2 : 3),
-                              read: true,
-                              update: role.roler <= (module === "settings" ? 1 : 2),
-                              delete: role.roler <= (module === "settings" ? 1 : 2),
-                            }
+                  {[4, 2, 3].map((roler) => {
+                    const roleName = getRoleName(roler)
+                    const permissions = getPermissionsForRole(roler)
 
-                            return (
-                              <Card key={module} className="p-4 bg-gray-50">
-                                <h5 className="font-medium capitalize mb-3 text-gray-700 flex items-center">
-                                  {module === "users" ? (
-                                    <UsersIcon className="w-4 h-4 mr-2" />
-                                  ) : module === "content" ? (
-                                    <Edit className="w-4 h-4 mr-2" />
-                                  ) : module === "reports" ? (
-                                    <Eye className="w-4 h-4 mr-2" />
-                                  ) : (
-                                    <Settings className="w-4 h-4 mr-2" />
-                                  )}
-                                  {module === "users"
-                                    ? "Utilizadores"
-                                    : module === "content"
-                                      ? "Conteúdo"
-                                      : module === "reports"
-                                        ? "Relatórios"
+                    return (
+                      <Card key={roler} className='border-none shadow-none'>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-2 rounded-lg ${getRoleBadgeColor(roler)}`}>
+                                <Crown className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-lg">{roleName}</CardTitle>
+                                <CardDescription>Nível de acesso: {roler}</CardDescription>
+                              </div>
+                            </div>
+                            <Badge className={`${getRoleBadgeColor(roler)} font-medium`}>Nível {roler}</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {["users", "content", "settings"].map((module) => {
+                              const modulePermissions = permissions[module]
+
+                              return (
+                                <Card key={module} className="p-4 bg-gray-50 border-none shadow-none">
+                                  <h5 className="font-medium capitalize mb-3 text-gray-700 flex items-center">
+                                    {module === "users" ? (
+                                      <UsersIcon className="w-4 h-4 mr-2" />
+                                    ) : module === "content" ? (
+                                      <Edit className="w-4 h-4 mr-2" />
+                                    ) : (
+                                      <Settings className="w-4 h-4 mr-2" />
+                                    )}
+                                    {module === "users"
+                                      ? "Utilizadores"
+                                      : module === "content"
+                                        ? "Conteúdo"
                                         : "Configurações"}
-                                </h5>
-                                <div className="space-y-2">
-                                  {Object.entries(permissions).map(([action, allowed]) => (
-                                    <div key={action} className="flex items-center justify-between">
-                                      <span className="text-sm text-gray-600">
-                                        {action === "create"
-                                          ? "Criar"
-                                          : action === "read"
-                                            ? "Ver"
-                                            : action === "update"
-                                              ? "Editar"
-                                              : "Excluir"}
-                                      </span>
-                                      {allowed ? (
-                                        <Check className="w-4 h-4 text-green-500" />
-                                      ) : (
-                                        <X className="w-4 h-4 text-red-500" />
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              </Card>
-                            )
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                                  </h5>
+                                  <div className="space-y-2">
+                                    {Object.entries(modulePermissions).map(([action, allowed]) => (
+                                      <div key={action} className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-600">
+                                          {action === "create"
+                                            ? "Criar"
+                                            : action === "read"
+                                              ? "Ver"
+                                              : action === "update"
+                                                ? "Editar"
+                                                : "Excluir"}
+                                        </span>
+                                        {allowed ? (
+                                          <Check className="w-4 h-4 text-green-500" />
+                                        ) : (
+                                          <X className="w-4 h-4 text-red-500" />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </Card>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -805,9 +642,11 @@ export default function UserManagement() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Settings className="w-5 h-5" />
-                    Gestão de Permissões
+                    Gestão de Permissões Individuais
                   </CardTitle>
-                  <CardDescription>Defina permissões específicas para utilizadores individuais</CardDescription>
+                  <CardDescription>
+                    Defina permissões específicas para utilizadores individuais (apenas Backoffice)
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -836,16 +675,19 @@ export default function UserManagement() {
                             className="p-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between"
                             onClick={() => {
                               setSelectedUserForPermissions(user)
-                              setUserPermissions({
-                                users: { create: false, read: true, update: false, delete: false },
-                                content: { create: false, read: true, update: false, delete: false },
-                                reports: { create: false, read: true, update: false, delete: false },
-                                settings: { create: false, read: false, update: false, delete: false },
-                              })
+                              const existingPermissions = getUserPermissions(user._id)
+                              setUserPermissions(
+                                existingPermissions || {
+                                  users: { create: false, read: true, update: false, delete: false },
+                                  content: { create: false, read: true, update: false, delete: false },
+                                  reports: { create: false, read: true, update: false, delete: false },
+                                  settings: { create: false, read: false, update: false, delete: false },
+                                },
+                              )
                             }}
                           >
                             <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-sm font-medium">
                                 {user.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
@@ -854,7 +696,9 @@ export default function UserManagement() {
                               </div>
                             </div>
                             {user.role && (
-                              <Badge className={`${getRoleBadgeColor(user.role.roler)}`}>{user.role.name}</Badge>
+                              <Badge className={`${getRoleBadgeColor(user.role.roler)}`}>
+                                {getRoleName(user.role.roler)}
+                              </Badge>
                             )}
                           </div>
                         ))}
@@ -866,12 +710,17 @@ export default function UserManagement() {
                     <Card className="border-2 border-blue-200">
                       <CardHeader>
                         <CardTitle className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
                             {selectedUserForPermissions.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <div>Definir Permissões para {selectedUserForPermissions.name}</div>
                             <div className="text-sm text-gray-500 font-normal">{selectedUserForPermissions.email}</div>
+                            {selectedUserForPermissions.role && (
+                              <Badge className={`${getRoleBadgeColor(selectedUserForPermissions.role.roler)} mt-1`}>
+                                {getRoleName(selectedUserForPermissions.role.roler)}
+                              </Badge>
+                            )}
                           </div>
                         </CardTitle>
                       </CardHeader>

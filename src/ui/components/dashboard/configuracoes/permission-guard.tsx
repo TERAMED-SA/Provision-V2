@@ -8,33 +8,38 @@ interface PermissionGuardProps {
   action: "create" | "read" | "update" | "delete"
   children: React.ReactNode
   fallback?: React.ReactNode
+  showFallback?: boolean
 }
 
 export const PermissionGuard: React.FC<PermissionGuardProps> = ({ 
   module, 
   action, 
   children, 
-  fallback 
+  fallback,
+  showFallback = true
 }) => {
   const hasPermission = usePermissionStore((state) => state.hasPermission)
 
   if (!hasPermission(module, action)) {
+    if (!showFallback) {
+      return null
+    }
+
     return (
       fallback || (
-        <div className="flex items-start gap-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <TriangleAlert className="h-5 w-5 text-amber-600 flex-shrink-0" />
-          <div className="text-sm text-amber-800">
-            <p className="font-medium text-sm">Acesso Negado</p>
-            <p className="text-xs">
-              Você não tem permissão para{" "}
+        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs">
+          <TriangleAlert className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="text-amber-800">
+            <p className="font-medium">Acesso Negado</p>
+            <p className="text-xs opacity-90">
+              Sem permissão para{" "}
               {action === "create"
                 ? "criar"
                 : action === "read"
                   ? "visualizar"
                   : action === "update"
                     ? "editar"
-                    : "excluir"}{" "}
-            
+                    : "excluir"}
             </p>
           </div>
         </div>
@@ -44,3 +49,4 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
 
   return <>{children}</>
 }
+

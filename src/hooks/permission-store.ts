@@ -31,12 +31,19 @@ interface User {
   type?: string
 }
 
+interface UserPermissions {
+  [userId: string]: {
+    [module: string]: Permission
+  }
+}
+
 interface PermissionStore {
   currentUser: User | null
   userRole: Role | null
   permissions: {
     [module: string]: Permission
   }
+  userPermissions: UserPermissions
   setCurrentUser: (user: User) => void
   setUserRole: (role: Role) => void
   canCreate: (module: string) => boolean
@@ -44,8 +51,52 @@ interface PermissionStore {
   canUpdate: (module: string) => boolean
   canDelete: (module: string) => boolean
   isBackoffice: () => boolean
+  isSupervisor: () => boolean
+  isCoordinator: () => boolean
   hasPermission: (module: string, action: "create" | "read" | "update" | "delete") => boolean
   updateUserPermissions: (userId: string, permissions: { [module: string]: Permission }) => void
+  getUserPermissions: (userId: string) => { [module: string]: Permission } | null
+}
+
+const getDefaultPermissions = (roler: number) => {
+  const isBackoffice = roler === 4
+  const isCoordinator = roler === 2
+  const isSupervisor = roler === 3
+
+  if (isBackoffice) {
+    const allPermissions = { create: true, read: true, update: true, delete: true }
+    return {
+      users: allPermissions,
+      content: allPermissions,
+      reports: allPermissions,
+      settings: allPermissions,
+    }
+  }
+
+  if (isCoordinator) {
+    return {
+      users: { create: true, read: true, update: true, delete: false },
+      content: { create: true, read: true, update: true, delete: false },
+      reports: { create: true, read: true, update: true, delete: false },
+      settings: { create: false, read: true, update: false, delete: false },
+    }
+  }
+
+  if (isSupervisor) {
+    return {
+      users: { create: false, read: true, update: false, delete: false },
+      content: { create: false, read: true, update: false, delete: false },
+      reports: { create: false, read: true, update: false, delete: false },
+      settings: { create: false, read: false, update: false, delete: false },
+    }
+  }
+
+  return {
+    users: { create: false, read: false, update: false, delete: false },
+    content: { create: false, read: false, update: false, delete: false },
+    reports: { create: false, read: false, update: false, delete: false },
+    settings: { create: false, read: false, update: false, delete: false },
+  }
 }
 
 export const usePermissionStore = create<PermissionStore>()(
@@ -59,45 +110,12 @@ export const usePermissionStore = create<PermissionStore>()(
         reports: { create: false, read: false, update: false, delete: false },
         settings: { create: false, read: false, update: false, delete: false },
       },
+      userPermissions: {},
 
       setCurrentUser: (user) => set({ currentUser: user }),
 
       setUserRole: (role) => {
-        const isBackoffice = role.name.toLowerCase() === "backoffice" || role.roler === 1
-        const allPermissions = { create: true, read: true, update: true, delete: true }
-        const permissions = isBackoffice
-          ? {
-              users: allPermissions,
-              content: allPermissions,
-              reports: allPermissions,
-              settings: allPermissions,
-            }
-          : {
-              users: {
-                create: role.roler <= 2,
-                read: true,
-                update: role.roler <= 2,
-                delete: role.roler <= 2,
-              },
-              content: {
-                create: role.roler <= 3,
-                read: true,
-                update: role.roler <= 2,
-                delete: role.roler <= 2,
-              },
-              reports: {
-                create: role.roler <= 3,
-                read: true,
-                update: role.roler <= 2,
-                delete: role.roler <= 2,
-              },
-              settings: {
-                create: role.roler <= 1,
-                read: role.roler <= 2,
-                update: role.roler <= 1,
-                delete: role.roler <= 1,
-              },
-            }
+        const permissions = getDefaultPermissions(role.roler)
         set({ userRole: role, permissions })
       },
 
@@ -108,7 +126,17 @@ export const usePermissionStore = create<PermissionStore>()(
 
       isBackoffice: () => {
         const role = get().userRole
-        return role?.name.toLowerCase() === "backoffice" || role?.roler === 1
+        return role?.roler === 4
+      },
+
+      isSupervisor: () => {
+        const role = get().userRole
+        return role?.roler === 3
+      },
+
+      isCoordinator: () => {
+        const role = get().userRole
+        return role?.roler === 2
       },
 
       hasPermission: (module, action) => {
@@ -117,7 +145,16 @@ export const usePermissionStore = create<PermissionStore>()(
       },
 
       updateUserPermissions: (userId, permissions) => {
-        console.log("Updating permissions for user:", userId, permissions)
+        set((state) => ({
+          userPermissions: {
+            ...state.userPermissions,
+            [userId]: permissions,
+          },
+        }))
+      },
+
+      getUserPermissions: (userId) => {
+        return get().userPermissions[userId] || null
       },
     }),
     {
