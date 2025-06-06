@@ -1,0 +1,300 @@
+{
+  "Sidebar": {
+    "Dashboard": "Tableau de bord",
+    "Supervisao": "Supervision",
+    "Ocorrencias": "Incidents",
+    "Auditorias": "Audits",
+    "Inspeccao": "Inspection",
+    "Recolhas": "Collectes",
+    "Reclamacoes": "Réclamations",
+    "Mapa": "Carte",
+    "Chat": "Discussion",
+    "Analytics": "Analyse",
+    "Configuracoes": "Paramètres",
+    "Clientes": "Clients",
+    "Utilizadores": "Utilisateurs",
+    "Zona": "Zone",
+    "Perfil": "Profil",
+    "Atividades": "Activités",
+    "Servicos": "Services",
+    "Relatorio": "Rapport",
+    "Menu": "Menu",
+    "Mais": "Plus"
+  },
+  "SectionCards": {
+    "supervisores": "Superviseurs",
+    "totalSupervisores": "Total de superviseurs",
+    "clientes": "Clients",
+    "totalClientes": "Total de clients",
+    "equipamentos": "Équipements",
+    "totalEquipamentos": "Total d'équipements"
+  },
+   "analytics": {
+    "occurrences": {
+      "title": "Occurrences",
+      "noData": "Aucune occurrence enregistrée",
+      "noDataPeriod": "dans cette période",
+      "total": "Total : {count} occurrences",
+      "distributionHour": "Distribution par heure dans la période sélectionnée",
+      "distributionDay": "Distribution par jour dans le mois"
+    },
+    "supervisions": {
+      "title": "Supervisions",
+      "noData": "Aucune supervision enregistrée",
+      "noDataPeriod": "dans cette période",
+      "total": "Total : {count} supervisions",
+      "distributionHour": "Distribution par heure dans la période sélectionnée"
+    },
+    "timeFilters": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "week": "Semaine",
+      "month": "Mois"
+    },
+    "periods": {
+      "lastDays": "7 derniers jours"
+    },
+    "errors": {
+      "loadingOccurrences": "Erreur lors du chargement des occurrences",
+      "loadingSupervisions": "Erreur lors du chargement des supervisions",
+      "timeoutOccurrences": "Timeout dans la requête d'occurrences",
+      "timeoutSupervisions": "Timeout dans la requête de supervisions",
+      "invalidResponse": "Format de réponse invalide",
+      "invalidDate": "Date invalide trouvée",
+      "itemWithoutDate": "Élément sans date de création",
+      "processingError": "Erreur lors du traitement de l'élément"
+    }
+  },
+  "DataTable": {
+      "subtitle": "Gérez et visualisez vos données efficacement",
+      "showing": "Affichage de {start} à {end} sur {total} enregistrements",
+      "noDataFound": "Aucune donnée trouvée",
+      "defaultEmptyMessage": "Aucun enregistrement trouvé à afficher"
+    },
+     "login": {
+    "leftPanel": {
+      "description": "Avec la puissance de Falcon, vous pouvez vous concentrer uniquement sur les fonctionnalités de vos produits numériques, en nous laissant le design !",
+      "readOur": "Lisez nos",
+      "terms": "conditions",
+      "and": "et",
+      "conditions": "termes"
+    },
+    "form": {
+      "title": "Se connecter au compte",
+      "phoneNumber": "Numéro de téléphone",
+      "subtitle": "Veuillez saisir votre numéro et votre mot de passe pour accéder à votre compte.",
+      "phoneNumberPlaceholder": "Entrez votre numéro de téléphone",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "forgotPassword": "Mot de passe oublié ?",
+      "loginButton": "Se connecter", 
+      "loggingIn": "Connexion en cours"
+    },
+    "validation": {
+      "numberLength": "Le numéro doit avoir exactement 9 chiffres",
+      "numberDigits": "Le numéro ne doit contenir que des chiffres",
+      "passwordMin": "Le mot de passe doit avoir au moins 6 caractères"
+    },
+    "messages": {
+      "loginSuccess": "Connexion réussie !",
+      "userNotFound": "Utilisateur non trouvé",
+      "invalidCredentials": "Identifiants invalides",
+      "loginError": "Erreur de connexion. Veuillez réessayer.",
+      "serverConnectionError": "Erreur de connexion au serveur."
+    }
+  },
+  "map": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "filtersAndOptions": "Filtres et Options",
+    "selectSupervisorsAndRoutes": "Sélectionnez les superviseurs et visualisez leurs itinéraires",
+    "supervisorRoutes": "Itinéraires des Superviseurs",
+    "locationHistory": "Historique de Localisation",
+    "refresh": "Actualiser",
+    "routes": "Itinéraires",
+    "history": "Historique",
+    "searchSupervisor": "Rechercher superviseur",
+    "searchPlaceholder": "Entrez le nom du superviseur...",
+    "selectDate": "Sélectionner la date",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "supervisors": "Superviseurs",
+    "noSupervisorsFound": "Aucun superviseur trouvé",
+    "filters": "Filtres",
+    "all": "Tous",
+    "filterByDate": "Filtrer par date",
+    "statistics": "Statistiques",
+    "total": "Total",
+    "historyPoints": "Points d'historique",
+    "selectedDate": "Date sélectionnée",
+    "errors": {
+      "loadSupervisors": "Erreur lors du chargement des superviseurs",
+      "loadHistory": "Erreur lors du chargement de l'historique",
+      "loadPositions": "Impossible de charger les positions des superviseurs"
+    },
+    "success": {
+      "historyLoaded": "Historique chargé avec succès"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "viewProfile": "Voir le profil",
+    "success": "Succès",
+    "error": "Erreur",
+    "cancel": "Annuler",
+    "userNotAuthenticated": "Utilisateur non authentifié",
+    "userNotFound": "Utilisateur non trouvé",
+    "profileUpdated": "Profil mis à jour avec succès",
+    "updateProfileError": "Échec de la mise à jour du profil",
+    "passwordUpdated": "Mot de passe mis à jour avec succès",
+    "updatePasswordError": "Échec de la mise à jour du mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+    "accountDeleted": "Compte supprimé avec succès",
+    "deleteAccountError": "Échec de la suppression du compte",
+    "tabs": {
+      "profile": "Profil",
+      "password": "Mot de passe",
+      "danger": "Zone de danger"
+    },
+    "profile": {
+      "title": "Informations du profil",
+      "description": "Mettez à jour les informations de votre profil et votre adresse email.",
+      "name": "Nom",
+      "namePlaceholder": "Entrez votre nom",
+      "email": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "number": "Numéro de téléphone",
+      "phoneNumber": "Entrez votre numéro de téléphone",
+      "update": "Mettre à jour le profil",
+      "phoneNumberRequired": "Le numéro de téléphone est requis.",
+      "phoneNumberInvalid": "Le numéro de téléphone ne doit contenir que des chiffres.",
+      "phoneNumberLength": "Le numéro de téléphone doit comporter exactement 9 chiffres."
+    },
+    "password": {
+      "title": "Mettre à jour le mot de passe",
+      "description": "Assurez-vous que votre compte utilise un mot de passe long et aléatoire pour rester sécurisé.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "requirements": "Votre nouveau mot de passe doit contenir plus de 8 caractères.",
+      "update": "Mettre à jour le mot de passe"
+    },
+    "danger": {
+      "title": "Zone de danger",
+      "description": "Supprimer définitivement votre compte et toutes les données associées.",
+      "deleteAccount": "Supprimer le compte",
+      "deleteWarning": "Une fois votre compte supprimé, toutes ses ressources et données seront définitivement supprimées. Avant de supprimer votre compte, veuillez télécharger toutes les données ou informations que vous souhaitez conserver.",
+      "deleteButton": "Supprimer le compte",
+      "confirmTitle": "Êtes-vous absolument sûr ?",
+      "confirmDescription": "Cette action ne peut pas être annulée. Cela supprimera définitivement votre compte et supprimera vos données de nos serveurs.",
+      "confirmDelete": "Oui, supprimer le compte"
+    }
+  },
+  "supervisors": {
+    "title": "Superviseurs",
+    "add": "Ajouter un superviseur",
+    "edit": "Éditer",
+    "view": "Voir les détails",
+    "delete": "Supprimer",
+    "deleteConfirmTitle": "Êtes-vous sûr ?",
+    "deleteConfirmDesc": "Cette action ne peut pas être annulée. Cela supprimera définitivement le superviseur {name} du système.",
+    "deleteCancel": "Annuler",
+    "deleteConfirm": "Confirmer",
+    "deleteSuccess": "Superviseur supprimé avec succès",
+    "deleteError": "Erreur lors de la suppression du superviseur",
+    "fetchError": "Impossible de charger les superviseurs",
+    "updateError": "Erreur lors de la mise à jour du superviseur",
+    "updateSuccess": "Superviseur mis à jour avec succès",
+    "noName": "Sans nom",
+    "noPhone": "Non informé",
+    "table": {
+      "name": "Nom",
+      "phone": "Téléphone",
+      "email": "Email",
+      "actions": "Actions"
+    },
+    "addTitle": "Ajouter un nouveau superviseur",
+    "addSuccess": "Superviseur ajouté avec succès",
+    "addError": "Erreur lors de l'ajout du superviseur",
+    "cancel": "Annuler",
+    "adding": "Ajout...",
+    "form": {
+      "name": "Nom",
+      "namePlaceholder": "Nom complet",
+      "email": "Email",
+      "emailPlaceholder": "email@exemple.com",
+      "employeeId": "ID Employé",
+      "employeeIdPlaceholder": "ID de l'employé",
+      "phoneNumber": "Téléphone",
+      "phoneNumberPlaceholder": "+(244) XXXXXXXXX",
+      "address": "Adresse",
+      "addressPlaceholder": "Adresse",
+      "gender": "Genre",
+      "genderPlaceholder": "Sélectionnez le genre",
+      "male": "Masculin",
+      "female": "Féminin"
+    }
+  },
+    "companySites": {
+    "title": "Sites",
+    "buttons": {
+      "addSite": "Ajouter un Site",
+      "cancel": "Annuler",
+      "add": "Ajouter",
+      "save": "Sauvegarder"
+    },
+    "table": {
+      "title": "Liste des sites",
+      "name": "Nom",
+      "address": "Adresse",
+      "costCenter": "Centre de Coût",
+      "numberOfWorkers": "Nombre de Travailleurs",
+      "supervisorCode": "Code Superviseur",
+      "zone": "Zone",
+      "actions": "Actions"
+    },
+    "fields": {
+      "name": "Nom",
+      "address": "Adresse",
+      "ctClient": "CT Client",
+      "costCenter": "Centre de Coût",
+      "numberOfWorkers": "Nombre de Travailleurs",
+      "supervisorCode": "Code Superviseur",
+      "zone": "Zone"
+    },
+    "modals": {
+      "addSite": {
+        "title": "Ajouter un Site",
+        "description": "Saisissez les détails du site ci-dessous"
+      },
+      "editSite": {
+        "title": "Modifier le Site",
+        "description": "Mettez à jour les détails du site ci-dessous"
+      },
+      "companyInfo": {
+        "title": "Informations sur l'Entreprise",
+        "description": "Détails de l'entreprise et statistiques de supervision",
+        "siteInfo": "Informations du Site",
+        "companyDetails": "Détails de l'Entreprise",
+        "supervisionStats": "Statistiques de Supervision",
+        "contactInfo": "Informations de Contact",
+        "totalSupervisions": "Total des Supervisions"
+      }
+    },
+    "success": {
+      "siteAdded": "Site ajouté avec succès!",
+      "siteUpdated": "Site mis à jour avec succès!",
+      "siteDeleted": "Site supprimé avec succès!"
+    },
+    "errors": {
+      "clientCodeNotFound": "Code client introuvable",
+      "failedToLoadSites": "Échec du chargement des sites",
+      "failedToAddSite": "Échec de l'ajout du site. Veuillez réessayer.",
+      "failedToUpdateSite": "Échec de la mise à jour du site. Veuillez réessayer.",
+      "failedToDeleteSite": "Échec de la suppression du site. Veuillez réessayer.",
+      "failedToLoadCompanyInfo": "Échec du chargement des informations sur l'entreprise",
+      "failedToLoadSupervisions": "Échec du chargement des supervisions"
+    }
+  }
+}

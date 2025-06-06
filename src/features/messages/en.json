@@ -1,0 +1,301 @@
+{
+ 
+"Sidebar": {
+    "Dashboard": "Dashboard",
+    "Supervisao": "Supervision",
+    "Ocorrencias": "Occurrences",
+    "Auditorias": "Audits",
+    "Inspeccao": "Inspection",
+    "Recolhas": "Collections",
+    "Reclamacoes": "Complaints",
+    "Mapa": "Map",
+    "Chat": "Chat",
+    "Analytics": "Analytics",
+    "Configuracoes": "Settings",
+    "Clientes": "Clients",
+    "Utilizadores": "Users",
+    "Zona": "Zone",
+    "Perfil": "Profile",
+    "Atividades": "Activities",
+    "Servicos": "Services",
+    "Relatorio": "Report",
+    "Menu": "Menu",
+    "Mais": "More"
+  },
+  "SectionCards": {
+    "supervisores": "Supervisors",
+    "totalSupervisores": "Total supervisors",
+    "clientes": "Clients",
+    "totalClientes": "Total clients",
+    "equipamentos": "Equipments",
+    "totalEquipamentos": "Total equipments"
+  },
+   "analytics": {
+    "occurrences": {
+      "title": "Occurrences",
+      "noData": "No occurrences recorded",
+      "noDataPeriod": "in this period",
+      "total": "Total: {count} occurrences",
+      "distributionHour": "Distribution by hour in the selected period",
+      "distributionDay": "Distribution by day in the month"
+    },
+    "supervisions": {
+      "title": "Supervisions",
+      "noData": "No supervisions recorded",
+      "noDataPeriod": "in this period",
+      "total": "Total: {count} supervisions",
+      "distributionHour": "Distribution by hour in the selected period"
+    },
+    "timeFilters": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Week",
+      "month": "Month"
+    },
+    "periods": {
+      "lastDays": "Last 7 days"
+    },
+    "errors": {
+      "loadingOccurrences": "Error loading occurrences",
+      "loadingSupervisions": "Error loading supervisions",
+      "timeoutOccurrences": "Timeout in occurrences request",
+      "timeoutSupervisions": "Timeout in supervisions request",
+      "invalidResponse": "Invalid response format",
+      "invalidDate": "Invalid date found",
+      "itemWithoutDate": "Item without creation date",
+      "processingError": "Error processing item"
+    }
+  },
+  "DataTable": {
+      "subtitle": "Manage and visualize your data efficiently",
+      "showing": "Showing {start} to {end} of {total} records",
+      "noDataFound": "No data found",
+      "defaultEmptyMessage": "No records found to display"
+    },
+    "login": {
+    "leftPanel": {
+      "description": "With the power of Falcon, you can focus only on the functionalities of your digital products, leaving the design with us!",
+      "readOur": "Read our",
+      "terms": "terms",
+      "and": "and",
+      "conditions": "conditions"
+    },
+    "form": {
+      "title": "Sign in to account",
+      "subtitle": "Please enter your number and password to access your account.",
+      "phoneNumber": "Phone number",
+      "phoneNumberPlaceholder": "Enter your phone number",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password", 
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Sign In",
+      "loggingIn": "Signing In"
+    },
+    "validation": {
+      "numberLength": "The number must have exactly 9 digits",
+      "numberDigits": "The number must contain only digits",
+      "passwordMin": "Password must have at least 6 characters"
+    },
+    "messages": {
+      "loginSuccess": "Login successful!",
+      "userNotFound": "User not found",
+      "invalidCredentials": "Invalid credentials", 
+      "loginError": "Error logging in. Please try again.",
+      "serverConnectionError": "Error connecting to server."
+    }
+  },
+  "map": {
+    "online": "Online",
+    "offline": "Offline",
+    "filtersAndOptions": "Filters and Options",
+    "selectSupervisorsAndRoutes": "Select supervisors and view their routes",
+    "supervisorRoutes": "Supervisor Routes",
+    "locationHistory": "Location History",
+    "refresh": "Refresh",
+    "routes": "Routes",
+    "history": "History",
+    "searchSupervisor": "Search supervisor",
+    "searchPlaceholder": "Enter supervisor name...",
+    "selectDate": "Select date",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "supervisors": "Supervisors",
+    "noSupervisorsFound": "No supervisors found",
+    "filters": "Filters",
+    "all": "All",
+    "filterByDate": "Filter by date",
+    "statistics": "Statistics",
+    "total": "Total",
+    "historyPoints": "History points",
+    "selectedDate": "Selected date",
+    "errors": {
+      "loadSupervisors": "Error loading supervisors",
+      "loadHistory": "Error loading history",
+      "loadPositions": "Could not load supervisor positions"
+    },
+    "success": {
+      "historyLoaded": "History loaded successfully"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "viewProfile": "View profile",
+    "success": "Success",
+    "error": "Error",
+    "cancel": "Cancel",
+    "userNotAuthenticated": "User not authenticated",
+    "userNotFound": "User not found",
+    "profileUpdated": "Profile updated successfully",
+    "updateProfileError": "Failed to update profile",
+    "passwordUpdated": "Password updated successfully",
+    "updatePasswordError": "Failed to update password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "accountDeleted": "Account deleted successfully",
+    "deleteAccountError": "Failed to delete account",
+    "tabs": {
+      "profile": "Profile",
+      "password": "Password",
+      "danger": "Danger Zone"
+    },
+    "profile": {
+      "title": "Profile Information",
+      "description": "Update your account profile information and email address.",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "number": "Phone Number",
+      "phoneNumber": "Enter your phone number",
+      "update": "Update Profile",
+      "phoneNumberRequired": "Phone number is required.",
+      "phoneNumberInvalid": "Phone number must contain only digits.",
+      "phoneNumberLength": "Phone number must be exactly 9 digits."
+    },
+    "password": {
+      "title": "Update Password",
+      "description": "Ensure your account is using a long, random password to stay secure.",
+      "current": "Current Password",
+      "new": "New Password",
+      "confirm": "Confirm New Password",
+      "requirements": "Your new password must be more than 8 characters.",
+      "update": "Update Password"
+    },
+    "danger": {
+      "title": "Danger Zone",
+      "description": "Permanently delete your account and all associated data.",
+      "deleteAccount": "Delete Account",
+      "deleteWarning": "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.",
+      "deleteButton": "Delete Account",
+      "confirmTitle": "Are you absolutely sure?",
+      "confirmDescription": "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
+      "confirmDelete": "Yes, delete account"
+    }
+  },
+  "supervisors": {
+    "title": "Supervisors",
+    "add": "Add Supervisor",
+    "edit": "Edit",
+    "view": "View Details",
+    "delete": "Remove",
+    "deleteConfirmTitle": "Are you sure?",
+    "deleteConfirmDesc": "This action cannot be undone. This will permanently delete supervisor {name} from the system.",
+    "deleteCancel": "Cancel",
+    "deleteConfirm": "Confirm",
+    "deleteSuccess": "Supervisor removed successfully",
+    "deleteError": "Error removing supervisor",
+    "fetchError": "Could not load supervisors",
+    "updateError": "Error updating supervisor",
+    "updateSuccess": "Supervisor updated successfully",
+    "addTitle": "Add New Supervisor",
+    "addSuccess": "Supervisor added successfully",
+    "addError": "Error adding supervisor",
+    "cancel": "Cancel",
+    "adding": "Adding...",
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Full name",
+      "email": "Email",
+      "emailPlaceholder": "email@example.com",
+      "employeeId": "Employee ID",
+      "employeeIdPlaceholder": "Employee ID",
+      "phoneNumber": "Phone",
+      "phoneNumberPlaceholder": "+(244) XXXXXXXXX",
+      "address": "Address",
+      "addressPlaceholder": "Address",
+      "gender": "Gender",
+      "genderPlaceholder": "Select gender",
+      "male": "Male",
+      "female": "Female"
+    },
+    "noName": "No name",
+    "noPhone": "Not informed",
+    "table": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "actions": "Actions"
+    }
+  },
+  "companySites": {
+    "title": "Sites",
+    "buttons": {
+      "addSite": "Add Site",
+      "cancel": "Cancel",
+      "add": "Add",
+      "save": "Save"
+    },
+    "table": {
+      "title": "Sites List",
+      "name": "Name",
+      "address": "Address",
+      "costCenter": "Cost Center",
+      "numberOfWorkers": "TL",
+      "supervisorCode": "Supervisor Code",
+      "zone": "Zone",
+      "actions": "Actions"
+    },
+    "fields": {
+      "name": "Name",
+      "address": "Address",
+      "ctClient": "CT Client",
+      "costCenter": "Cost Center",
+      "numberOfWorkers": "Number of Workers",
+      "supervisorCode": "Supervisor Code",
+      "zone": "Zone"
+    },
+    "modals": {
+      "addSite": {
+        "title": "Add Site",
+        "description": "Enter the site details below"
+      },
+      "editSite": {
+        "title": "Edit Site",
+        "description": "Update the site details below"
+      },
+      "companyInfo": {
+        "title": "Company Information",
+        "description": "Company details and supervision statistics",
+        "siteInfo": "Site Information",
+        "companyDetails": "Company Details",
+        "supervisionStats": "Supervision Statistics",
+        "contactInfo": "Contact Information",
+        "totalSupervisions": "Total Supervisions"
+      }
+    },
+    "success": {
+      "siteAdded": "Site added successfully!",
+      "siteUpdated": "Site updated successfully!",
+      "siteDeleted": "Site deleted successfully!"
+    },
+    "errors": {
+      "clientCodeNotFound": "Client code not found",
+      "failedToLoadSites": "Failed to load sites",
+      "failedToAddSite": "Failed to add site. Please try again.",
+      "failedToUpdateSite": "Failed to update site. Please try again.",
+      "failedToDeleteSite": "Failed to delete site. Please try again.",
+      "failedToLoadCompanyInfo": "Failed to load company information",
+      "failedToLoadSupervisions": "Failed to load supervisions"
+    }
+  }
+}

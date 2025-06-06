@@ -1,0 +1,300 @@
+{
+  "Sidebar": {
+    "Dashboard": "Dashboard",
+    "Supervisao": "Supervisão",
+    "Ocorrencias": "Ocorrências",
+    "Auditorias": "Auditorias",
+    "Inspeccao": "Inspeção",
+    "Recolhas": "Recolhas",
+    "Reclamacoes": "Reclamações",
+    "Mapa": "Mapa",
+    "Chat": "Chat",
+    "Analytics": "Analytics",
+    "Configuracoes": "Configurações",
+    "Clientes": "Clientes",
+    "Utilizadores": "Utilizadores",
+    "Zona": "Zona",
+    "Perfil": "Perfil",
+    "Atividades": "Atividades",
+    "Servicos": "Serviços",
+    "Relatorio": "Relatório",
+    "Menu": "Menu",
+    "Mais": "Mais"
+  },
+   "SectionCards": {
+    "supervisores": "Supervisores",
+    "totalSupervisores": "Total de supervisores",
+    "clientes": "Clientes",
+    "totalClientes": "Total de clientes",
+    "equipamentos": "Equipamentos",
+    "totalEquipamentos": "Total de equipamentos"
+  },
+  "analytics": {
+    "occurrences": {
+      "title": "Ocorrências",
+      "noData": "Nenhuma ocorrência registrada",
+      "noDataPeriod": "neste período",
+      "total": "Total: {count} ocorrências",
+      "distributionHour": "Distribuição por hora no período selecionado",
+      "distributionDay": "Distribuição por dia no mês"
+    },
+    "supervisions": {
+      "title": "Supervisões",
+      "noData": "Nenhuma supervisão registrada",
+      "noDataPeriod": "neste período",
+      "total": "Total: {count} supervisões",
+      "distributionHour": "Distribuição por hora no período selecionado"
+    },
+    "timeFilters": {
+      "today": "Hoje",
+      "yesterday": "Ontem",
+      "week": "Semana",
+      "month": "Mês"
+    },
+    "periods": {
+      "lastDays": "Últimos 7 dias"
+    },
+    "errors": {
+      "loadingOccurrences": "Erro ao carregar ocorrências",
+      "loadingSupervisions": "Erro ao carregar supervisões",
+      "timeoutOccurrences": "Timeout na requisição de ocorrências",
+      "timeoutSupervisions": "Timeout na requisição de supervisões",
+      "invalidResponse": "Formato de resposta inválido",
+      "invalidDate": "Data inválida encontrada",
+      "itemWithoutDate": "Item sem data de criação",
+      "processingError": "Erro ao processar item"
+    }
+  },
+  "DataTable": {
+      "subtitle": "Gerencie e visualize seus dados de forma eficiente",
+      "showing": "Mostrando {start} a {end} de {total} registros",
+      "noDataFound": "Nenhum dado encontrado",
+      "defaultEmptyMessage": "Nenhum registro encontrado para exibir"
+    },
+     "login": {
+    "leftPanel": {
+      "description": "Com o poder do Falcon, você pode focar apenas nas funcionalidades dos seus produtos digitais, deixando o design com a gente!",
+      "readOur": "Leia nossos",
+      "terms": "termos",
+      "and": "e",
+      "conditions": "condições"
+    },
+    "form": {
+      "title": "Bem-vindo de volta!",
+      "subtitle": "Por favor, insira seu número e senha para acessar sua conta.",
+      "phoneNumber": "Número de telefone",
+      "phoneNumberPlaceholder": "Digite seu número de telefone",
+      "password": "Senha",
+      "passwordPlaceholder": "Digite sua senha",
+      "forgotPassword": "Esqueceu a senha?",
+      "loginButton": "Entrar",
+      "loggingIn": "Entrando"
+    },
+    "validation": {
+      "numberLength": "O número deve ter exatamente 9 dígitos",
+      "numberDigits": "O número deve conter apenas dígitos",
+      "passwordMin": "A senha deve ter no mínimo 6 caracteres"
+    },
+    "messages": {
+      "loginSuccess": "Login realizado com sucesso!",
+      "userNotFound": "Usuário não encontrado",
+      "invalidCredentials": "Credenciais inválidas",
+      "loginError": "Erro ao fazer login. Tente novamente.",
+      "serverConnectionError": "Erro ao conectar com o servidor."
+    }
+  },
+  "map": {
+    "online": "Online",
+    "offline": "Offline",
+    "filtersAndOptions": "Filtros e Opções",
+    "selectSupervisorsAndRoutes": "Selecione supervisores e visualize suas rotas",
+    "supervisorRoutes": "Rotas dos Supervisores",
+    "locationHistory": "Histórico de Localização",
+    "refresh": "Atualizar",
+    "routes": "Rotas",
+    "history": "Histórico",
+    "searchSupervisor": "Buscar supervisor",
+    "searchPlaceholder": "Digite o nome do supervisor...",
+    "selectDate": "Selecionar data",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "supervisors": "Supervisores",
+    "noSupervisorsFound": "Nenhum supervisor encontrado",
+    "filters": "Filtros",
+    "all": "Todos",
+    "filterByDate": "Filtrar por data",
+    "statistics": "Estatísticas",
+    "total": "Total",
+    "historyPoints": "Pontos do histórico",
+    "selectedDate": "Data selecionada",
+    "errors": {
+      "loadSupervisors": "Erro ao carregar supervisores",
+      "loadHistory": "Erro ao carregar histórico",
+      "loadPositions": "Não foi possível carregar as posições dos supervisores"
+    },
+    "success": {
+      "historyLoaded": "Histórico carregado com sucesso"
+    }
+  },
+  "settings": {
+    "title": "Definição ",
+    "viewProfile": "Ver perfil",
+    "success": "Sucesso",
+    "error": "Erro",
+    "cancel": "Cancelar",
+    "userNotAuthenticated": "Usuário não autenticado",
+    "userNotFound": "Usuário não encontrado",
+    "profileUpdated": "Perfil atualizado com sucesso",
+    "updateProfileError": "Falha ao atualizar perfil",
+    "passwordUpdated": "Senha atualizada com sucesso",
+    "updatePasswordError": "Falha ao atualizar senha",
+    "passwordMismatch": "As senhas não coincidem",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
+    "accountDeleted": "Conta deletada com sucesso",
+    "deleteAccountError": "Falha ao deletar conta",
+    "tabs": {
+      "profile": "Perfil",
+      "password": "Senha",
+      "danger": "Zona de Perigo"
+    },
+    "profile": {
+      "title": "Informações do Perfil",
+      "description": "Atualize as informações do seu perfil e endereço de email.",
+      "name": "Nome",
+      "namePlaceholder": "Digite seu nome",
+      "email": "Email",
+      "emailPlaceholder": "Digite seu email",
+      "number": "Número de Telefone",
+      "phoneNumber": "Digite seu número de telefone",
+      "update": "Atualizar Perfil",
+      "phoneNumberRequired": "O número de telefone é obrigatório.",
+      "phoneNumberInvalid": "O número de telefone deve conter apenas dígitos.",
+      "phoneNumberLength": "O número de telefone deve ter exatamente 9 dígitos."
+    },
+    "password": {
+      "title": "Atualizar Senha",
+      "description": "Certifique-se de que sua conta está usando uma senha longa e aleatória para manter-se seguro.",
+      "current": "Senha Atual",
+      "new": "Nova Senha",
+      "confirm": "Confirmar Nova Senha",
+      "requirements": "Sua nova senha deve ter mais de 8 caracteres.",
+      "update": "Atualizar Senha"
+    },
+    "danger": {
+      "title": "Zona de Perigo",
+      "description": "Deletar permanentemente sua conta e todos os dados associados.",
+      "deleteAccount": "Deletar Conta",
+      "deleteWarning": "Uma vez que sua conta for deletada, todos os seus recursos e dados serão permanentemente deletados. Antes de deletar sua conta, por favor baixe qualquer dado ou informação que deseje manter.",
+      "deleteButton": "Deletar Conta",
+      "confirmTitle": "Você tem certeza absoluta?",
+      "confirmDescription": "Esta ação não pode ser desfeita. Isso irá deletar permanentemente sua conta e remover seus dados dos nossos servidores.",
+      "confirmDelete": "Sim, deletar conta"
+    }
+  },
+  "supervisors": {
+    "title": "Supervisores",
+    "add": "Adicionar Supervisor",
+    "edit": "Editar",
+    "view": "Ver Detalhes",
+    "delete": "Remover",
+    "deleteConfirmTitle": "Tem certeza?",
+    "deleteConfirmDesc": "Esta ação não pode ser desfeita. Isso excluirá permanentemente o supervisor {name} do sistema.",
+    "deleteCancel": "Cancelar",
+    "deleteConfirm": "Confirmar",
+    "deleteSuccess": "Supervisor removido com sucesso",
+    "deleteError": "Erro ao remover supervisor",
+    "fetchError": "Não foi possível carregar os supervisores",
+    "updateError": "Erro ao atualizar supervisor",
+    "updateSuccess": "Supervisor atualizado com sucesso",
+    "noName": "Sem nome",
+    "noPhone": "Não informado",
+    "table": {
+      "name": "Nome",
+      "phone": "Telefone",
+      "email": "Email",
+      "actions": "Ações"
+    },
+    "addTitle": "Adicionar Novo Supervisor",
+    "addSuccess": "Supervisor adicionado com sucesso",
+    "addError": "Erro ao adicionar supervisor",
+    "cancel": "Cancelar",
+    "adding": "Adicionando...",
+    "form": {
+      "name": "Nome",
+      "namePlaceholder": "Nome completo",
+      "email": "Email",
+      "emailPlaceholder": "email@exemplo.com",
+      "employeeId": "ID do Funcionário",
+      "employeeIdPlaceholder": "ID do funcionário",
+      "phoneNumber": "Telefone",
+      "phoneNumberPlaceholder": "+(244) XXXXXXXXX",
+      "address": "Endereço",
+      "addressPlaceholder": "Endereço",
+      "gender": "Gênero",
+      "genderPlaceholder": "Selecione o gênero",
+      "male": "Masculino",
+      "female": "Feminino"
+    }
+  },
+   "companySites": {
+    "title": "Sites",
+    "buttons": {
+      "addSite": "Adicionar Site",
+      "cancel": "Cancelar",
+      "add": "Adicionar",
+      "save": "Salvar"
+    },
+    "table": {
+      "title": "Lista dos sites",
+      "name": "Nome",
+      "address": "Endereço",
+      "costCenter": "Centro de Custo",
+      "numberOfWorkers": "TL",
+      "supervisorCode": "Código ",
+      "zone": "Zona",
+      "actions": "Ações"
+    },
+    "fields": {
+      "name": "Nome",
+      "address": "Endereço",
+      "ctClient": "CT Cliente",
+      "costCenter": "Centro de Custo",
+      "numberOfWorkers": "Número de Trabalhadores",
+      "supervisorCode": "Código do Supervisor",
+      "zone": "Zona"
+    },
+    "modals": {
+      "addSite": {
+        "title": "Adicionar Site",
+        "description": "Insira os detalhes do site abaixo"
+      },
+      "editSite": {
+        "title": "Editar Site",
+        "description": "Atualize os detalhes do site abaixo"
+      },
+      "companyInfo": {
+        "title": "Informações da Empresa",
+        "description": "Detalhes da empresa e estatísticas de supervisão",
+        "siteInfo": "Informações do Site",
+        "companyDetails": "Detalhes da Empresa",
+        "supervisionStats": "Estatísticas de Supervisão",
+        "contactInfo": "Informações de Contato",
+        "totalSupervisions": "Total de Supervisões"
+      }
+    },
+    "success": {
+      "siteAdded": "Site adicionado com sucesso!",
+      "siteUpdated": "Site atualizado com sucesso!",
+      "siteDeleted": "Site excluído com sucesso!"
+    },
+    "errors": {
+      "clientCodeNotFound": "Código do cliente não encontrado",
+      "failedToLoadSites": "Falha ao carregar sites",
+      "failedToAddSite": "Falha ao adicionar site. Tente novamente.",
+      "failedToUpdateSite": "Falha ao atualizar site. Tente novamente.",
+      "failedToDeleteSite": "Falha ao excluir site. Tente novamente.",
+      "failedToLoadCompanyInfo": "Falha ao carregar informações da empresa",
+      "failedToLoadSupervisions": "Falha ao carregar supervisões"
+    }
+  }
+}
