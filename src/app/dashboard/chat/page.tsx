@@ -1,7 +1,9 @@
 "use client"
-import { getUser } from "@/src/features/services/auth/authApi"
-import ChatInterface from "@/src/ui/components/dashboard/chats/chat-interface"
-import { Card } from "@/src/ui/components/ui/card"
+
+
+import ChatInterface from "@/components/dashboard/chats/chat-interface"
+import { Card } from "@/components/ui/card"
+import { getUser } from "@/features/auth/authApi"
 import { useEffect, useState } from "react"
 
 export default function Chat() {

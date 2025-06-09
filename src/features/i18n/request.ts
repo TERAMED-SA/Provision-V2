@@ -1,6 +1,5 @@
-// app/i18n/request.ts
+import { getUserLocale } from "@/lib/service";
 import { getRequestConfig } from "next-intl/server";
-import { getUserLocale } from "../../lib/service"; // ajuste conforme necessário
 
 export default getRequestConfig(async () => {
   const locale = await getUserLocale();

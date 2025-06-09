@@ -1,10 +1,12 @@
 "use client";
-import { getUser } from "@/src/features/services/auth/authApi";
-import Header from "@/src/ui/components/dashboard/header/header";
-import { Sidebar } from "@/src/ui/components/dashboard/sidebar";
-import LoadingScreen from "@/src/ui/components/ui/loadingScreen";
-import { useEffect, useState } from "react";
+
+import Header from "@/components/dashboard/header/header";
+import { Sidebar } from "@/components/dashboard/sidebar";
+import LoadingScreen from "@/components/ui/loadingScreen";
+import { getUser } from "@/features/auth/authApi";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);

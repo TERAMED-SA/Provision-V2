@@ -1,7 +1,8 @@
-import AnalyticsView from "@/src/ui/components/dashboard/analyticsView";
-import { SectionCards } from "@/src/ui/components/dashboard/cardsHome";
-import { ActivityTable } from "@/src/ui/components/dashboard/data-table/activities";
-import { BreadcrumbRoutas } from "@/src/ui/components/ulils/breadcrumbRoutas";
+import AnalyticsView from "@/components/dashboard/analyticsView";
+import { SectionCards } from "@/components/dashboard/cardsHome";
+import { ActivityTable } from "@/components/dashboard/data-table/activities";
+import { BreadcrumbRoutas } from "@/components/ulils/breadcrumbRoutas";
+
 
 export default function Dashboard() {
   return (

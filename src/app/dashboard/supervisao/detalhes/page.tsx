@@ -4,18 +4,16 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ArrowLeft, FileText, Calendar, Clock, Building, User, AlertTriangle, Package, Info } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
-import { Button } from "@/src/ui/components/ui/button"
-import { OccurrencePDF } from "@/src/ui/components/dashboard/pdf/occurrence-pdf"
-import { getPriorityLabel } from "@/src/ui/components/dashboard/data-table/occurrence"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/ui/components/ui/card"
-import { Separator } from "@/src/ui/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/ui/components/ui/tabs"
-import { Skeleton } from "@/src/ui/components/ui/skeleton"
 import instance from "@/src/lib/api"
 import { toast } from "sonner"
-import { BreadcrumbRoutas } from "@/src/ui/components/ulils/breadcrumbRoutas"
+import { Button } from "@/src/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/src/components/ui/card"
+import { BreadcrumbRoutas } from "@/src/components/ulils/breadcrumbRoutas"
+import { OccurrencePDF } from "@/src/components/dashboard/pdf/occurrence-pdf"
+import { Separator } from "@/src/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs"
+import { Skeleton } from "@/src/components/ui/skeleton"
 
-// Tipos
 type Notification = {
   _id: string
   idNotification?: string

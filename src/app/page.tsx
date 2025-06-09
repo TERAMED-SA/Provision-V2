@@ -6,12 +6,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import logo from "@/public/logo.png";
+import logo from "../../public/logo.png";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useLogin } from "@/src/features/services/auth/authApi";
 import toast from "react-hot-toast";
-import LocaleSwitcher from "@/src/ui/components/dashboard/locale-switcher";
 import { useRouter } from "next/navigation";
+import LocaleSwitcher from "../components/dashboard/locale-switcher";
+import { useLogin } from "@/features/auth/authApi";
 
 const createSchema = (t: any) =>
   z.object({
@@ -30,7 +30,6 @@ type FormData = {
 export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
-
   const t = useTranslations("login");
   const router = useRouter();
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from '../ui/components/ui/button';
+import { Button } from '../components/ui/button';
 export default function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center gap-6 h-screen b dark:bg-gray-900">

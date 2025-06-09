@@ -5,15 +5,17 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Edit, Trash, Plus, Info, Eye } from "lucide-react"
+import { Edit, Trash, Plus,  Eye } from "lucide-react"
 import { useTranslations } from "next-intl"
 import instance from "@/src/lib/api"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/src/ui/components/ui/alert-dialog"
-import { Input } from "@/src/ui/components/ui/input"
-import { DataTable } from "@/src/ui/components/ulils/data-table"
-import { Button } from "@/src/ui/components/ui/button"
-import { BreadcrumbRoutas } from "@/src/ui/components/ulils/breadcrumbRoutas"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/src/ui/components/ui/dialog"
+import { DataTable } from "@/src/components/ulils/data-table"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTrigger } from "@/src/components/ui/alert-dialog"
+import { AlertDialogTitle } from "@radix-ui/react-alert-dialog"
+import { Input } from "@/src/components/ui/input"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/src/components/ui/dialog"
+import { Button } from "@/src/components/ui/button"
+import { BreadcrumbRoutas } from "@/src/components/ulils/breadcrumbRoutas"
+
 
 interface Site {
   _id: string
@@ -366,7 +368,7 @@ export default function CompanySites() {
               <AlertDialogFooter>
                 <AlertDialogCancel>{t('buttons.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleAddSite}>{t('buttons.add')}</AlertDialogAction>
-              </AlertDialogFooter>
+              </AlertDialogFooter> 
             </AlertDialogContent>
           </AlertDialog>
         </div>
