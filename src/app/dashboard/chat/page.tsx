@@ -3,19 +3,18 @@
 
 import ChatInterface from "@/components/dashboard/chats/chat-interface"
 import { Card } from "@/components/ui/card"
-import { getUser } from "@/features/auth/authApi"
+import { useAuth } from "@/hooks/useAuth"
 import { useEffect, useState } from "react"
 
 export default function Chat() {
-  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const userData = await getUser()
-        setUser(userData)
-        console.log("User fetched:", userData)
+        const user = useAuth()
+        console.log("User fetched:", user)
       } catch (error) {
         console.error("Error fetching user:", error)
       } finally {

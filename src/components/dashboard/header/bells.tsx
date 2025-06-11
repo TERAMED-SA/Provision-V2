@@ -6,6 +6,8 @@ import { format } from "date-fns";
 import { Badge } from "../../ui/badge";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../../ui/dropdown-menu";
+import instance from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Bells() {
   const [notifications, setNotifications] = useState([]);
@@ -13,7 +15,7 @@ export function Bells() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const user = getUser();
+        const user = useAuth();
         if (!user) return;
 
         const response = await instance.get(`/notification/${user}?size=50`);

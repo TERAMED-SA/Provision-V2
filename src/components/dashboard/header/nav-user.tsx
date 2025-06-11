@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, LogOut, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import SettingsModal from "../settings";
@@ -9,36 +9,15 @@ import LoadingScreen from "../../ui/loadingScreen";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Dialog, DialogContent } from "../../ui/dialog";
-import { getUser, logout } from "@/features/auth/authApi";
+import { useAuth } from "@/hooks/useAuth";
 
 
 export function NavUser() {
   const router = useRouter();
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    avatar?: string;
-  } | null>(null);
-
+  const { user , logout } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const user = await getUser(); 
-        setUser({
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar || "",
-        });
-      } catch (e) {
-        console.error("Erro ao carregar usuário:", e);
-      }
-    }
-
-    fetchUser(); 
-  }, []);
 
   if (!user) {
     return <LoadingScreen message="Carregando usuário..." />;
@@ -76,8 +55,8 @@ export function NavUser() {
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center justify-center gap-2 px-1 py-1.5 text-left text-sm">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                {!user.avatar && user.name ? (
+                <AvatarImage src={user?.avatar} alt={user.name} />
+                {!user?.avatar && user.name ? (
                   <AvatarFallback className="flex items-center justify-center bg-gray-400 text-white rounded-full font-semibold">
                     {user.name
                       .split(" ")

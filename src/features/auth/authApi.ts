@@ -1,40 +1,78 @@
-import instance from "@/lib/api";
-import { AuthResponse } from "@/types/auth";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import Cookies from 'js-cookie';
+import { AuthResponse, User } from '@/types/auth';
+import instance from '@/lib/api';
 
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface AuthActions {
+  setAuth: (token: string, user: User) => void;
+  clearAuth: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  getUser: () => User | null;
+  initializeAuth: () => void;
+}
+
+const useAuthStore = create<AuthState & AuthActions>()(
+  devtools(
+    (set, get) => ({
+      // Estado inicial
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+
+      setAuth: (token: string, user: User) => {
+        Cookies.set('auth_token', token);
+        
+        set({
+          token,
+          user,
+          isAuthenticated: true,
+          error: null
+        });
+      },
+
+      clearAuth: () => {
+        Cookies.remove('auth_token');
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          error: null
+        });
+      },
+
+      setLoading: (loading: boolean) => set({ isLoading: loading }),
+
+      setError: (error: string | null) => set({ error }),
+
+      getUser: () => get().user,
+
+      initializeAuth: () => {
+        const token = Cookies.get('auth_token');
+        if (token) {
+          set({ token, isAuthenticated: true });
+        }
+      }
+    }),
+    {
+      name: 'auth-store'
+    }
+  )
+);
+
+export default useAuthStore;
 export const loginRequest = async (number: string, password: string) => {
   const response = await instance.post<AuthResponse>("/userAuth/signIn", { number, password });
   return response.data; 
-};
-
-export const useLogin = async (number: string, password: string) => {
-  const data = await loginRequest(number, password);
-  const token = data.token;
-  const userData = data.data.data;
-  console.log("Dados do usuário:", userData);
-  if (!token) throw new Error("Token não encontrado na resposta");
-  
-  Cookies.set("token", token);
-  return { token };
-};
-
-export const getUser = async () => {
-  const token = Cookies.get("token");
-
-  if (!token) throw new Error("Token não encontrado");
-
-  try {
-    const decoded: any = jwtDecode(token);
-    const userId = decoded.value;
-    const response = await instance.get(`/user/${userId}`);
-    return response.data.data; 
-  } catch (error) {
-    throw new Error("Erro ao buscar usuário");
-  }
-};
-
-export const logout = () => {
-  Cookies.remove("token");
-  window.location.href = "/";
 };

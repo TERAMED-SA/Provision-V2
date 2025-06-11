@@ -10,8 +10,8 @@ import { Button } from "../ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-import { getUser } from "@/features/auth/authApi"
 import instance from "@/lib/api"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function SettingsModal() {
   const t = useTranslations("settings")
@@ -38,13 +38,9 @@ export default function SettingsModal() {
   useEffect(() => {
     async function validateSession() {
       try {
-        const userData = await getUser()
+        const userData = useAuth()
         setUser(userData)
-        setProfileForm({
-          name: userData.name,
-          email: userData.email,
-          phoneNumber: userData.phoneNumber || "",
-        })
+        
       } catch (err) {
         toast(`${t("error")}: ${t("userNotAuthenticated")}`)
       } finally {

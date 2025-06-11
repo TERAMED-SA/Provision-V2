@@ -9,7 +9,8 @@ import { DataTable } from "../../ulils/data-table"
 import { toast } from "sonner"
 import { Button } from "../../ui/button"
 import instance from "@/lib/api"
-import { getUser } from "@/features/auth/authApi"
+import { useAuth } from "@/hooks/useAuth"
+
 
 export type Notification = {
   id: string
@@ -32,7 +33,7 @@ export function ActivityTable() {
     const fetchNotifications = async () => {
       setLoading(true);
       try {
-        const user = getUser();
+        const user = useAuth();
         if (!user) {
           setLoading(false);
           return;

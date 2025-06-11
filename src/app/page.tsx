@@ -11,7 +11,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import LocaleSwitcher from "../components/dashboard/locale-switcher";
-import { useLogin } from "@/features/auth/authApi";
+import { useAuth } from "@/hooks/useAuth";
 
 const createSchema = (t: any) =>
   z.object({
@@ -31,6 +31,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const t = useTranslations("login");
+  const { login, error } = useAuth();
   const router = useRouter();
 
   const schema = createSchema(t);
@@ -46,7 +47,7 @@ export default function Login() {
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-       await useLogin(data.number, data.password);
+       await login(data.number, data.password);
       toast.success(t("messages.loginSuccess"));
       router.push("/dashboard");
     } catch (error: unknown) {

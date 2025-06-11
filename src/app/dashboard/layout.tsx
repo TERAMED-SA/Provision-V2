@@ -3,7 +3,7 @@
 import Header from "@/components/dashboard/header/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import LoadingScreen from "@/components/ui/loadingScreen";
-import { getUser } from "@/features/auth/authApi";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -29,7 +29,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function validateSession() {
       try {
-        const user = await getUser();
+        const user = useAuth();
       } catch (err) {
         console.error("Usuário não autenticado", err);
       } finally {
