@@ -37,8 +37,8 @@ import { Separator } from '../../ui/separator';
 import { DataTable } from '../../ulils/data-table';
 import { usePermissionStore } from '@/hooks/use-permission-store';
 import { useRoleApi } from '@/hooks/use-role-api';
-import { getUser } from '@/features/auth/authApi';
 import instance from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface User {
   _id: string
@@ -233,7 +233,7 @@ export default function UserManagement() {
     }
 
     try {
-      const user = await getUser()
+      const user = useAuth()
       const response = await instance.post(`/userAuth/signUp?roler=${formData.roler || 3}`, {
         ...formData,
         password: "",
