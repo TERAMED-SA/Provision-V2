@@ -44,7 +44,7 @@ export function SectionCards() {
     {
       title: t("clientes"),
       value: companyCount,
-      link: "/dashboard/cliente",
+      link: "/dashboard",
       description: t("totalClientes"),
       icon: <Building2Icon className="size-5" />,
       color: "bg-amber-100 text-amber-500",
@@ -52,7 +52,7 @@ export function SectionCards() {
     {
       title: t("equipamentos"),
       value: equipmentCount,
-      link: "/dashboard/equipamentos",
+      link: "/dashboard",
       description: t("totalEquipamentos"),
       icon: <Hammer className="size-5" />,
       color: "bg-rose-100 text-rose-500",

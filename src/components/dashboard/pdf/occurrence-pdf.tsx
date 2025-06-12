@@ -1,6 +1,6 @@
 "use client"
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
-import { Notification } from "../data-table/occurrence"
+import { Occurrence } from "@/features/application/domain/entities/Occurrence"
 
 const styles = StyleSheet.create({
   page: {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
 })
 
 interface OccurrencePDFProps {
-  notification: Notification
+  notification: Occurrence
   getPriorityLabel: (priority: string) => string
 }
 
@@ -170,9 +170,9 @@ export function OccurrencePDF({ notification, getPriorityLabel }: OccurrencePDFP
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Prioridade:</Text>
-            <View style={[styles.priorityBadge, getPriorityStyle(notification.priority)]}>
-              <Text>{getPriorityLabel(notification.priority)}</Text>
-            </View>
+            <Text style={[styles.infoValue, getPriorityStyle(notification.priority)]}>
+              {getPriorityLabel(notification.priority)}
+            </Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -181,85 +181,41 @@ export function OccurrencePDF({ notification, getPriorityLabel }: OccurrencePDFP
           </View>
         </View>
 
-        <View style={styles.divider} />
-
-        <View>
-          <Text style={styles.sectionTitle}>DETALHES DA OCORRÊNCIA</Text>
-          <View style={styles.detailsContainer}>
-            <Text>{notification.details || "Sem detalhes disponíveis."}</Text>
-          </View>
+        <View style={styles.detailsContainer}>
+          <Text style={styles.sectionTitle}>DETALHES</Text>
+          <Text>{notification.details || "Sem detalhes disponíveis."}</Text>
         </View>
 
         {notification.workerInformation && notification.workerInformation.length > 0 && (
           <View>
-            <Text style={styles.sectionTitle}>INFORMAÇÃO DOS TRABALHADORES</Text>
+            <Text style={styles.sectionTitle}>TRABALHADORES</Text>
             <View style={styles.gridContainer}>
               {notification.workerInformation.map((worker, index) => (
-                <View key={`worker-${index}`} style={styles.gridItem}>
+                <View key={index} style={styles.gridItem}>
                   <View style={styles.itemCard}>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Nome:</Text>
-                      <Text style={styles.infoValue}>{worker.name}</Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Número de Empregado:</Text>
-                      <Text style={styles.infoValue}>{worker.employeeNumber}</Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Estado:</Text>
-                      <Text style={styles.infoValue}>{worker.state}</Text>
-                    </View>
-
-                    {worker.obs && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Observações:</Text>
-                        <Text style={styles.infoValue}>{worker.obs}</Text>
-                      </View>
-                    )}
+                    <Text style={{ fontSize: 10, fontWeight: "bold" }}>{worker.name}</Text>
+                    <Text style={{ fontSize: 8 }}>Nº {worker.employeeNumber}</Text>
+                    <Text style={{ fontSize: 8 }}>Estado: {worker.state}</Text>
+                    {worker.obs && <Text style={{ fontSize: 8 }}>Obs: {worker.obs}</Text>}
                   </View>
                 </View>
               ))}
             </View>
           </View>
         )}
-
-        <View style={styles.divider} />
 
         {notification.equipment && notification.equipment.length > 0 && (
           <View>
             <Text style={styles.sectionTitle}>EQUIPAMENTOS</Text>
             <View style={styles.gridContainer}>
               {notification.equipment.map((equip, index) => (
-                <View key={`equip-${index}`} style={styles.gridItem}>
+                <View key={index} style={styles.gridItem}>
                   <View style={styles.itemCard}>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Nome:</Text>
-                      <Text style={styles.infoValue}>{equip.name}</Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Número de Série:</Text>
-                      <Text style={styles.infoValue}>{equip.serialNumber}</Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Estado:</Text>
-                      <Text style={styles.infoValue}>{equip.state}</Text>
-                    </View>
-
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Centro de Custo:</Text>
-                      <Text style={styles.infoValue}>{equip.costCenter}</Text>
-                    </View>
-
-                    {equip.obs && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Observações:</Text>
-                        <Text style={styles.infoValue}>{equip.obs}</Text>
-                      </View>
-                    )}
+                    <Text style={{ fontSize: 10, fontWeight: "bold" }}>{equip.name}</Text>
+                    <Text style={{ fontSize: 8 }}>Nº Série: {equip.serialNumber}</Text>
+                    <Text style={{ fontSize: 8 }}>Estado: {equip.state}</Text>
+                    <Text style={{ fontSize: 8 }}>Centro de Custo: {equip.costCenter}</Text>
+                    {equip.obs && <Text style={{ fontSize: 8 }}>Obs: {equip.obs}</Text>}
                   </View>
                 </View>
               ))}
@@ -267,13 +223,12 @@ export function OccurrencePDF({ notification, getPriorityLabel }: OccurrencePDFP
           </View>
         )}
 
-        <Text style={styles.footer}>Gerado pelo sistema - Visualização da ocorrência</Text>
-
-        <Text
-          style={styles.pageNumber}
-          render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
-          fixed
-        />
+        <Text style={styles.footer}>
+          Relatório gerado em {new Date().toLocaleDateString()}
+        </Text>
+        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+          `${pageNumber} / ${totalPages}`
+        )} />
       </Page>
     </Document>
   )

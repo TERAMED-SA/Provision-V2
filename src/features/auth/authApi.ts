@@ -24,7 +24,6 @@ interface AuthActions {
 const useAuthStore = create<AuthState & AuthActions>()(
   devtools(
     (set, get) => ({
-      // Estado inicial
       user: null,
       token: null,
       isAuthenticated: false,
@@ -71,8 +70,7 @@ const useAuthStore = create<AuthState & AuthActions>()(
   )
 );
 
-export default useAuthStore;
-export const loginRequest = async (number: string, password: string) => {
+export default useAuthStore;export const loginRequest = async (number: string, password: string) => {
   const response = await instance.post<AuthResponse>("/userAuth/signIn", { number, password });
   return response.data; 
 };

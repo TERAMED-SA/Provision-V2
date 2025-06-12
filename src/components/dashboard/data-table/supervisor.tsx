@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown,  Edit, Trash, Eye } from "lucide-react"
 import { toast } from "sonner"
 import { DataTable } from "../../ulils/data-table"
-import instance from "@/src/lib/api"
 import { SupervisorDetailModal } from "../supervisor/supervisor-Detail-Modal"
 import { SupervisorAddForm } from "../supervisor/supervision-Add-Form"
 import { SupervisorEditForm } from "../supervisor/supervision-edit"
@@ -13,20 +12,11 @@ import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas"
 import { useTranslations } from "next-intl"
 import { Button } from "../../ui/button"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../ui/alert-dialog"
-
-export type Supervisor = {
-  _id: string
-  name: string
-  phoneNumber: string
-  email?: string
-  avatar?: string
-  active?: boolean
-  employeeId?: string
-  address?: string
-  createdAt?: string
-  mecCoordinator?: string
-}
-
+import { SupervisorFactory } from "@/features/application/infrastructure/factories/SupervisorFactory"
+import { Supervisor } from "@/features/application/domain/entities/Supervisor"
+import { GetSupervisorsUseCase } from "@/features/application/domain/use-cases/supervisor/GetSupervisorsUseCase"
+import { UpdateSupervisorUseCase } from "@/features/application/domain/use-cases/supervisor/UpdateSupervisorUseCase"
+import { DeleteSupervisorUseCase } from "@/features/application/domain/use-cases/supervisor/DeleteSupervisorUseCase"
 
 export function SupervisorTable() {
   const t = useTranslations("supervisors")
@@ -36,8 +26,11 @@ export function SupervisorTable() {
   const [editingSupervisor, setEditingSupervisor] = React.useState<Supervisor | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
-  const [searchTerm, setSearchTerm] = React.useState(""); // ADICIONE ESTA LINHA
-
+  const [searchTerm, setSearchTerm] = React.useState("")
+  const supervisorPort = SupervisorFactory.getSupervisorPort()
+  const getSupervisorsUseCase = new GetSupervisorsUseCase(supervisorPort)
+  const updateSupervisorUseCase = new UpdateSupervisorUseCase(supervisorPort)
+  const deleteSupervisorUseCase = new DeleteSupervisorUseCase(supervisorPort)
  
   React.useEffect(() => {
     fetchSupervisors()
@@ -58,22 +51,9 @@ export function SupervisorTable() {
   const fetchSupervisors = async () => {
     setLoading(true)
     try {
-      const response = await instance.get( `/user?size=100` ) 
-      if (response.data && Array.isArray(response.data.data.data)) {
-        const formattedData = response.data.data.data.map((user: any) => ({
-          _id: user._id,
-          name: user.name || "Sem nome",
-          phoneNumber: user.phoneNumber || "Não informado",
-          email: user.email,
-          active: user.active !== false, 
-          avatar: user.avatar
-        }))
-        
-        setSupervisors(formattedData)
-        setData(formattedData) 
-      } else {
-        toast.error("Formato de resposta inválido")
-      }
+      const supervisors = await getSupervisorsUseCase.execute()
+      setSupervisors(supervisors)
+      setData(supervisors)
     } catch (error) {
       console.error("Erro ao buscar supervisores:", error)
       toast.error("Não foi possível carregar os supervisores")
@@ -85,10 +65,10 @@ export function SupervisorTable() {
   const updateSupervisor = async (editedSupervisor: Supervisor) => {
     try {
       const { _id, active, ...payload } = editedSupervisor
-      await instance.put( `/user/updateMe/${_id}`, payload )
+      const updatedSupervisor = await updateSupervisorUseCase.execute(_id, payload)
 
       const updatedSupervisors = supervisors.map(sup => 
-        sup._id === _id ? { ...sup, ...payload, _id } : sup
+        sup._id === _id ? updatedSupervisor : sup
       );
       
       setSupervisors(updatedSupervisors);
@@ -98,6 +78,19 @@ export function SupervisorTable() {
     } catch (error) {
       console.error("Erro ao atualizar supervisor:", error)
       return Promise.reject(error)
+    }
+  }
+
+  const handleDelete = async (supervisorId: string) => {
+    try {
+      await deleteSupervisorUseCase.execute(supervisorId)
+      const updatedSupervisors = supervisors.filter(sup => sup._id !== supervisorId)
+      setSupervisors(updatedSupervisors)
+      setData(updatedSupervisors)
+      toast.success(t("deleteSuccess"))
+    } catch (error) {
+      console.error(t("deleteError"), error)
+      toast.error(t("deleteError"))
     }
   }
 
@@ -159,15 +152,6 @@ export function SupervisorTable() {
     cell: ({ row }) => {
       const supervisor = row.original
 
-      const handleDelete = async () => {
-        try {
-          toast.success(t("deleteSuccess"))
-        } catch (error) {
-          console.error(t("deleteError"), error)
-          toast.error(t("deleteError"))
-        }
-      }
-
       return (
         <div className="flex items-center gap-2">
           <Button
@@ -208,7 +192,7 @@ export function SupervisorTable() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>{t("deleteCancel")}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                <AlertDialogAction onClick={() => handleDelete(supervisor._id)} className="bg-red-600 hover:bg-red-700">
                   {t("deleteConfirm")}
                 </AlertDialogAction>
               </AlertDialogFooter>

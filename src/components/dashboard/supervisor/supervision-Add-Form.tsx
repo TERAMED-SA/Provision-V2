@@ -3,14 +3,14 @@
 import * as React from "react"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import instance from "@/src/lib/api"
-import { getUser } from "@/src/features/auth/authApi"
 import { useTranslations } from "next-intl"
 import { Label } from "../../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog"
+import { useAuth } from "@/hooks/useAuth"
+import instance from "@/lib/api"
 
 interface SupervisorAddFormProps {
   open: boolean
@@ -60,7 +60,7 @@ export function SupervisorAddForm({
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const user = getUser()
+      const user = useAuth()
       await instance.post(
         `/userAuth/signUp?roler=3`,
         {

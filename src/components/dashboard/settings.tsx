@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function SettingsModal() {
   const t = useTranslations("settings")
+  const { user: authUser } = useAuth()
   const [user, setUser] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
@@ -36,19 +37,16 @@ export default function SettingsModal() {
   const [profileError, setProfileError] = useState<{ phoneNumber?: string }>({})
 
   useEffect(() => {
-    async function validateSession() {
-      try {
-        const userData = useAuth()
-        setUser(userData)
-        
-      } catch (err) {
-        toast(`${t("error")}: ${t("userNotAuthenticated")}`)
-      } finally {
-        setLoading(false)
-      }
+    if (authUser) {
+      setUser(authUser)
+      setProfileForm({
+        name: authUser.name || "",
+        email: authUser.email || "",
+        phoneNumber: authUser.phoneNumber || "",
+      })
     }
-    validateSession()
-  }, [t])
+    setLoading(false)
+  }, [authUser])
 
   const validateProfile = () => {
     const errors: { phoneNumber?: string } = {}

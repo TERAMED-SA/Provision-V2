@@ -367,20 +367,20 @@ export function Sidebar({
         <div
           className={cn(
             "min-h-screen h-full flex flex-col transition-all duration-300 border-r overflow-hidden",
-            collapsed ? "w-20" : "w-72",
+            collapsed ? "w-20 py-8" : "w-72",
             isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200",
             className
           )}
         >
-          <div className="flex items-center justify-center px-4 ">
+          <Link href="/" className="flex items-center justify-center px-4 ">
             {collapsed ? (
-              <Image src="/logo.png" alt="Logo" width={40} height={40} />
+              <Image src="/logo.png" alt="Logo" width={80} height={80} />
             ) : (
               <div className="flex items-center pt-6">
                 <Image src="/logo.png" alt="Logo" width={100} height={100} className="mr-3" />
               </div>
             )}
-          </div>
+          </Link>
 
           <div className="flex-1 overflow-y-auto p-4 custom-scrollbar hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
             <nav className="space-y-6">
@@ -403,11 +403,20 @@ export function Sidebar({
               ))}
             </nav>
           </div>
+
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <Image
+              src={collapsed ? "/prometeus.jpeg" : "/prometeus-w-80.jpeg"}
+              alt="Prometeus"
+              width={collapsed ? 80 : 288}
+              height={collapsed ? 80 : 80}
+              className="w-full object-contain"
+            />
+          </div>
         </div>
       )}
 
-   
-   
+      <div id="navigation-menu-portal" className="fixed z-50" />
     </>
   )
 }

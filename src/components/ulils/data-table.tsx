@@ -55,6 +55,8 @@ interface DataTableProps<TData, TValue> {
   }
   emptyMessage?: string
   initialColumnVisibility?: VisibilityState
+  onLoadMore?: () => void
+  hasMore?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -76,6 +78,8 @@ export function DataTable<TData, TValue>({
   cardOptions,
   emptyMessage,
   initialColumnVisibility = {},
+  onLoadMore,
+  hasMore = false,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations('DataTable')
   
@@ -83,6 +87,7 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility)
   const [rowSelection, setRowSelection] = React.useState({})
+  const tableRef = React.useRef<HTMLDivElement>(null)
 
   const table = useReactTable({
     data,
@@ -101,7 +106,34 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
     },
+    initialState: {
+      pagination: {
+        pageSize: 100,
+      },
+    },
   })
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current || !onLoadMore || !hasMore || loading) return
+
+      const { scrollTop, scrollHeight, clientHeight } = tableRef.current
+      if (scrollHeight - scrollTop <= clientHeight * 1.5) {
+        onLoadMore()
+      }
+    }
+
+    const currentRef = tableRef.current
+    if (currentRef) {
+      currentRef.addEventListener('scroll', handleScroll)
+    }
+
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener('scroll', handleScroll)
+      }
+    }
+  }, [onLoadMore, hasMore, loading])
 
   React.useEffect(() => {
     if (date && table.getColumn("createdAt")) {
@@ -278,6 +310,12 @@ export function DataTable<TData, TValue>({
     </div>
   )
 
+  const renderLoadingIndicator = () => (
+    <div className="flex items-center justify-center py-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  )
+
   return (
     <div className="w-full">
       <Card className="border border-gray-300 rounded-sm dark:border-gray-700 shadow-none p-4 sm:p-6 md:p-8 dark:bg-gray-800">
@@ -286,7 +324,6 @@ export function DataTable<TData, TValue>({
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 truncate">
               {title}
             </h1>
-          
           </div>
           <div className="flex items-center gap-3 flex-shrink-0 ">
             <DataTableFilters
@@ -304,76 +341,88 @@ export function DataTable<TData, TValue>({
         </div>
 
         {viewMode === "table" ? (
-          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg  dark:border-gray-700">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead
-                        key={header.id}
-                        className="py-3 sm:py-4 px-2 sm:px-4 text-sm font-semibold text-gray-700 dark:text-gray-200  tracking-wider bg-gray-50 dark:bg-gray-800 first:pl-4 sm:first:pl-6 last:pr-4 sm:last:pr-6 whitespace-nowrap"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
+          <div className="relative h-[600px]">
+            <div className="absolute inset-0 overflow-auto" ref={tableRef}>
+              <div className="min-w-full">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 shadow-sm">
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700">
+                        {headerGroup.headers.map((header) => (
+                          <TableHead
+                            key={header.id}
+                            className="py-3 sm:py-4 px-2 sm:px-4 text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wider first:pl-4 sm:first:pl-6 last:pr-4 sm:last:pr-6 whitespace-nowrap bg-gray-50 dark:bg-gray-800"
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
                     ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  renderSkeletonRows()
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row, index) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className={`border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors duration-200 ${
-                        index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50/30 dark:bg-gray-800/50"
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-2 sm:py-0.5 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-gray-100 first:pl-4 sm:first:pl-6 last:pr-4 sm:last:pr-6">
-                          {cell.column.id === nameAccessor && hasAvatar ? (
-                            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </div>
-                          ) : (
-                            <div className="truncate">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </div>
-                          )}
+                  </TableHeader>
+                  <TableBody>
+                    {loading && data.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={columns.length} className="h-32 text-center">
+                          {renderLoadingIndicator()}
                         </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-32 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                          <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" />
-                        </div>
-                        <div className="text-base sm:text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">
-                          {t('noDataFound')}
-                        </div>
-                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center px-4">
-                          {emptyMessage || t('defaultEmptyMessage')}
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                      </TableRow>
+                    ) : table.getRowModel().rows?.length ? (
+                      table.getRowModel().rows.map((row, index) => (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && "selected"}
+                          className={`border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors duration-200 ${
+                            index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50/30 dark:bg-gray-800/50"
+                          }`}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id} className="py-2 sm:py-0.5 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-gray-100 first:pl-4 sm:first:pl-6 last:pr-4 sm:last:pr-6">
+                              {cell.column.id === nameAccessor && hasAvatar ? (
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </div>
+                              ) : (
+                                <div className="truncate">
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </div>
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={columns.length} className="h-32 text-center">
+                          <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                              <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" />
+                            </div>
+                            <div className="text-base sm:text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">
+                              {t('noDataFound')}
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center px-4">
+                              {emptyMessage || t('defaultEmptyMessage')}
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              {loading && data.length > 0 && renderLoadingIndicator()}
+            </div>
           </div>
         ) : (
-          <>{loading ? renderCardSkeleton() : renderCardView()}</>
+          <div className="relative h-[600px]">
+            <div className="absolute inset-0 overflow-auto" ref={tableRef}>
+              {loading && data.length === 0 ? renderLoadingIndicator() : renderCardView()}
+              {loading && data.length > 0 && renderLoadingIndicator()}
+            </div>
+          </div>
         )}
-
-        {totalPages > 1 && !loading && renderPagination()}
       </Card>
     </div>
   )

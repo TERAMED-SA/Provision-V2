@@ -1,12 +1,10 @@
 "use client";
-
 import Header from "@/components/dashboard/header/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import LoadingScreen from "@/components/ui/loadingScreen";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
@@ -20,24 +18,11 @@ function useIsMobile() {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const router = useRouter();
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    async function validateSession() {
-      try {
-        const user = useAuth();
-      } catch (err) {
-        console.error("Usuário não autenticado", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    validateSession();
-  }, [router]);
+  const { user, loading, isAuthenticated } = useAuth();
 
   const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
@@ -49,7 +34,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (loading) return <LoadingScreen message="Validando sessão do usuário..." />;
+  if (loading) {
+    return <LoadingScreen message="Validando sessão do usuário..." />;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <LoadingScreen message="Redirecionando..." />;
+  }
 
   return (
     <div className="flex h-screen">

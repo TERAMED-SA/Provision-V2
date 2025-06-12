@@ -12,38 +12,11 @@ import type { Column, Row } from "@tanstack/react-table";
 import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
-import instance from "@/lib/api";
+import { OccurrenceFactory } from "@/features/application/infrastructure/factories/OccurrenceFactory";
+import { Occurrence } from "@/features/application/domain/entities/Occurrence";
+import { OccurrenceDetailModal } from "./occurrence-detail-modal";
 
-export type Notification = {
-  _id: string;
-  idNotification?: string;
-  createdAt: string;
-  createdAtTime: string;
-  createdAtDate: Date;
-  siteName: string;
-  costCenter: string;
-  supervisorName: string;
-  priority: "BAIXA" | "MEDIA" | "ALTA" | "CRITICA";
-  details: string;
-  numberOfWorkers?: number;
-  workerInformation?: WorkerInfo[];
-  equipment?: Equipment[];
-};
-
-type WorkerInfo = {
-  name: string;
-  employeeNumber: string;
-  state: string;
-  obs?: string;
-};
-
-type Equipment = {
-  name: string;
-  serialNumber: string;
-  state: string;
-  costCenter: string;
-  obs?: string;
-};
+export type Notification = Occurrence;
 
 const PriorityBadge = ({
   priority,
@@ -124,22 +97,15 @@ export function OccurrenceTable() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [data, setData] = React.useState<Notification[]>([]);
   const [dataInitialized, setDataInitialized] = React.useState(false);
+  const [selectedNotification, setSelectedNotification] = React.useState<Notification | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const fetchNotifications = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await instance.get(`/occurrence?size=100`);
-      const formattedNotifications = response.data.data.data.map(
-        (notification: any) => ({
-          ...notification,
-          createdAt: format(new Date(notification.createdAt), "dd/MM/yyyy"),
-          createdAtTime: format(new Date(notification.createdAt), "HH:mm"),
-          createdAtDate: new Date(notification.createdAt),
-          supervisorName: notification.supervisorName || "Carregando...",
-          siteName: notification.name || "Carregando...",
-        })
-      );
-      setNotifications(formattedNotifications);
+      const getOccurrencesUseCase = OccurrenceFactory.createGetOccurrencesUseCase();
+      const occurrences = await getOccurrencesUseCase.execute();
+      setNotifications(occurrences);
     } catch (error: any) {
       console.error("Error fetching notifications:", error.message);
       toast.error("Erro ao carregar ocorrências");
@@ -150,8 +116,9 @@ export function OccurrenceTable() {
 
   const fetchMetrics = React.useCallback(async () => {
     try {
-      const response = await instance.get(`/admin/metrics?size=100&page=1`);
-      setMetricsData(response.data.data.sites);
+      const response = await fetch('/api/metrics?size=100&page=1');
+      const data = await response.json();
+      setMetricsData(data.data.sites);
     } catch (error: any) {
       console.error("Error fetching metrics:", error.message);
       toast.error("Erro ao carregar métricas");
@@ -210,12 +177,7 @@ export function OccurrenceTable() {
       );
       setData(sorted);
     }
-  }, [
-    notifications,
-    metricsData,
-    updateNotificationsWithMetrics,
-    updateNotificationsWithMetrics,
-  ]);
+  }, [notifications, metricsData, updateNotificationsWithMetrics]);
 
   const handleViewDetails = React.useCallback(
     (notification: Notification) => {
@@ -225,14 +187,14 @@ export function OccurrenceTable() {
           return;
         }
 
-        const url = `/dashboard/occurrence/${notification._id}`;
-        router.push(url);
+        setSelectedNotification(notification);
+        setIsModalOpen(true);
       } catch (error) {
-        console.error("Erro ao navegar para detalhes:", error);
+        console.error("Erro ao abrir detalhes:", error);
         toast.error("Erro ao abrir detalhes da ocorrência");
       }
     },
-    [router]
+    []
   );
 
   const columns = React.useMemo(
@@ -339,49 +301,20 @@ export function OccurrenceTable() {
       },
       {
         id: "actions",
-        header: "Ações",
+        header: "Ações",  
         cell: ({ row }: { row: Row<Notification> }) => {
           const notification = row.original;
 
           return (
-            <div className="flex items-center gap-2">
+            <div>
               <Button
                 variant="ghost"
-                size="sm"
-                className="cursor-pointer text-gray-600 hover:text-green-900 hover:bg-green-100"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleViewDetails(notification);
-                }}
+                size="icon"
+                className="cursor-pointer text-gray-600 hover:text-gray-100 hover:bg-gray-800"
+                onClick={() => handleViewDetails(notification)}
               >
                 <Eye className="h-4 w-4" />
               </Button>
-
-              <PDFDownloadLink
-                document={
-                  <OccurrencePDF
-                    notification={notification}
-                    getPriorityLabel={getPriorityLabel}
-                  />
-                }
-                fileName={`ocorrencia-${notification.siteName}-${notification._id}.pdf`}
-                style={{ textDecoration: "none" }}
-              >
-                {({ loading: pdfLoading }: { loading: boolean }) => (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="cursor-pointer text-blue-600 hover:text-blue-900 hover:bg-blue-100"
-                    disabled={pdfLoading}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                )}
-              </PDFDownloadLink>
             </div>
           );
         },
@@ -412,6 +345,12 @@ export function OccurrenceTable() {
           }}
         />
       </div>
+
+      <OccurrenceDetailModal
+        notification={selectedNotification}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
