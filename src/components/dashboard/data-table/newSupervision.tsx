@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
 import { Separator } from "../../ui/separator"
 import { Building, User, Package, Calendar, Clock, Info } from "lucide-react"
 import { BreadcrumbRoutas } from "@/components/ulils/breadcrumbRoutas"
+import { ptBR } from "date-fns/locale"
 
 // Definição dos tipos
 export type WorkerInfo = {
@@ -93,19 +94,25 @@ export function NewSupervionTable() {
   const fetchNotifications = React.useCallback(async () => {
     try {
       setIsLoading(true)
-      const response = await instance.get(`/supervision?size=100`)
+      const response = await instance.get(`/supervision?size=5000`)
       
       const formattedNotifications = response.data.data.data.map((notification: any) => {
+        // Ensure we're creating a proper Date object from the ISO string
         const createdAtDate = new Date(notification.createdAt)
+        
+        // Format the date in Brazilian format
+        const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
+        const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
+        
         return {
           ...notification,
-          createdAt: format(createdAtDate, "dd/MM/yyyy"),
-          createdAtTime: format(createdAtDate, "HH:mm"),
+          createdAt: formattedDate,
+          createdAtTime: formattedTime,
           createdAtDate: createdAtDate,
           supervisorName: notification.supervisorName || "Carregando...",
           siteName: notification.name || "Carregando...",
         }
-      })
+      }).sort((a: Notification, b: Notification) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
    
       setNotifications(formattedNotifications)
     } catch (error: any) {
@@ -142,61 +149,47 @@ export function NewSupervionTable() {
     })
   }, [])
 
+  // Efeito para carregar dados iniciais e configurar polling
   React.useEffect(() => {
     const loadInitialData = async () => {
       await fetchNotifications()
       await fetchMetrics()
     }
     loadInitialData()
+
+    // Configurar polling para atualizar dados a cada 30 segundos
+    const intervalId = setInterval(() => {
+      fetchNotifications()
+    }, 30000)
+
+    return () => clearInterval(intervalId)
   }, [fetchNotifications, fetchMetrics])
 
+  // Efeito para atualizar dados quando notifications ou metrics mudam
   React.useEffect(() => {
-    if (notifications.length > 0 && metricsData.length > 0) {
-      const updatedNotifications = updateNotificationsWithMetrics(notifications, metricsData)
-      const sorted = [...updatedNotifications].sort(
-        (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-      )
-      setData(sorted)
-    } else if (notifications.length > 0) {
-      const sorted = [...notifications].sort(
-        (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-      )
-      setData(sorted)
-    }
-  }, [notifications, metricsData, updateNotificationsWithMetrics])
+    if (notifications.length > 0) {
+      const updatedNotifications = metricsData.length > 0 
+        ? updateNotificationsWithMetrics(notifications, metricsData)
+        : notifications
 
-  React.useEffect(() => {
-    if (!date) {
-      if (notifications.length > 0 && metricsData.length > 0) {
-        const updatedNotifications = updateNotificationsWithMetrics(notifications, metricsData)
-        const sorted = [...updatedNotifications].sort(
-          (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-        )
-        setData(sorted)
-      }
-    } else {
-      const selectedDateStr = format(date, "dd/MM/yyyy")
-      if (notifications.length > 0 && metricsData.length > 0) {
-        const updatedNotifications = updateNotificationsWithMetrics(notifications, metricsData)
-        const filtered = updatedNotifications.filter(
-          notification => notification.createdAt === selectedDateStr
-        )
-        const sorted = [...filtered].sort(
-          (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-        )
-        setData(sorted)
-      } else if (notifications.length > 0) {
-        const filtered = notifications.filter(
-          notification => notification.createdAt === selectedDateStr
-        )
-        const sorted = [...filtered].sort(
-          (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-        )
-        setData(sorted)
+      if (!date) {
+        setData(updatedNotifications)
+      } else {
+        const filtered = updatedNotifications.filter(notification => {
+          const notificationDate = notification.createdAtDate
+          const selectedDate = new Date(date)
+          
+          // Reset time part to ensure we're only comparing dates
+          selectedDate.setHours(0, 0, 0, 0)
+          const notificationDateOnly = new Date(notificationDate)
+          notificationDateOnly.setHours(0, 0, 0, 0)
+          
+          return notificationDateOnly.getTime() === selectedDate.getTime()
+        })
+        setData(filtered)
       }
     }
-  }, [date, notifications, metricsData, updateNotificationsWithMetrics])
-
+  }, [notifications, metricsData, date, updateNotificationsWithMetrics])
 
   const handleViewDetails = React.useCallback((notification: Notification) => {
     try {
@@ -302,6 +295,7 @@ export function NewSupervionTable() {
         title="Supervisão"
         filterOptions={{
           enableSiteFilter: true,
+          enableColumnVisibility: true,
           enableDateFilter: true,
         }}
         date={date}

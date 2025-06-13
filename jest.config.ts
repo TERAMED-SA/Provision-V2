@@ -44,6 +44,13 @@ const config: Config = {
       statements: 80,
     },
   },
+  reporters: [
+    "default",
+    ["jest-html-reporter", {
+      pageTitle: "Relatório de Testes",
+      outputPath: "test-report.html"
+    }]
+  ]
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

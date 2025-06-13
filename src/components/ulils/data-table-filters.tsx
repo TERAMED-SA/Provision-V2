@@ -9,6 +9,8 @@ import {
   LayoutGrid,
   Plus,
   Search,
+  Building,
+  User,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -17,6 +19,7 @@ import { Calendar } from "../ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Checkbox } from "../ui/checkbox";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface DataTableFiltersProps<TData> {
   table: Table<TData>;
@@ -50,6 +53,8 @@ export function DataTableFilters<TData>({
   viewMode = "table",
   setViewMode = () => {},
 }: DataTableFiltersProps<TData>) {
+  const t = useTranslations('DataTable.filters');
+  
   const {
     enableNameFilter = false,
     enableDateFilter = false,
@@ -62,20 +67,35 @@ export function DataTableFilters<TData>({
   } = filterOptions;
 
   useEffect(() => {
-    // Aplicar o searchTerm como um filtro global
     if (searchTerm) {
       table.setGlobalFilter(searchTerm);
+    } else {
+      table.resetGlobalFilter();
     }
   }, [table, searchTerm]);
 
+  const handleSiteFilter = (value: string) => {
+    const column = table.getColumn("siteName");
+    if (column) {
+      column.setFilterValue(value);
+    }
+  };
+
+  const handleSupervisorFilter = (value: string) => {
+    const column = table.getColumn("supervisorName");
+    if (column) {
+      column.setFilterValue(value);
+    }
+  };
+
   return (
-    <div className="flex  items-center gap-2  ">
+    <div className="flex flex-wrap items-center gap-3">
       {/* Filtro de nome/busca */}
       {enableNameFilter && (
         <div className="relative w-full md:w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar..."
+            placeholder={t('searchByName')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -85,33 +105,28 @@ export function DataTableFilters<TData>({
 
       {/* Filtro de site */}
       {enableSiteFilter && (
-        <Input
-          placeholder="Filtrar por site..."
-          value={
-            (table.getColumn("name")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className=""
-        />
+        <div className="relative w-full md:w-64">
+          <Building className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('searchBySite')}
+            value={(table.getColumn("siteName")?.getFilterValue() as string) ?? ""}
+            onChange={(event) => handleSiteFilter(event.target.value)}
+            className="pl-8"
+          />
+        </div>
       )}
 
       {/* Filtro de supervisor */}
       {enableSupervisorFilter && (
-        <Input
-          placeholder="Filtrar por supervisor..."
-          value={
-            (table.getColumn("supervisorName")?.getFilterValue() as string) ??
-            ""
-          }
-          onChange={(event) =>
-            table
-              .getColumn("supervisorName")
-              ?.setFilterValue(event.target.value)
-          }
-          className=""
-        />
+        <div className="relative w-full md:w-64">
+          <User className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('searchBySupervisor')}
+            value={(table.getColumn("supervisorName")?.getFilterValue() as string) ?? ""}
+            onChange={(event) => handleSupervisorFilter(event.target.value)}
+            className="pl-8"
+          />
+        </div>
       )}
 
       {/* Filtro de data */}
@@ -127,7 +142,7 @@ export function DataTableFilters<TData>({
               <CalendarIcon className="mr-2 h-4 w-4" />
               {date
                 ? format(date, "PPP", { locale: ptBR })
-                : "Filtrar por data"}
+                : t('filterByDate')}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -146,7 +161,7 @@ export function DataTableFilters<TData>({
                       size="sm"
                       onClick={() => setDate(undefined)}
                     >
-                      Limpar
+                      {t('clear')}
                     </Button>
                   </div>
                 )
@@ -162,6 +177,7 @@ export function DataTableFilters<TData>({
           variant="outline"
           size="icon"
           onClick={() => setViewMode(viewMode === "table" ? "card" : "table")}
+          title={t(`viewMode.${viewMode}`)}
         >
           {viewMode === "table" ? (
             <List className="h-4 w-4" />
@@ -188,7 +204,7 @@ export function DataTableFilters<TData>({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
-              Colunas <ChevronDown className="ml-2 h-4 w-4" />
+              {t('columns')} <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[180px]">

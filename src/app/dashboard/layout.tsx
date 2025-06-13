@@ -26,13 +26,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
-  const handleSidebarToggle = () => {
-    if (isMobile) {
-      setIsSheetOpen(true);
-    } else {
-      toggleSidebar();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/");
     }
-  };
+  }, [isAuthenticated, router]);
 
   if (loading) {
     return <LoadingScreen message="Validando sessão do usuário..." />;
@@ -44,6 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen">
+    
       <Sidebar 
         collapsed={sidebarCollapsed} 
         isMobile={isMobile}
@@ -51,8 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setIsSheetOpen={setIsSheetOpen}
         className={isMobile ? "hidden" : ""}
       />
-      
-      <div className="flex flex-col flex-1 h-screen">
+      <div className="flex flex-col flex-1 h-screen">   
         <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 ">
           <Header
             collapsed={sidebarCollapsed}
@@ -62,7 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onOpenSheet={() => setIsSheetOpen(true)}
           />
         </div>
-        <main className="flex-1 overflow-y-auto bg-[#FAFAFB] p-3 md:px-6 md:py-4 dark:bg-gray-900">
+        <main className="flex-1 overflow-y-auto bg-[#F0F5F9] p-3 md:px-6 md:py-4 dark:bg-gray-900">
           {children}
         </main>
       </div>

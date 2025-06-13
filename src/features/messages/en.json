@@ -70,7 +70,19 @@
       "subtitle": "Manage and visualize your data efficiently",
       "showing": "Showing {start} to {end} of {total} records",
       "noDataFound": "No data found",
-      "defaultEmptyMessage": "No records found to display"
+      "defaultEmptyMessage": "No records found to display",
+      "filters": {
+        "searchByName": "Search by name...",
+        "searchBySite": "Search by site...",
+        "searchBySupervisor": "Search by supervisor...",
+        "filterByDate": "Filter by date",
+        "clear": "Clear",
+        "columns": "Columns",
+        "viewMode": {
+          "table": "Table view",
+          "card": "Card view"
+        }
+      }
     },
     "login": {
     "leftPanel": {
@@ -296,6 +308,16 @@
       "failedToDeleteSite": "Failed to delete site. Please try again.",
       "failedToLoadCompanyInfo": "Failed to load company information",
       "failedToLoadSupervisions": "Failed to load supervisions"
+    },
+        "placeholders": {
+      "name": "Site name",
+      "address": "Address",
+      "ctClient": "Client code",
+      "costCenter": "Cost center",
+      "numberOfWorkers": "Number of workers",
+      "supervisorCode": "Supervisor code",
+      "zone": "Zone"
     }
   }
+   
 }

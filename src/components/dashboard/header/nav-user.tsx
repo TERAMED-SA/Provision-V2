@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChevronDown, LogOut, Settings } from "lucide-react";
-import { useRouter } from "next/navigation";
 import SettingsModal from "../settings";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../ui/alert-dialog";
 import LoadingScreen from "../../ui/loadingScreen";
@@ -13,11 +12,10 @@ import { useAuth } from "@/hooks/useAuth";
 
 
 export function NavUser() {
-  const router = useRouter();
   const { user , logout } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-
+console.log(user);
 
   if (!user) {
     return <LoadingScreen message="Carregando usuário..." />;
@@ -43,6 +41,7 @@ export function NavUser() {
             </Avatar>
             <div className="hidden md:grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-semibold">{user.name}</span>
+              <span className="truncate font-medium text-zinc-600 text-xs ">{user?.type}</span>
             </div>
             <ChevronDown className="ml-auto size-4" />
           </div>

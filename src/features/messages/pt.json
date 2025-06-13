@@ -69,7 +69,19 @@
       "subtitle": "Gerencie e visualize seus dados de forma eficiente",
       "showing": "Mostrando {start} a {end} de {total} registros",
       "noDataFound": "Nenhum dado encontrado",
-      "defaultEmptyMessage": "Nenhum registro encontrado para exibir"
+      "defaultEmptyMessage": "Nenhum registro encontrado para exibir",
+      "filters": {
+        "searchByName": "Buscar por nome...",
+        "searchBySite": "Buscar por site...",
+        "searchBySupervisor": "Buscar por supervisor...",
+        "filterByDate": "Filtrar por data",
+        "clear": "Limpar",
+        "columns": "Colunas",
+        "viewMode": {
+          "table": "Visualização em tabela",
+          "card": "Visualização em cards"
+        }
+      }
     },
      "login": {
     "leftPanel": {
@@ -295,6 +307,15 @@
       "failedToDeleteSite": "Falha ao excluir site. Tente novamente.",
       "failedToLoadCompanyInfo": "Falha ao carregar informações da empresa",
       "failedToLoadSupervisions": "Falha ao carregar supervisões"
+    },
+     "placeholders": {
+      "name": "Nome do local",
+      "address": "Endereço",
+      "ctClient": "Código do cliente",
+      "costCenter": "Centro de custo",
+      "numberOfWorkers": "Número de trabalhadores",
+      "supervisorCode": "Código do supervisor",
+      "zone": "Zona"
     }
   }
 }

@@ -7,14 +7,14 @@ import { toast } from "sonner"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Edit, Trash, Plus,  Eye } from "lucide-react"
 import { useTranslations } from "next-intl"
-import instance from "@/src/lib/api"
-import { DataTable } from "@/src/components/ulils/data-table"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTrigger } from "@/src/components/ui/alert-dialog"
-import { AlertDialogTitle } from "@radix-ui/react-alert-dialog"
-import { Input } from "@/src/components/ui/input"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/src/components/ui/dialog"
-import { Button } from "@/src/components/ui/button"
-import { BreadcrumbRoutas } from "@/src/components/ulils/breadcrumbRoutas"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Input } from "@/components/ui/input"
+import instance from "@/lib/api"
+import { BreadcrumbRoutas } from "@/components/ulils/breadcrumbRoutas"
+import { Button } from "@/components/ui/button"
+import { DataTable } from "@/components/ulils/data-table"
+
 
 
 interface Site {
@@ -49,6 +49,7 @@ interface FormData {
   zone: string
 }
 
+
 export default function CompanySites() {
   const t = useTranslations('companySites')
   const searchParams = useSearchParams()
@@ -81,6 +82,10 @@ export default function CompanySites() {
       cell: ({ row }) => (
         <span>{row.original.costCenter}</span>
       ),
+      filterFn: (row, id, value: string) => {
+        const cellValue = row.getValue(id) as string
+        return cellValue.toLowerCase().includes(value.toLowerCase())
+      },
     },
     {
       accessorKey: "name",
@@ -90,6 +95,10 @@ export default function CompanySites() {
           {row.original.name}
         </span>
       ),
+      filterFn: (row, id, value: string) => {
+        const cellValue = row.getValue(id) as string
+        return cellValue.toLowerCase().includes(value.toLowerCase())
+      },
     },
     {
       accessorKey: "address",
@@ -97,6 +106,10 @@ export default function CompanySites() {
       cell: ({ row }) => (
         <span>{row.original.address || "N/A"}</span>
       ),
+      filterFn: (row, id, value: string) => {
+        const cellValue = row.getValue(id) as string | undefined
+        return (cellValue || "").toLowerCase().includes(value.toLowerCase())
+      },
     },
    
     {
@@ -105,6 +118,10 @@ export default function CompanySites() {
       cell: ({ row }) => (
         <span>{row.original.numberOfWorkers}</span>
       ),
+      filterFn: (row, id, value: string) => {
+        const cellValue = row.getValue(id) as number
+        return cellValue.toString().includes(value)
+      },
     },
     {
       accessorKey: "supervisorCode",
@@ -112,6 +129,10 @@ export default function CompanySites() {
       cell: ({ row }) => (
         <span>{row.original.supervisorCode}</span>
       ),
+      filterFn: (row, id, value: string) => {
+        const cellValue = row.getValue(id) as string
+        return cellValue.toLowerCase().includes(value.toLowerCase())
+      },
     },
     {
       accessorKey: "zone",
@@ -119,6 +140,10 @@ export default function CompanySites() {
       cell: ({ row }) => (
         <span>{row.original.zone}</span>
       ),
+      filterFn: (row, id, value: string) => {
+        const cellValue = row.getValue(id) as string
+        return cellValue.toLowerCase().includes(value.toLowerCase())
+      },
     },
     {
       id: "actions",
@@ -323,7 +348,7 @@ export default function CompanySites() {
         <div>
           <AlertDialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <AlertDialogTrigger asChild>
-              <Button className="bg-blue-600 text-white cursor-pointer">
+              <Button className="bg-black text-white cursor-pointer">
                 <Plus className="h-4 w-4" />
                 {t('buttons.addSite')}
               </Button>
@@ -337,31 +362,74 @@ export default function CompanySites() {
               <div className="grid grid-cols-2 gap-4 py-4 max-h-96 overflow-y-auto">
                 <div className="space-y-2">
                   <label htmlFor="name">{t('fields.name')}:</label>
-                  <Input id="name" name="name" value={formData.name} onChange={handleInputChange} />
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.name')} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="address">{t('fields.address')}:</label>
-                  <Input id="address" name="address" value={formData.address} onChange={handleInputChange} />
+                  <Input 
+                    id="address" 
+                    name="address" 
+                    value={formData.address} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.address')} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="ctClient">{t('fields.ctClient')}:</label>
-                  <Input id="ctClient" name="ctClient" value={formData.ctClient} onChange={handleInputChange} />
+                  <Input 
+                    id="ctClient" 
+                    name="ctClient" 
+                    value={formData.ctClient} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.ctClient')} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="costCenter">{t('fields.costCenter')}:</label>
-                  <Input id="costCenter" name="costCenter" value={formData.costCenter} onChange={handleInputChange} />
+                  <Input 
+                    id="costCenter" 
+                    name="costCenter" 
+                    value={formData.costCenter} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.costCenter')} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="numberOfWorkers">{t('fields.numberOfWorkers')}:</label>
-                  <Input id="numberOfWorkers" name="numberOfWorkers" type="number" value={formData.numberOfWorkers} onChange={handleInputChange} />
+                  <Input 
+                    id="numberOfWorkers" 
+                    name="numberOfWorkers" 
+                    type="number" 
+                    value={formData.numberOfWorkers} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.numberOfWorkers')} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="supervisorCode">{t('fields.supervisorCode')}:</label>
-                  <Input id="supervisorCode" name="supervisorCode" value={formData.supervisorCode} onChange={handleInputChange} />
+                  <Input 
+                    id="supervisorCode" 
+                    name="supervisorCode" 
+                    value={formData.supervisorCode} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.supervisorCode')} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="zone">{t('fields.zone')}:</label>
-                  <Input id="zone" name="zone" value={formData.zone} onChange={handleInputChange} />
+                  <Input 
+                    id="zone" 
+                    name="zone" 
+                    value={formData.zone} 
+                    onChange={handleInputChange}
+                    placeholder={t('placeholders.zone')} 
+                  />
                 </div>
               </div>
 
@@ -438,31 +506,56 @@ export default function CompanySites() {
         <Dialog open={isCompanyInfoModalOpen} onOpenChange={setIsCompanyInfoModalOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{t('modals.companyInfo.title')}</DialogTitle>
-              <DialogDescription>{t('modals.companyInfo.description')}</DialogDescription>
+              <DialogTitle className="text-2xl font-bold text-gray-900">{t('modals.companyInfo.title')}</DialogTitle>
+              <DialogDescription className="text-gray-600">{t('modals.companyInfo.description')}</DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4">
+            <div className="space-y-6 py-4">
               {selectedSite && (
                 <>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">{t('modals.companyInfo.siteInfo')}</h3>
-                    <p><strong>{t('fields.name')}:</strong> {selectedSite.name}</p>
-                    <p><strong>{t('fields.costCenter')}:</strong> {selectedSite.costCenter}</p>
-                    <p><strong>{t('fields.supervisorCode')}:</strong> {selectedSite.supervisorCode}</p>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-lg mb-3 text-gray-900 border-b pb-2">{t('modals.companyInfo.siteInfo')}</h3>
+                    <div className="space-y-2">
+                      <p className="flex justify-between">
+                        <span className="font-medium text-gray-700">{t('fields.name')}:</span>
+                        <span className="text-gray-900">{selectedSite.name}</span>
+                      </p>
+                      <p className="flex justify-between">
+                        <span className="font-medium text-gray-700">{t('fields.costCenter')}:</span>
+                        <span className="text-gray-900">{selectedSite.costCenter}</span>
+                      </p>
+                      <p className="flex justify-between">
+                        <span className="font-medium text-gray-700">{t('fields.supervisorCode')}:</span>
+                        <span className="text-gray-900">{selectedSite.supervisorCode}</span>
+                      </p>
+                    </div>
                   </div>
                   
                   {companyInfo && (
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">{t('modals.companyInfo.companyDetails')}</h3>
-                      <p><strong>{t('fields.name')}:</strong> {companyInfo.name}</p>
-                      <p><strong>{t('fields.address')}:</strong> {companyInfo.address}</p>
-                      <p><strong>{t('modals.companyInfo.contactInfo')}:</strong> {companyInfo.contactInfo}</p>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-semibold text-lg mb-3 text-gray-900 border-b pb-2">{t('modals.companyInfo.companyDetails')}</h3>
+                      <div className="space-y-2">
+                        <p className="flex justify-between">
+                          <span className="font-medium text-gray-700">{t('fields.name')}:</span>
+                          <span className="text-gray-900">{companyInfo.name}</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span className="font-medium text-gray-700">{t('fields.address')}:</span>
+                          <span className="text-gray-900">{companyInfo.address}</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span className="font-medium text-gray-700">{t('modals.companyInfo.contactInfo')}:</span>
+                          <span className="text-gray-900">{companyInfo.contactInfo}</span>
+                        </p>
+                      </div>
                     </div>
                   )}
                   
-                  <div>
-                    <p><strong>{t('modals.companyInfo.totalSupervisions')}:</strong> {supervisionCount}</p>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="flex justify-between items-center">
+                      <span className="font-medium text-gray-700">{t('modals.companyInfo.totalSupervisions')}:</span>
+                      <span className="text-blue-600 font-semibold text-lg">{supervisionCount}</span>
+                    </p>
                   </div>
                 </>
               )}

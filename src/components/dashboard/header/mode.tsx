@@ -2,8 +2,7 @@
 
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import {  Moon, Sun, SunMoon } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Moon, Sun } from "lucide-react"
 
 export function Mode() {
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -13,31 +12,22 @@ export function Mode() {
     setMounted(true)
   }, [])
 
-
-  const renderIcon = () => {
-    if (!mounted) return <SunMoon className="h-5 w-5" />
-    if (resolvedTheme === "dark") return <Moon className="h-5 w-5" />
-    if (resolvedTheme === "light") return <Sun className="h-5 w-5" />
-    return <SunMoon className="h-5 w-5" />
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="cursor-pointer  p-2 hover:bg-muted rounded-full transition-colors">
-          {renderIcon()}
-      
-        </div>
-      </DropdownMenuTrigger>
+  if (!mounted) return null
 
-      <DropdownMenuContent className="min-w-30 rounded-lg shadow-xl" align="center" sideOffset={4}>
-        <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
-          <Sun className="mr-2 h-5 w-5" /> Claro
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer">
-          <Moon className="mr-2 h-5 w-5" /> Escuro
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+  return (
+    <button
+      onClick={toggleTheme}
+      className="relative cursor-pointer p-2 rounded-full dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-900 bg-yellow-100  dark:hover:from-gray-700 dark:hover:to-gray-800  "
+    >
+      {resolvedTheme === "dark" ? (
+        <Moon className="h-5 w-5 text-gray-200" />
+      ) : (
+        <Sun className="h-5 w-5 text-orange-600" />
+      )}
+    </button>
   )
 }

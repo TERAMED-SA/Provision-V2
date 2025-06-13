@@ -16,9 +16,7 @@ import {
 } from "@tanstack/react-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { Card, CardContent, CardHeader } from "../ui/card"
-import { Skeleton } from "../ui/skeleton"
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
-import { Button } from "../ui/button"
+import { Info } from "lucide-react"
 import { DataTableFilters } from "./data-table-filters"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -149,54 +147,7 @@ export function DataTable<TData, TValue>({
     }
   }, [searchTerm, nameAccessor, table])
 
-  const renderSkeletonRows = () => {
-    return Array(5)
-      .fill(0)
-      .map((_, i) => (
-        <TableRow key={`skeleton-${i}`} className="border-b border-gray-100 dark:border-gray-700">
-          {Array(columns.length)
-            .fill(0)
-            .map((_, j) => (
-              <TableCell key={`skeleton-cell-${i}-${j}`} className="py-3 px-2 sm:px-4">
-                {j === 0 && hasAvatar ? (
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Skeleton className="h-6 w-6 sm:h-8 sm:w-8 rounded-full dark:bg-gray-700" />
-                    <Skeleton className="h-4 w-20 sm:w-32 dark:bg-gray-700" />
-                  </div>
-                ) : (
-                  <Skeleton className="h-4 w-16 sm:w-24 dark:bg-gray-700" />
-                )}
-              </TableCell>
-            ))}
-        </TableRow>
-      ))
-  }
 
-  const renderCardSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-      {Array(8)
-        .fill(0)
-        .map((_, index) => (
-          <Card key={index} className="border border-gray-200 dark:border-gray-700 shadow-sm dark:bg-gray-800">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full dark:bg-gray-700" />
-                <Skeleton className="h-4 sm:h-5 w-24 sm:w-32 dark:bg-gray-700" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-full dark:bg-gray-700" />
-                <div className="flex justify-between">
-                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-20 dark:bg-gray-700" />
-                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-20 dark:bg-gray-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-    </div>
-  )
 
   const renderCardView = () => {
     if (!cardOptions) return null
@@ -240,75 +191,6 @@ export function DataTable<TData, TValue>({
       </div>
     )
   }
-
-  const totalPages = table.getPageCount()
-  const currentPage = table.getState().pagination.pageIndex + 1
-  const startItem = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1
-  const endItem = Math.min(startItem + table.getState().pagination.pageSize - 1, data.length)
-
-  const renderPagination = () => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 sm:mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
-        {t('showing', { start: startItem, end: endItem, total: data.length })}
-      </div>
-
-      <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
-        >
-          <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-        </Button>
-
-        <div className="flex items-center gap-1">
-          {Array.from({ length: Math.min(totalPages, window.innerWidth < 640 ? 5 : 7) }, (_, i) => {
-            const maxPages = window.innerWidth < 640 ? 5 : 7
-            let pageNumber
-            if (totalPages <= maxPages) {
-              pageNumber = i + 1
-            } else if (currentPage <= Math.floor(maxPages / 2) + 1) {
-              pageNumber = i + 1
-            } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
-              pageNumber = totalPages - maxPages + 1 + i
-            } else {
-              pageNumber = currentPage - Math.floor(maxPages / 2) + i
-            }
-
-            if (pageNumber < 1 || pageNumber > totalPages) return null
-
-            return (
-              <Button
-                key={pageNumber}
-                variant={currentPage === pageNumber ? "default" : "outline"}
-                size="sm"
-                onClick={() => table.setPageIndex(pageNumber - 1)}
-                className={`h-7 w-7 sm:h-8 sm:w-8 p-0 text-xs font-medium transition-all ${
-                  currentPage === pageNumber
-                    ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm dark:bg-blue-600 dark:hover:bg-blue-700"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                {pageNumber}
-              </Button>
-            )
-          })}
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
-        >
-          <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-        </Button>
-      </div>
-    </div>
-  )
 
   const renderLoadingIndicator = () => (
     <div className="flex items-center justify-center py-4">
@@ -397,7 +279,7 @@ export function DataTable<TData, TValue>({
                         <TableCell colSpan={columns.length} className="h-32 text-center">
                           <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
                             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                              <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" />
+                              <Info className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" />
                             </div>
                             <div className="text-base sm:text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">
                               {t('noDataFound')}

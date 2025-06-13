@@ -41,8 +41,8 @@ function Header({
           onOpenSheet={onOpenSheet}
         />
       </div>
-      <div className="flex items-center gap-4">
-        <LocaleSwitcher />
+      <div className="flex items-center gap-1">
+        <LocaleSwitcher showLabel />
         <SearchDasboardh />
         <Mode />
         <Bells />

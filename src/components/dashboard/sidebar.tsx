@@ -176,7 +176,7 @@ export function Sidebar({
             isActive
               ? isDarkMode
                 ? "bg-blue-900/50 text-blue-300"
-                : "bg-blue-50 text-blue-700"
+                : "bg-blue-600 text-white"
               : isDarkMode
                 ? "text-gray-300 hover:bg-gray-700 hover:text-white"
                 : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -193,7 +193,7 @@ export function Sidebar({
               isActive
                 ? isDarkMode
                   ? "text-blue-300"
-                  : "text-blue-600"
+                  : "text-white"
                 : isDarkMode
                   ? "text-gray-400"
                   : "text-gray-600"
@@ -253,7 +253,7 @@ export function Sidebar({
                     pathname === subItem.href
                       ? isDarkMode
                         ? "bg-blue-900/50 text-blue-300 "
-                        : "bg-blue-50 text-blue-700 "
+                        : "bg-blue-600 text-white "
                       : isDarkMode
                         ? "text-gray-400 hover:bg-gray-700 hover:text-gray-300"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
@@ -283,7 +283,7 @@ export function Sidebar({
             isActive
               ? isDarkMode
                 ? "bg-blue-900/50 text-blue-300 "
-                : "bg-blue-50 text-blue-700 "
+                : "bg-blue-600 text-white"
               : isDarkMode
                 ? "text-gray-300 hover:bg-gray-700 hover:text-white"
                 : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -301,7 +301,7 @@ export function Sidebar({
               isActive
                 ? isDarkMode
                   ? "text-blue-300"
-                  : "text-blue-600"
+                  : "text-white"
                 : isDarkMode
                   ? "text-gray-400"
                   : "text-gray-600"
@@ -404,13 +404,13 @@ export function Sidebar({
             </nav>
           </div>
 
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className=" pt-6 pb-2 border-t border-gray-200 flex items-center justify-center dark:border-gray-700">
             <Image
               src={collapsed ? "/prometeus.jpeg" : "/prometeus-w-80.jpeg"}
               alt="Prometeus"
-              width={collapsed ? 80 : 288}
-              height={collapsed ? 80 : 80}
-              className="w-full object-contain"
+              width={collapsed ? 40 : 150}
+              height={collapsed ? 40 : 80}
+              className=" object-contain"
             />
           </div>
         </div>

@@ -63,7 +63,7 @@ export function SectionCards() {
     <div className=" gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {cardsData.map((card, index) => (
         <Link key={index} href={card.link} className="block">
-          <div className="bg-white dark:bg-gray-800 rounded-sm p-5  border border-gray-200 dark:border-gray-700  transition-all duration-200">
+          <div className="bg-white dark:bg-gray-800 rounded-sm p-5  border border-gray-200 dark:border-gray-700">
             <div className="flex items-start">
               <div className={`${card.color} p-3 rounded-full mr-4`}>
                 {card.icon}

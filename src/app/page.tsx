@@ -81,7 +81,7 @@ export default function Login() {
      <div className="grid min-h-svh lg:grid-cols-2">
       <div className="bg-muted  relative hidden lg:block">
           <div className="absolute top-4 left-6 flex justify-between items-center z-20">
-          <LocaleSwitcher className="shadow-sm" />
+          <LocaleSwitcher className="shadow-sm" showLabel />
         </div>
         <Image
         width={1000}

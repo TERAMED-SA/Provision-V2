@@ -69,7 +69,19 @@
       "subtitle": "Gérez et visualisez vos données efficacement",
       "showing": "Affichage de {start} à {end} sur {total} enregistrements",
       "noDataFound": "Aucune donnée trouvée",
-      "defaultEmptyMessage": "Aucun enregistrement trouvé à afficher"
+      "defaultEmptyMessage": "Aucun enregistrement trouvé à afficher",
+      "filters": {
+        "searchByName": "Rechercher par nom...",
+        "searchBySite": "Rechercher par site...",
+        "searchBySupervisor": "Rechercher par superviseur...",
+        "filterByDate": "Filtrer par date",
+        "clear": "Effacer",
+        "columns": "Colonnes",
+        "viewMode": {
+          "table": "Vue tableau",
+          "card": "Vue carte"
+        }
+      }
     },
      "login": {
     "leftPanel": {
@@ -295,6 +307,15 @@
       "failedToDeleteSite": "Échec de la suppression du site. Veuillez réessayer.",
       "failedToLoadCompanyInfo": "Échec du chargement des informations sur l'entreprise",
       "failedToLoadSupervisions": "Échec du chargement des supervisions"
+    },
+     "placeholders": {
+      "name": "Nom du site",
+      "address": "Adresse",
+      "ctClient": "Code client",
+      "costCenter": "Centre de coûts",
+      "numberOfWorkers": "Nombre de travailleurs",
+      "supervisorCode": "Code superviseur",
+      "zone": "Zone"
     }
   }
 }
