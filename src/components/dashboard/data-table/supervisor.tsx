@@ -91,6 +91,7 @@ export function SupervisorTable() {
     } catch (error) {
       console.error(t("deleteError"), error)
       toast.error(t("deleteError"))
+      
     }
   }
 
@@ -111,6 +112,7 @@ export function SupervisorTable() {
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
+    
     cell: ({ row }) => {
       const user = row.original
       return (

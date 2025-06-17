@@ -6,21 +6,7 @@ import { toast } from "sonner"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog"
-
-
-
-interface Supervisor {
-  _id: string
-  name: string
-  phoneNumber: string
-  email?: string
-  avatar?: string
-  active?: boolean
-  employeeId?: string
-  address?: string
-  createdAt?: string
-  mecCoordinator?: string
-}
+import { Supervisor } from "@/features/application/domain/entities/Supervisor"
 
 interface SupervisorEditFormProps {
   supervisor: Supervisor | null
@@ -51,11 +37,6 @@ export function SupervisorEditForm({
     
     const { name, value } = e.target
     setEditedSupervisor(prev => prev ? { ...prev, [name]: value } : null)
-  }
-
-  const handleActiveChange = (checked: boolean) => {
-    if (!editedSupervisor) return
-    setEditedSupervisor(prev => prev ? { ...prev, active: checked } : null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,24 +78,46 @@ export function SupervisorEditForm({
           </div>
           
           <div className="grid gap-2">
-            <label htmlFor="phone">Telefone</label>
+            <label htmlFor="supervisorCode">Código do Supervisor</label>
             <Input
-              id="phone"
-              name="phoneNumber"
-              value={editedSupervisor.phoneNumber || ""}
+              id="supervisorCode"
+              name="supervisorCode"
+              value={editedSupervisor.supervisorCode || ""}
               onChange={handleChange}
               required
             />
           </div>
           
           <div className="grid gap-2">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="time">Tempo</label>
             <Input
-              id="email"
-              name="email"
-              type="email"
-              value={editedSupervisor.email || ""}
+              id="time"
+              name="time"
+              value={editedSupervisor.time || ""}
               onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="costCenter">Centro de Custo</label>
+            <Input
+              id="costCenter"
+              name="costCenter"
+              value={editedSupervisor.costCenter || ""}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="report">Relatório</label>
+            <Input
+              id="report"
+              name="report"
+              value={editedSupervisor.report || ""}
+              onChange={handleChange}
+              required
             />
           </div>
           

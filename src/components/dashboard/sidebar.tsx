@@ -26,6 +26,8 @@ import { useTranslations } from "next-intl"
 import { Sheet, SheetContent } from "../ui/sheet"
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "../ui/navigation-menu"
 import { cn } from "@/lib/utils"
+import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates"
+import { Badge } from "../ui/badge"
 
 interface SidebarProps {
   className?: string
@@ -44,7 +46,7 @@ interface MenuItem {
     href: string
     icon?: any
   }[]
-  badge?: string
+  badge?: string | number
 }
 
 export function Sidebar({
@@ -59,6 +61,7 @@ export function Sidebar({
   const { theme } = useTheme()
   const isDarkMode = theme === "dark"
   const t = useTranslations("Sidebar")
+  const { supervisions, occurrences, notifications } = useRealTimeUpdates()
 
   const toggleItem = (label: string) => {
     setOpenItems((prev) => ({
@@ -72,8 +75,8 @@ export function Sidebar({
       title: t("Atividades"),
       items: [
         { icon: Home, label: t("Dashboard"), href: "/dashboard" },
-        { icon: Shield, label: t("Supervisao"), href: "/dashboard/supervisao" },
-        { icon: ClipboardMinus, label: t("Ocorrencias"), href: "/dashboard/ocorrencias" },
+        { icon: Shield, label: t("Supervisao"), href: "/dashboard/supervisao", badge: supervisions },
+        { icon: ClipboardMinus, label: t("Ocorrencias"), href: "/dashboard/ocorrencias", badge: occurrences },
         { icon: AudioLines, label: t("Auditorias"), href: "/dashboard/auditorias" },
         { icon: UserCheck, label: t("Inspeccao"), href: "/dashboard/inspeccao" },
         { icon: Trash2, label: t("Recolhas"), href: "/dashboard/recolhas" },
@@ -208,6 +211,8 @@ export function Sidebar({
     const isActive = pathname === item.href
     const hasSubItems = item.items && item.items.length > 0
     const isOpen = openItems[item.label]
+    const showBadge = item.label === t("Supervisao") || 
+                     item.label === t("Ocorrencias")
 
     if (collapsed && !alwaysShowLabel) {
       return renderCollapsedMenuItem(item, index)
@@ -308,15 +313,16 @@ export function Sidebar({
             )}
           />
           <span className="font-medium">{item.label}</span>
-          {item.badge && (
-            <span
+          {showBadge && (
+            <Badge
+              variant="secondary"
               className={cn(
-                "ml-auto px-2 py-0.5 text-xs rounded-full",
-                isDarkMode ? "bg-orange-900/50 text-orange-300" : "bg-orange-100 text-orange-600"
+                "ml-auto",
+                isDarkMode ? "bg-blue-900/50 text-blue-300" : "bg-blue-100 text-blue-700"
               )}
             >
-              {item.badge}
-            </span>
+              {item.badge || 0}
+            </Badge>
           )}
         </Link>
       </div>

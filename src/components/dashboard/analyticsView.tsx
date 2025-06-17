@@ -437,10 +437,12 @@ export default function AnalyticsView() {
       }))
     } else {
       const hourlyGroups: Record<string, number> = {}
+      // Initialize all hours from 0 to 23
       for (let i = 0; i < 24; i++) {
         const hour = i.toString().padStart(2, "0")
         hourlyGroups[hour] = 0
       }
+      
       data.forEach((item) => {
         if (item.createdAtDate && !isNaN(item.createdAtDate.getTime())) {
           const hour = format(item.createdAtDate, "HH")
@@ -449,12 +451,16 @@ export default function AnalyticsView() {
           }
         }
       })
-      return Object.entries(hourlyGroups).map(([hour, count]) => ({
-        day: "", 
-        hour: `${hour}:00`,
-        occurrences: count,
-        supervisions: count,
-      }))
+
+      // Convert to array and sort by hour
+      return Object.entries(hourlyGroups)
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .map(([hour, count]) => ({
+          day: "",
+          hour: `${hour}:00`,
+          occurrences: count,
+          supervisions: count,
+        }))
     }
   }, [])
 

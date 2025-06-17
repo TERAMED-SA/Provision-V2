@@ -45,7 +45,6 @@ export default function LocaleSwitcher({
             height={20}
             className="rounded-full object-contain"
           />
-          {showLabel && <span className="text-gray-700 dark:text-gray-300  font-medium">{localeNames[locale as keyof typeof localeNames]}</span>}
           <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
         </button>
       </DropdownMenuTrigger>

@@ -4,15 +4,12 @@ import instance from '@/lib/api';
 
 export class SupervisorAdapter implements ISupervisorPort {
   async getSupervisors(): Promise<Supervisor[]> {
-    const response = await instance.get('/user?size=100');
-    return response.data.data.data.map((user: any) => ({
-      _id: user._id,
-      name: user.name || "Sem nome",
-      phoneNumber: user.phoneNumber || "Não informado",
-      email: user.email,
-      active: user.active !== false,
-      avatar: user.avatar
-    }));
+    const response = await instance.get('/supervision/');
+    const supervisors = response.data.data;
+    // Sort by createdAt in descending order (most recent first)
+    return supervisors.sort((a: Supervisor, b: Supervisor) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   async getSupervisorById(id: string): Promise<Supervisor> {

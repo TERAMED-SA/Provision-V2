@@ -338,6 +338,8 @@ export function OccurrenceTable() {
             enableSiteFilter: true,
             enableDateFilter: true,
             enableColumnVisibility: true,
+            enableColumnFilters: true,
+            enableViewModeToggle: true,
           }}
           date={date}
           setDate={setDate}

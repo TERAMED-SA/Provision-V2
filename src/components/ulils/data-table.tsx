@@ -1,29 +1,28 @@
 "use client"
 
-import * as React from "react"
-import { useTranslations } from "next-intl"
 import {
   type ColumnDef,
-  type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
+  useReactTable,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+  type PaginationState,
+  type VisibilityState,
 } from "@tanstack/react-table"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
-import { Card, CardContent, CardHeader } from "../ui/card"
-import { Info } from "lucide-react"
+import { useState } from "react"
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DataTableFilters } from "./data-table-filters"
+import { DataTableCards } from "./data-table-cards"
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  loading?: boolean
   title?: string
-  filterOptions: {
+  description?: string
+  filterOptions?: {
     enableNameFilter?: boolean
     enableDateFilter?: boolean
     enableSiteFilter?: boolean
@@ -31,281 +30,273 @@ interface DataTableProps<TData, TValue> {
     enableColumnVisibility?: boolean
     enableViewModeToggle?: boolean
     enableAddButton?: boolean
+    enableColumnFilters?: boolean
     addButtonLabel?: string
   }
   onAddClick?: () => void
-  searchTerm?: string
-  setSearchTerm?: (value: string) => void
+  loading?: boolean
   date?: Date
   setDate?: (date: Date | undefined) => void
-  viewMode?: "table" | "card"
-  setViewMode?: (mode: "table" | "card") => void
-  hasAvatar?: boolean
-  avatarAccessor?: keyof TData
-  nameAccessor?: keyof TData
-  cardOptions?: {
-    primaryField: keyof TData
-    secondaryFields: Array<{
-      key: keyof TData
-      label: string
-    }>
-    onCardClick?: (item: TData) => void
+  initialColumnVisibility?: Record<string, boolean>
+  cardConfig?: {
+    titleField?: string
+    subtitleField?: string
+    descriptionField?: string
+    statusField?: string
+    priorityField?: string
+    dateField?: string
+    avatarField?: string
   }
-  emptyMessage?: string
-  initialColumnVisibility?: VisibilityState
-  onLoadMore?: () => void
-  hasMore?: boolean
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  loading = false,
-  title,
-  filterOptions,
+  title = "Dados",
+  description,
+  filterOptions = {},
   onAddClick,
-  searchTerm = "",
-  setSearchTerm = () => {},
+  loading = false,
   date,
-  setDate = () => {},
-  viewMode = "table",
-  setViewMode = () => {},
-  hasAvatar = false,
-  avatarAccessor = "logo" as keyof TData,
-  nameAccessor = "name" as keyof TData,
-  cardOptions,
-  emptyMessage,
+  setDate,
   initialColumnVisibility = {},
-  onLoadMore,
-  hasMore = false,
+  cardConfig = {
+    titleField: "name",
+    subtitleField: "email",
+    descriptionField: "description",
+    statusField: "status",
+    priorityField: "priority",
+    dateField: "createdAt",
+    avatarField: "name",
+  },
 }: DataTableProps<TData, TValue>) {
-  const t = useTranslations('DataTable')
-  
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(initialColumnVisibility)
-  const [rowSelection, setRowSelection] = React.useState({})
-  const tableRef = React.useRef<HTMLDivElement>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [viewMode, setViewMode] = useState<"table" | "card">("table")
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(initialColumnVisibility)
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: viewMode === "card" ? 12 : 100,
+  })
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
-      sorting,
-      columnFilters,
+      pagination,
       columnVisibility,
-      rowSelection,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 100,
-      },
     },
   })
 
-  React.useEffect(() => {
-    const handleScroll = () => {
-      if (!tableRef.current || !onLoadMore || !hasMore || loading) return
-
-      const { scrollTop, scrollHeight, clientHeight } = tableRef.current
-      if (scrollHeight - scrollTop <= clientHeight * 1.5) {
-        onLoadMore()
-      }
-    }
-
-    const currentRef = tableRef.current
-    if (currentRef) {
-      currentRef.addEventListener('scroll', handleScroll)
-    }
-
-    return () => {
-      if (currentRef) {
-        currentRef.removeEventListener('scroll', handleScroll)
-      }
-    }
-  }, [onLoadMore, hasMore, loading])
-
-  React.useEffect(() => {
-    if (date && table.getColumn("createdAt")) {
-      table.getColumn("createdAt")?.setFilterValue(date.toISOString().split("T")[0])
-    } else if (table.getColumn("createdAt")) {
-      table.getColumn("createdAt")?.setFilterValue(undefined)
-    }
-  }, [date, table])
-
-  React.useEffect(() => {
-    if (searchTerm && nameAccessor && table.getColumn(nameAccessor as string)) {
-      table.getColumn(nameAccessor as string)?.setFilterValue(searchTerm)
-    }
-  }, [searchTerm, nameAccessor, table])
-
-
-
-  const renderCardView = () => {
-    if (!cardOptions) return null
-
-    const paginatedData = table.getRowModel().rows.map((row) => row.original)
-
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-        {paginatedData.map((item, index) => (
-          <Card
-            key={index}
-            className="group border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg dark:hover:shadow-gray-900/20 transition-all duration-300 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 hover:-translate-y-1 bg-white dark:bg-gray-800"
-            onClick={() => cardOptions.onCardClick && cardOptions.onCardClick(item)}
-          >
-            <CardHeader className="pb-3 sm:pb-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base sm:text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                  {String(item[cardOptions.primaryField] || "")}
-                </h3>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2 sm:space-y-3 flex  justify-between items-center">
-                {cardOptions.secondaryFields.map((field, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 truncate mr-2">
-                      {field.label}
-                    </span>
-                    <span className="text-xs sm:text-sm text-gray-900 dark:text-gray-100 font-semibold truncate max-w-[60%] text-right">
-                      {String(item[field.key] || "-")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
+  // Ajustar pageSize quando mudar o viewMode
+  const handleViewModeChange = (mode: "table" | "card") => {
+    setViewMode(mode)
+    setPagination((prev) => ({
+      ...prev,
+      pageSize: mode === "card" ? 12 : 100,
+      pageIndex: 0, // Reset para primeira página
+    }))
   }
 
-  const renderLoadingIndicator = () => (
-    <div className="flex items-center justify-center py-4">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  const totalPages = table.getPageCount()
+  const currentPage = table.getState().pagination.pageIndex + 1
+  const startItem = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1
+  const endItem = Math.min(startItem + table.getState().pagination.pageSize - 1, data.length)
+
+  const renderPagination = () => (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 sm:mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+        Mostrando {startItem} a {endItem} de {data.length} resultados
+      </div>
+
+      <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
+        >
+          <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+        </Button>
+
+        <div className="flex items-center gap-1">
+          {Array.from(
+            { length: Math.min(totalPages, typeof window !== "undefined" && window.innerWidth < 640 ? 5 : 7) },
+            (_, i) => {
+              const maxPages = typeof window !== "undefined" && window.innerWidth < 640 ? 5 : 7
+              let pageNumber
+              if (totalPages <= maxPages) {
+                pageNumber = i + 1
+              } else if (currentPage <= Math.floor(maxPages / 2) + 1) {
+                pageNumber = i + 1
+              } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
+                pageNumber = totalPages - maxPages + 1 + i
+              } else {
+                pageNumber = currentPage - Math.floor(maxPages / 2) + i
+              }
+
+              if (pageNumber < 1 || pageNumber > totalPages) return null
+
+              return (
+                <Button
+                  key={pageNumber}
+                  variant={currentPage === pageNumber ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => table.setPageIndex(pageNumber - 1)}
+                  className={`h-7 w-7 sm:h-8 sm:w-8 p-0 text-xs font-medium transition-all ${
+                    currentPage === pageNumber
+                      ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm dark:bg-blue-600 dark:hover:bg-blue-700"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600"
+                  }`}
+                >
+                  {pageNumber}
+                </Button>
+              )
+            },
+          )}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
+        >
+          <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+        </Button>
+      </div>
     </div>
   )
 
   return (
-    <div className="w-full">
-      <Card className="border border-gray-300 rounded-sm dark:border-gray-700 shadow-none p-4 sm:p-6 md:p-8 dark:bg-gray-800">
-        <div className="flex flex-col sm:flex-row flex-wrap sm:items-center justify-between gap-4 ">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 truncate">
-              {title}
-            </h1>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0 ">
-            <DataTableFilters
-              table={table}
-              filterOptions={filterOptions}
-              onAddClick={onAddClick}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              date={date}
-              setDate={setDate}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-            />
-          </div>
+    <div className="space-y-4">
+      {/* Header compacto */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h2>
+          {description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description}</p>}
+        </div>
+      </div>
+
+      {/* Filtros integrados */}
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <DataTableFilters
+            table={table}
+            filterOptions={filterOptions}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            date={date}
+            setDate={setDate}
+            viewMode={viewMode}
+            setViewMode={handleViewModeChange}
+            onAddClick={onAddClick}
+          />
         </div>
 
-        {viewMode === "table" ? (
-          <div className="relative h-[600px]">
-            <div className="absolute inset-0 overflow-auto" ref={tableRef}>
-              <div className="min-w-full">
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 shadow-sm">
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id} className="border-b border-gray-200 dark:border-gray-700">
-                        {headerGroup.headers.map((header) => (
-                          <TableHead
-                            key={header.id}
-                            className="py-3 sm:py-4 px-2 sm:px-4 text-sm font-semibold text-gray-700 dark:text-gray-200 tracking-wider first:pl-4 sm:first:pl-6 last:pr-4 sm:last:pr-6 whitespace-nowrap bg-gray-50 dark:bg-gray-800"
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
-                          </TableHead>
+        {/* Conteúdo - Tabela ou Cards */}
+        <div className="relative">
+          {viewMode === "table" ? (
+            // Visualização em Tabela
+            <div className="max-h-[600px] overflow-auto">
+              <Table>
+                <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className="py-0 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 last:border-r-0"
+                        >
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    // Loading skeleton
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index} className="animate-pulse">
+                        {columns.map((_, colIndex) => (
+                          <TableCell key={colIndex} className="py-1 px-4">
+                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+                          </TableCell>
                         ))}
                       </TableRow>
-                    ))}
-                  </TableHeader>
-                  <TableBody>
-                    {loading && data.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={columns.length} className="h-32 text-center">
-                          {renderLoadingIndicator()}
-                        </TableCell>
+                    ))
+                  ) : table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row, index) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className={`
+                          transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
+                          ${index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/30 dark:bg-gray-800/20"}
+                        `}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className="py-0 px-4 text-sm border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
                       </TableRow>
-                    ) : table.getRowModel().rows?.length ? (
-                      table.getRowModel().rows.map((row, index) => (
-                        <TableRow
-                          key={row.id}
-                          data-state={row.getIsSelected() && "selected"}
-                          className={`border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors duration-200 ${
-                            index % 2 === 0 ? "bg-white dark:bg-gray-800" : "bg-gray-50/30 dark:bg-gray-800/50"
-                          }`}
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id} className="py-2 sm:py-0.5 px-2 sm:px-4 text-xs sm:text-sm text-gray-900 dark:text-gray-100 first:pl-4 sm:first:pl-6 last:pr-4 sm:last:pr-6">
-                              {cell.column.id === nameAccessor && hasAvatar ? (
-                                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </div>
-                              ) : (
-                                <div className="truncate">
-                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                </div>
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={columns.length} className="h-32 text-center">
-                          <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-                              <Info className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-gray-500" />
-                            </div>
-                            <div className="text-base sm:text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">
-                              {t('noDataFound')}
-                            </div>
-                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center px-4">
-                              {emptyMessage || t('defaultEmptyMessage')}
-                            </div>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center py-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="h-8 w-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              />
+                            </svg>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-              {loading && data.length > 0 && renderLoadingIndicator()}
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                              Nenhum resultado encontrado
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Tente ajustar os filtros ou adicionar novos dados
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
-          </div>
-        ) : (
-          <div className="relative h-[600px]">
-            <div className="absolute inset-0 overflow-auto" ref={tableRef}>
-              {loading && data.length === 0 ? renderLoadingIndicator() : renderCardView()}
-              {loading && data.length > 0 && renderLoadingIndicator()}
+          ) : (
+            // Visualização em Cards
+            <div className="p-4">
+              <DataTableCards
+                rows={table.getRowModel().rows}
+                loading={loading}
+                cardConfig={cardConfig}
+                onCardClick={(row) => console.log("Card clicked:", row.original)}
+              />
             </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </div>
+
+        {/* Paginação */}
+        <div className="px-4 pb-4">{renderPagination()}</div>
+      </div>
     </div>
   )
 }
