@@ -26,7 +26,6 @@ import { useTranslations } from "next-intl"
 import { Sheet, SheetContent } from "../ui/sheet"
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "../ui/navigation-menu"
 import { cn } from "@/lib/utils"
-import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates"
 import { Badge } from "../ui/badge"
 
 interface SidebarProps {
@@ -61,7 +60,6 @@ export function Sidebar({
   const { theme } = useTheme()
   const isDarkMode = theme === "dark"
   const t = useTranslations("Sidebar")
-  const { supervisions, occurrences, notifications } = useRealTimeUpdates()
 
   const toggleItem = (label: string) => {
     setOpenItems((prev) => ({
@@ -75,8 +73,8 @@ export function Sidebar({
       title: t("Atividades"),
       items: [
         { icon: Home, label: t("Dashboard"), href: "/dashboard" },
-        { icon: Shield, label: t("Supervisao"), href: "/dashboard/supervisao", badge: supervisions },
-        { icon: ClipboardMinus, label: t("Ocorrencias"), href: "/dashboard/ocorrencias", badge: occurrences },
+        { icon: Shield, label: t("Supervisao"), href: "/dashboard/supervisao", badge: 0 },
+        { icon: ClipboardMinus, label: t("Ocorrencias"), href: "/dashboard/ocorrencias", badge: 0 },
         { icon: AudioLines, label: t("Auditorias"), href: "/dashboard/auditorias" },
         { icon: UserCheck, label: t("Inspeccao"), href: "/dashboard/inspeccao" },
         { icon: Trash2, label: t("Recolhas"), href: "/dashboard/recolhas" },

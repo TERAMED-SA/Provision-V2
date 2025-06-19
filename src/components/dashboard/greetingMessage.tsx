@@ -37,13 +37,13 @@ export function GreetingMessage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white dark:bg-gray-800 rounded-sm p-5 max-w-lg border border-gray-200 dark:border-gray-700 "
+      
     >
       <div className="flex flex-col space-y-2">
         <div className="flex items-center gap-3">
          
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-base font-semibold text-gray-800 dark:text-white tracking-tight">
               {greeting}, {user.name?.split(" ")[0]}! <span className="inline-block animate-wave">👋</span>
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

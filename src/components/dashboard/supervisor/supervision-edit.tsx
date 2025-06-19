@@ -65,81 +65,59 @@ export function SupervisorEditForm({
         <DialogHeader>
           <DialogTitle>Editar Supervisor</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="grid gap-2">
-            <label htmlFor="name">Nome</label>
-            <Input
-              id="name"
-              name="name"
-              value={editedSupervisor.name || ""}
-              onChange={handleChange}
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="name">Nome</label>
+              <Input
+                id="name"
+                name="name"
+                value={editedSupervisor.name || ""}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="supervisorCode">Código do Supervisor</label>
+              <Input
+                id="supervisorCode"
+                name="supervisorCode"
+                value={editedSupervisor.supervisorCode || ""}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="costCenter">Centro de Custo</label>
+              <Input
+                id="costCenter"
+                name="costCenter"
+                value={editedSupervisor.costCenter || ""}
+                onChange={handleChange}
+                required
+              />
+            </div>
           
-          <div className="grid gap-2">
-            <label htmlFor="supervisorCode">Código do Supervisor</label>
-            <Input
-              id="supervisorCode"
-              name="supervisorCode"
-              value={editedSupervisor.supervisorCode || ""}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <label htmlFor="time">Tempo</label>
-            <Input
-              id="time"
-              name="time"
-              value={editedSupervisor.time || ""}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <label htmlFor="costCenter">Centro de Custo</label>
-            <Input
-              id="costCenter"
-              name="costCenter"
-              value={editedSupervisor.costCenter || ""}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <label htmlFor="report">Relatório</label>
-            <Input
-              id="report"
-              name="report"
-              value={editedSupervisor.report || ""}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                  Salvando...
-                </>
-              ) : (
-                "Salvar alterações"
-              )}
-            </Button>
+            <div className="flex justify-end gap-2 pt-4 col-span-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar alterações"
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

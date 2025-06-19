@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dr
 import { Checkbox } from "../ui/checkbox"
 import { useEffect, useState } from "react"
 import { Badge } from "../ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 interface DataTableFiltersProps<TData> {
   table: Table<TData>
@@ -131,220 +132,346 @@ export function DataTableFilters<TData>({
   const activeFiltersCount = Object.values(columnFilters).filter((value) => value.length > 0).length
 
   return (
-    <div className="space-y-3">
-      {/* Linha principal de filtros */}
-      <div className="flex flex-wrap items-center justify-start gap-3">
-        {/* Filtros básicos */}
-        <div className="flex items-center gap-3">
-          {/* Busca geral */}
-          {enableNameFilter && (
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
-              />
-            </div>
-          )}
-
-          {/* Filtros específicos */}
-          {enableSiteFilter && (
-            <div className="relative min-w-[150px]">
-              <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Site..."
-                value={(table.getColumn("siteName")?.getFilterValue() as string) ?? ""}
-                onChange={(event) => handleSiteFilter(event.target.value)}
-                className="pl-10 h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
-              />
-            </div>
-          )}
-
-          {enableSupervisorFilter && (
-            <div className="relative min-w-[150px]">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Supervisor..."
-                value={(table.getColumn("supervisorName")?.getFilterValue() as string) ?? ""}
-                onChange={(event) => handleSupervisorFilter(event.target.value)}
-                className="pl-10 h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
-              />
-            </div>
-          )}
-
-          {enableDateFilter && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={`h-9 min-w-[140px] justify-start text-left font-normal bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-900 ${!date ? "text-gray-500" : ""}`}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "dd/MM/yyyy", { locale: ptBR }) : "Data..."}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={ptBR} />
-                {date && (
-                  <div className="p-3 border-t flex justify-center">
-                    <Button variant="ghost" size="sm" onClick={() => setDate(undefined)}>
-                      Limpar
-                    </Button>
+    <TooltipProvider>
+      <div className="space-y-3">
+        {/* Linha principal de filtros */}
+        <div className="flex flex-wrap items-center justify-start gap-3">
+          {/* Filtros básicos */}
+          <div className="flex items-center gap-3">
+            {/* Busca geral */}
+            {enableNameFilter && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative flex-1 min-w-[200px] max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-800 cursor-pointer" />
+                    <Input
+                      placeholder="Buscar..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
+                    />
                   </div>
-                )}
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
+                </TooltipTrigger>
+                <TooltipContent className="bg-gray-400 text-white text-sm">
+                  <p>Buscar em todos os campos da tabela</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
 
-        {/* Controles à direita */}
-        <div className="flex items-center gap-2">
-          {enableColumnFilters && (
-            <Button
-              variant={showColumnFilters ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowColumnFilters(!showColumnFilters)}
-              className="h-9 relative"
-            >
-              <Filter className="h-4 w-4 mr-1" />
-              Filtros
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-xs">
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </Button>
-          )}
+            {/* Filtros específicos */}
+            {/* Filtro de Site como ícone popover */}
+            {enableSiteFilter && (
+              <Popover>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-9 w-9 p-0 flex items-center justify-center cursor-pointer">
+                        <Building className="h-5 w-5 text-gray-800 " />
+                      </Button>
+                    </PopoverTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Filtrar por Site</p>
+                  </TooltipContent>
+                </Tooltip>
+                <PopoverContent className="w-56 p-3" align="start">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Filtrar por Site</span>
+                    <Input
+                      placeholder="Site..."
+                      value={(table.getColumn("siteName")?.getFilterValue() as string) ?? ""}
+                      onChange={(event) => handleSiteFilter(event.target.value)}
+                      className="h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
+                      autoFocus
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
 
-          {enableColumnVisibility && viewMode === "table" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9">
-                  <Settings2 className="h-4 w-4 mr-1" />
-                  Colunas
-                  <ChevronDown className="ml-1 h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 p-2">
-                <div className="space-y-1">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => (
-                      <div
-                        key={column.id}
-                        className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-sm"
-                        onClick={() => column.toggleVisibility(!column.getIsVisible())}
-                      >
-                        <Checkbox
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                          tabIndex={-1}
-                        />
-                        <span className="text-sm">{getColumnLabel(column.id)}</span>
+            {/* Filtro de Supervisor como ícone popover */}
+            {enableSupervisorFilter && (
+              <Popover>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-9 w-9 p-0 flex items-center justify-center cursor-pointer">
+                        <User className="h-5 w-5 text-gray-800 cursor-pointer" />
+                      </Button>
+                    </PopoverTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Filtrar por Supervisor</p>
+                  </TooltipContent>
+                </Tooltip>
+                <PopoverContent className="w-56 p-3" align="start">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Filtrar por Supervisor</span>
+                    <Input
+                      placeholder="Supervisor..."
+                      value={(table.getColumn("supervisorName")?.getFilterValue() as string) ?? ""}
+                      onChange={(event) => handleSupervisorFilter(event.target.value)}
+                      className="h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
+                      autoFocus
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Filtro de Data como ícone popover */}
+            {enableDateFilter && (
+              <Popover>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-9 w-9 p-0 flex items-center justify-center cursor-pointer">
+                        <CalendarIcon className="h-5 w-5 text-gray-800" />
+                      </Button>
+                    </PopoverTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Filtrar por Data</p>
+                  </TooltipContent>
+                </Tooltip>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <div className="flex flex-col gap-2 p-3">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Data</span>
+                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={ptBR} />
+                    {date && (
+                      <div className="pt-2 flex justify-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" onClick={() => setDate(undefined)}>
+                              Limpar
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-200 text-white text-sm">
+                            <p>Remover filtro de data</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
-                    ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {enableViewModeToggle && (
-            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-md p-0.5">
-              <Button
-                variant={viewMode === "table" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("table")}
-                className="h-8 w-8 p-0"
-                title="Visualização em Tabela"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "card" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("card")}
-                className="h-8 w-8 p-0"
-                title="Visualização em Cards"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {enableAddButton && (
-            <Button onClick={onAddClick} size="sm" className="h-9">
-              <Plus className="h-4 w-4 mr-1" />
-              {addButtonLabel}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Filtros por coluna (expansível) */}
-      {enableColumnFilters && showColumnFilters && (
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-              <h4 className="text-sm font-medium text-gray-900 dark:text-white">Filtros por Coluna</h4>
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {hasActiveColumnFilters && (
-                <Button
-                  onClick={clearColumnFilters}
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-gray-500 hover:text-gray-700"
-                >
-                  <FilterX size={12} className="mr-1" />
-                  Limpar
-                </Button>
-              )}
-              <Button onClick={() => setShowColumnFilters(false)} variant="ghost" size="sm" className="h-7 w-7 p-0">
-                <X size={12} />
-              </Button>
-            </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filterableColumns.map((column) => (
-              <div key={column.id} className="space-y-1">
-                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                  {getColumnLabel(column.id)}
-                  {columnFilters[column.id] && <div className="h-1.5 w-1.5 bg-blue-500 rounded-full" />}
-                </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder={`Filtrar...`}
-                    value={columnFilters[column.id] || ""}
-                    onChange={(e) => handleColumnFilter(column.id, e.target.value)}
-                    className="h-8 text-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
-                  />
-                  {columnFilters[column.id] && (
+          {/* Controles à direita */}
+          <div className="flex items-center gap-2">
+            {enableColumnFilters && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={showColumnFilters ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowColumnFilters(!showColumnFilters)}
+                    className="h-9 relative"
+                  >
+                    <Filter className="h-4 w-4 mr-1" />
+                    Filtros
+                    {activeFiltersCount > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-xs">
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-gray-400 text-white text-sm">
+                  <p>{showColumnFilters ? 'Ocultar' : 'Mostrar'} filtros avançados por coluna</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {enableColumnVisibility && viewMode === "table" && (
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-9">
+                        <Settings2 className="h-4 w-4 mr-1" />
+                        Colunas
+                        <ChevronDown className="ml-1 h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Mostrar/ocultar colunas da tabela</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-48 p-2">
+                  <div className="space-y-1">
+                    {table
+                      .getAllColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => (
+                        <Tooltip key={column.id}>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-sm"
+                              onClick={() => column.toggleVisibility(!column.getIsVisible())}
+                            >
+                              <Checkbox
+                                checked={column.getIsVisible()}
+                                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                tabIndex={-1}
+                              />
+                              <span className="text-sm">{getColumnLabel(column.id)}</span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-gray-400 text-white text-sm">
+                            <p>{column.getIsVisible() ? 'Ocultar' : 'Mostrar'} coluna {getColumnLabel(column.id)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {enableViewModeToggle && (
+              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-md p-0.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
-                      onClick={() => handleColumnFilter(column.id, "")}
-                      variant="ghost"
+                      variant={viewMode === "table" ? "default" : "ghost"}
                       size="sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                      onClick={() => setViewMode("table")}
+                      className="h-8 w-8 p-0"
                     >
-                      <X size={10} />
+                      <List className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Visualização em Tabela</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={viewMode === "card" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("card")}
+                      className="h-8 w-8 p-0"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Visualização em Cards</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
-            ))}
+            )}
+
+            {enableAddButton && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={onAddClick} size="sm" className="h-9">
+                    <Plus className="h-4 w-4 mr-1" />
+                    {addButtonLabel}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-gray-400 text-white text-sm">
+                  <p>{addButtonLabel} novo item</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Filtros por coluna (expansível) */}
+        {enableColumnFilters && showColumnFilters && (
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Filtros por Coluna</h4>
+                {activeFiltersCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {hasActiveColumnFilters && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={clearColumnFilters}
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        <FilterX size={12} className="mr-1" />
+                        Limpar
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-gray-400 text-white text-sm">
+                      <p>Limpar todos os filtros de coluna</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button onClick={() => setShowColumnFilters(false)} variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      <X size={12} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-gray-400 text-white text-sm">
+                    <p>Fechar filtros por coluna</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filterableColumns.map((column) => (
+                <div key={column.id} className="space-y-1">
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    {getColumnLabel(column.id)}
+                    {columnFilters[column.id] && <div className="h-1.5 w-1.5 bg-blue-500 rounded-full" />}
+                  </label>
+                  <div className="relative">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Input
+                          type="text"
+                          placeholder={`Filtrar...`}
+                          value={columnFilters[column.id] || ""}
+                          onChange={(e) => handleColumnFilter(column.id, e.target.value)}
+                          className="h-8 text-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-gray-400 text-white text-sm">
+                        <p>Filtrar por {getColumnLabel(column.id)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    {columnFilters[column.id] && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={() => handleColumnFilter(column.id, "")}
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                          >
+                            <X size={10} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-gray-400 text-white text-sm">
+                          <p>Limpar filtro de {getColumnLabel(column.id)}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </TooltipProvider>
   )
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
 import { format } from "date-fns"
 import { ArrowUpDown, Download, Eye } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
@@ -19,11 +18,10 @@ import {
   AlertDialogCancel,
 } from "../../ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { Building, User, Package, Calendar, Clock, Info } from "lucide-react"
+import { Building, User, Package, Info } from "lucide-react"
 import { BreadcrumbRoutas } from "@/components/ulils/breadcrumbRoutas"
 import { ptBR } from "date-fns/locale"
-import { GetSupervisorsUseCase } from "@/features/application/domain/use-cases/supervisor/GetSupervisorsUseCase"
-import { SupervisorFactory } from "@/features/application/infrastructure/factories/SupervisorFactory"
+import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
 
 export type WorkerInfo = {
   name: string
@@ -43,7 +41,6 @@ export type Equipment = {
 export type Supervisor = {
   code: string
   name: string
-  // Adicione outras propriedades conforme necessário
 }
 
 export type Notification = {
@@ -59,7 +56,10 @@ export type Notification = {
   numberOfWorkers?: number
   workerInformation?: WorkerInfo[]
   equipment?: Equipment[]
-  duration?: string
+  time?: string
+  coordinates?: string
+  tlAbsent?: string
+  report?: string
 }
 
 type Column<TData, TValue> = {
@@ -76,101 +76,107 @@ export function NewSupervionTable() {
   const [date, setDate] = React.useState<Date | undefined>(undefined)
   const [isLoading, setIsLoading] = React.useState(true)
   const [data, setData] = React.useState<Notification[]>([])
-  const [supervisors, setSupervisors] = React.useState<Supervisor[]>([])
+  const [supervisors, setSupervisors] = React.useState<Map<string, string>>(new Map())
   const [selectedNotification, setSelectedNotification] = React.useState<Notification | null>(null)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  const supervisorPort = SupervisorFactory.getSupervisorPort()
-  const getSupervisorsUseCase = new GetSupervisorsUseCase(supervisorPort)
+  const pageSize = 10000
 
-  const fetchSupervisors = React.useCallback(async () => {
+  const loadSupervisors = React.useCallback(async () => {
     try {
-      const supervisorsData = await getSupervisorsUseCase.execute()
-      console.log(supervisorsData)
- 
+      const users = await userAdapter.getUsers()
+      const supervisorMap = new Map<string, string>()
+
+      users.forEach((user: any) => {
+        const code = user.employeeId || user._id
+        supervisorMap.set(code, user.name)
+      })
+
+      setSupervisors(supervisorMap)
+      return supervisorMap
     } catch (error) {
-      console.error("Erro ao buscar supervisores:", error)
-      toast.error("Não foi possível carregar os supervisores")
-      return []
+      console.error("Erro ao carregar supervisores:", error)
+      return new Map()
     }
   }, [])
 
-  // Função para buscar notificações
-  const fetchNotifications = React.useCallback(async (supervisorsData?: Supervisor[]) => {
-    try {
-      setIsLoading(true)
-      const response = await instance.get(`/supervision?size=5000`)
-      
-      // Use os supervisores passados como parâmetro ou os já carregados no state
-      const currentSupervisors = supervisorsData || supervisors
-      
-      const formattedNotifications = response.data.data.data.map((notification: any) => {
-        // Ensure we're creating a proper Date object from the ISO string
-        const createdAtDate = new Date(notification.createdAt)
-        
-        // Format the date in Brazilian format
-        const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
-        const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
-        
-        // Buscar o nome do supervisor pelo código
-        const supervisor = currentSupervisors.find(sup => sup.code === notification.supervisorCode)
-        const supervisorName = supervisor ? supervisor.name : `Supervisor ${notification.supervisorCode}`
-        
-        return {
-          ...notification,
-          createdAt: formattedDate,
-          createdAtTime: formattedTime,
-          createdAtDate: createdAtDate,
-          supervisorName,
-          siteName: notification.name || "Carregando...",
+  const fetchNotifications = React.useCallback(
+    async (page = 1000, supervisorMap?: Map<string, string>) => {
+      try {
+        setIsLoading(true)
+        const response = await instance.get(`/supervision?page=${page}&size=${pageSize}`)
+
+        if (!response.data?.data?.data) {
+          console.error("Estrutura de resposta inválida:", response.data)
+          toast.error("Erro na estrutura dos dados recebidos")
+          return
         }
-      }).sort((a: Notification, b: Notification) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
+        const currentSupervisors = supervisorMap || supervisors
+
+        const formattedNotifications = response.data.data.data
+          .map((notification: any) => {
+            const createdAtDate = new Date(notification.createdAt)
+            const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
+            const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
+
+            const supervisorName =
+              currentSupervisors.get(notification.supervisorCode) || `Supervisor ${notification.supervisorCode}`
+
+            let formattedDuration = "-"
+            if (notification.time) {
+              const timeDate = new Date(notification.time)
+              if (!isNaN(timeDate.getTime())) {
+                formattedDuration = format(timeDate, "HH:mm")
+              } else if (typeof notification.time === "string") {
+                const match = notification.time.match(/^(\d{1,2}):(\d{2})/)
+                if (match) {
+                  formattedDuration = `${match[1].padStart(2, '0')}:${match[2]}`
+                }
+              }
+            }
+
+            return {
+              ...notification,
+              createdAt: formattedDate,
+              createdAtTime: formattedTime,
+              createdAtDate: createdAtDate,
+              supervisorName,
+              siteName: notification.name || "Site não informado",
+              coordinates: notification.coordinates || "-",
+              tlAbsent: notification.tlAbsent || "-",
+              time: formattedDuration,
+            }
+          })
+          .sort((a: Notification, b: Notification) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
+
+        setData(formattedNotifications)
       
-      setData(formattedNotifications)
-    } catch (error: any) {
-      console.error("Error fetching notifications:", error.message)
-      toast.error("Erro ao carregar ocorrências")
-    } finally {
-      setIsLoading(false)
-    }
-  }, [supervisors])
+      } catch (error: any) {
+        console.error("Erro ao buscar notificações:", error)
+        toast.error("Erro ao carregar ocorrências")
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [supervisors, pageSize],
+  )
 
-  // Função para carregar dados iniciais
-  const loadInitialData = React.useCallback(async () => {
-    try {
-      // Primeiro carrega os supervisores
-      const supervisorsData = await fetchSupervisors()
-      // Depois carrega as notificações com os supervisores já disponíveis
-      await fetchNotifications(supervisorsData)
-    } catch (error) {
-      console.error("Erro ao carregar dados iniciais:", error)
-    }
-  }, [fetchSupervisors, fetchNotifications])
-
-  // Efeito para carregar dados iniciais e configurar polling
   React.useEffect(() => {
+    const loadInitialData = async () => {
+      const supervisorMap = await loadSupervisors()
+      await fetchNotifications(1, supervisorMap)
+    }
+
     loadInitialData()
-
-    // Configurar polling para atualizar dados a cada 30 segundos
-    const intervalId = setInterval(() => {
-      fetchNotifications() // Usa os supervisores já carregados no state
-    }, 30000)
-
-    return () => clearInterval(intervalId)
-  }, [loadInitialData, fetchNotifications])
+  }, [])
 
   const handleViewDetails = React.useCallback((notification: Notification) => {
-    try {
-      if (!notification || !notification._id) {
-        toast.error("Dados da ocorrência inválidos")
-        return
-      }
-      
-      setSelectedNotification(notification)
-      setIsModalOpen(true)
-    } catch (error) {
-      console.error("Erro ao abrir detalhes:", error)
-      toast.error("Erro ao abrir detalhes da ocorrência")
+    if (!notification || !notification._id) {
+      toast.error("Dados da supervisao inválidos")
+      return
     }
+
+    setSelectedNotification(notification)
+    setIsModalOpen(true)
   }, [])
 
   const columns = React.useMemo(
@@ -211,41 +217,78 @@ export function NewSupervionTable() {
           </Button>
         ),
       },
-  {
-  accessorKey: "report",
-  header: ({ column }: { column: Column<Notification, unknown> }) => (
-    <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-      Relatório
-      <ArrowUpDown className="ml-2 h-4 w-4" />
-    </Button>
-  ),
-  cell: ({ row }: { row: Row<Notification> }) => {
-    const value = row.getValue("report") as string
-    if (!value) return null
-    return value.length > 40 ? value.slice(0, 40) + "..." : value
-  },
-},
+      {
+        accessorKey: "coordinates",
+        header: ({ column }: { column: Column<Notification, unknown> }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Coordenadas
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Notification> }) => {
+          const value = row.getValue("coordinates") as string
+          return value || "-"
+        },
+      },
+      {
+        accessorKey: "tlAbsent",
+        header: ({ column }: { column: Column<Notification, unknown> }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            TL Ausente
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Notification> }) => {
+          const value = row.getValue("tlAbsent") as string
+          return value || "-"
+        },
+      },
+      // {
+      //   accessorKey: "report",
+      //   header: ({ column }: { column: Column<Notification, unknown> }) => (
+      //     <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
+      //       Relatório
+      //       <ArrowUpDown className="ml-2 h-4 w-4" />
+      //     </Button>
+      //   ),
+      //   cell: ({ row }: { row: Row<Notification> }) => {
+      //     const value = row.getValue("report") as string
+      //     if (!value) return "-"
+      //     return value.length > 25 ? value.slice(0, 25) + "..." : value
+      //   },
+      // },
+      {
+        accessorKey: "time",
+        header: ({ column }: { column: Column<Notification, unknown> }) => (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Duração
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Notification> }) => {
+          const value = row.getValue("time") as string
+          return value || "-"
+        },
+      },
       {
         id: "actions",
-        header: "Ações",
+        header: "Ação",
         cell: ({ row }: { row: Row<Notification> }) => {
           const notification = row.original
 
           return (
-            <div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="cursor-pointer text-gray-600 hover:text-gray-100 hover:bg-gray-800"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  handleViewDetails(notification)
-                }}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer text-gray-600 hover:text-gray-100 hover:bg-gray-800"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                handleViewDetails(notification)
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
           )
         },
       },
@@ -270,13 +313,12 @@ export function NewSupervionTable() {
             enableColumnVisibility: true,
             enableColumnFilters: true,
             enableViewModeToggle: true,
-           
           }}
           date={date}
           setDate={setDate}
           initialColumnVisibility={{
             details: false,
-          }}
+          }}    
         />
 
         <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -300,7 +342,9 @@ export function NewSupervionTable() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Data</p>
-                    <p>{selectedNotification.createdAt} {selectedNotification.createdAtTime}</p>
+                    <p>
+                      {selectedNotification.createdAt} {selectedNotification.createdAtTime}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Supervisor</p>
@@ -398,7 +442,7 @@ export function NewSupervionTable() {
 
             <AlertDialogFooter className="flex items-center justify-between mt-4">
               <PDFDownloadLink
-                document={<OccurrencePDF notification={selectedNotification!} />}
+                document={<OccurrencePDF notification={selectedNotification!}  />}
                 fileName={`supervisao-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
                 style={{ textDecoration: "none" }}
               >

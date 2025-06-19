@@ -27,4 +27,9 @@ export interface Occurrence {
   numberOfWorkers?: number;
   workerInformation?: WorkerInfo[];
   equipment?: Equipment[];
+  latitude?: string;
+  longitude?: string;
+  aria?: string;
+  referencia?: string;
+  ocorrencia?: string;
 } 

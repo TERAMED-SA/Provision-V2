@@ -10,7 +10,7 @@ import {
   type PaginationState,
   type VisibilityState,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -52,7 +52,7 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  title = "Dados",
+  title = "",
   description,
   filterOptions = {},
   onAddClick,
@@ -77,6 +77,9 @@ export function DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: viewMode === "card" ? 12 : 100,
   })
+  const [isFiltering, setIsFiltering] = useState(false)
+  const [columnWidths, setColumnWidths] = useState<number[]>([])
+  const tableRef = useRef<HTMLTableElement>(null)
 
   const table = useReactTable({
     data,
@@ -92,13 +95,23 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  // Controlar estado de filtragem
+  useEffect(() => {
+    setIsFiltering(true)
+    const timer = setTimeout(() => {
+      setIsFiltering(false)
+    }, 300) // Delay para evitar flicker desnecessário
+
+    return () => clearTimeout(timer)
+  }, [searchTerm, date])
+
   // Ajustar pageSize quando mudar o viewMode
   const handleViewModeChange = (mode: "table" | "card") => {
     setViewMode(mode)
     setPagination((prev) => ({
       ...prev,
       pageSize: mode === "card" ? 12 : 100,
-      pageIndex: 0, // Reset para primeira página
+      pageIndex: 0, 
     }))
   }
 
@@ -108,7 +121,7 @@ export function DataTable<TData, TValue>({
   const endItem = Math.min(startItem + table.getState().pagination.pageSize - 1, data.length)
 
   const renderPagination = () => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 sm:mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 sm:mt-6  dark:border-gray-700 pt-4">
       <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
         Mostrando {startItem} a {endItem} de {data.length} resultados
       </div>
@@ -126,7 +139,7 @@ export function DataTable<TData, TValue>({
 
         <div className="flex items-center gap-1">
           {Array.from(
-            { length: Math.min(totalPages, typeof window !== "undefined" && window.innerWidth < 640 ? 5 : 7) },
+            { length: Math.min(totalPages, typeof window !== "undefined" && window.innerWidth < 640 ? 2 : 4) },
             (_, i) => {
               const maxPages = typeof window !== "undefined" && window.innerWidth < 640 ? 5 : 7
               let pageNumber
@@ -200,93 +213,91 @@ export function DataTable<TData, TValue>({
           />
         </div>
 
-        {/* Conteúdo - Tabela ou Cards */}
         <div className="relative">
           {viewMode === "table" ? (
-            // Visualização em Tabela
-            <div className="max-h-[600px] overflow-auto">
-              <Table>
-                <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className="py-0 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 last:border-r-0"
-                        >
-                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    // Loading skeleton
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <TableRow key={index} className="animate-pulse">
-                        {columns.map((_, colIndex) => (
-                          <TableCell key={colIndex} className="py-1 px-4">
-                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row, index) => (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                        className={`
-                          transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
-                          ${index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/30 dark:bg-gray-800/20"}
-                        `}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="py-0 px-4 text-sm border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+            <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden">
+              <div className="max-h-[600px] overflow-auto">
+                <Table>
+                  <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                        {headerGroup.headers.map((header) => (
+                          <TableHead
+                            key={header.id}
+                            className="py-0 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
                           >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
                         ))}
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center py-8">
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="h-8 w-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {(loading || isFiltering) ? (
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <TableRow key={index} className="animate-pulse">
+                          {columns.map((_, colIndex) => (
+                            <TableCell key={colIndex} className="py-3 px-4">
+                              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : table.getRowModel().rows?.length ? (
+                      table.getRowModel().rows.map((row, index) => (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && "selected"}
+                          className={`
+                            transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50
+                            ${index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/30 dark:bg-gray-800/20"}
+                          `}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell
+                              key={cell.id}
+                              className="py-0 px-4 text-sm border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={columns.length} className="h-32 text-center py-8">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="h-8 w-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                Nenhum resultado encontrado
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Tente ajustar os filtros ou adicionar novos dados
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-center">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              Nenhum resultado encontrado
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              Tente ajustar os filtros ou adicionar novos dados
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           ) : (
-            // Visualização em Cards
             <div className="p-4">
               <DataTableCards
                 rows={table.getRowModel().rows}
-                loading={loading}
+                loading={loading || isFiltering}
                 cardConfig={cardConfig}
                 onCardClick={(row) => console.log("Card clicked:", row.original)}
               />
@@ -294,7 +305,6 @@ export function DataTable<TData, TValue>({
           )}
         </div>
 
-        {/* Paginação */}
         <div className="px-4 pb-4">{renderPagination()}</div>
       </div>
     </div>

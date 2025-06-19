@@ -247,7 +247,11 @@
       "phone": "Phone",
       "email": "Email",
       "actions": "Actions"
-    }
+    },
+    "disableConfirmTitle": "Disable Supervisor",
+    "disableConfirmDesc": "Are you sure you want to disable {name}?",
+    "disableCancel": "Cancel",
+    "disableConfirm": "Disable"
   },
   "companySites": {
     "title": "Sites",

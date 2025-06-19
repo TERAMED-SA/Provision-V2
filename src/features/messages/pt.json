@@ -246,7 +246,11 @@
       "genderPlaceholder": "Selecione o gênero",
       "male": "Masculino",
       "female": "Feminino"
-    }
+    },
+    "disableConfirmTitle": "Desabilitar Supervisor",
+    "disableConfirmDesc": "Tem certeza de que deseja desabilitar {name}?",
+    "disableCancel": "Cancelar",
+    "disableConfirm": "Desabilitar"
   },
    "companySites": {
     "title": "Sites",
@@ -264,7 +268,7 @@
       "numberOfWorkers": "TL",
       "supervisorCode": "Código ",
       "zone": "Zona",
-      "actions": "Ações"
+      "actions": "Ação"
     },
     "fields": {
       "name": "Nome",

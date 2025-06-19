@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Building2, BarChart2, ClipboardMinus, UserCheck, Trash2, MessageCircle } from "lucide-react"
+import { Building2, BarChart2, ClipboardMinus, UserCheck, Trash2, MessageCircle, Edit, UserPlus, Image as ImageIcon } from "lucide-react"
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "../../ulils/data-table"
@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog"
 import { Label } from "../../ui/label"
 import instance from "@/lib/api"
+import { companyAdapter } from "@/features/application/infrastructure/factories/CompanyFactory"
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../../ui/alert-dialog"
 
 interface Company {
   id: string
@@ -48,6 +50,9 @@ export default function CompanyTable() {
   const [clientName, setClientName] = useState<string>("")
   const [clientCode, setClientCode] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDisableAlertOpen, setIsDisableAlertOpen] = useState(false)
+  const [editCompanyData, setEditCompanyData] = useState<Partial<Company>>({})
 
   const columns: ColumnDef<Company>[] = React.useMemo(
     () => [
@@ -75,8 +80,37 @@ export default function CompanyTable() {
           </div>
         ),
       },
+      {
+        id: "actions",
+        header: "Ações",
+        cell: ({ row }) => {
+          const company = row.original
+          return (
+            <div className="flex gap-2">
+              <button
+                title="Editar"
+                onClick={() => { setSelectedCompany(company); setEditCompanyData(company); setIsEditDialogOpen(true); }}
+                className="p-2 rounded transition-colors text-blue-600 hover:bg-blue-100 cursor-pointer"
+                style={{ background: 'none', border: 'none' }}
+                type="button"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              <button
+                title="Desativar"
+                onClick={() => { setSelectedCompany(company); setIsDisableAlertOpen(true); }}
+                className="p-2 rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
+                style={{ background: 'none', border: 'none' }}
+                type="button"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )
+        },
+      },
     ],
-    [viewMode],
+    [viewMode]
   )
 
   const fetchCompanies = async (): Promise<void> => {
@@ -168,6 +202,36 @@ export default function CompanyTable() {
     }
   }
 
+  const handleEditCompany = async () => {
+    if (!selectedCompany) return
+    setIsSubmitting(true)
+    try {
+      await companyAdapter.updateCompany(selectedCompany.id, selectedCompany.clientCode, editCompanyData)
+      toast.success("Empresa atualizada com sucesso")
+      setIsEditDialogOpen(false)
+      fetchCompanies()
+    } catch (error) {
+      toast.error("Erro ao atualizar empresa")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDisableCompany = async () => {
+    if (!selectedCompany) return
+    setIsSubmitting(true)
+    try {
+      await companyAdapter.disableCompany(selectedCompany.id, selectedCompany.clientCode)
+      toast.success("Empresa desativada com sucesso")
+      setIsDisableAlertOpen(false)
+      fetchCompanies()
+    } catch (error) {
+      toast.error("Erro ao desativar empresa")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="col-span-1 md:col-span-2">
@@ -187,36 +251,6 @@ export default function CompanyTable() {
           addButtonLabel: "Adicionar Cliente",
         }}
         onAddClick={() => setIsAddClientDialogOpen(true)}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        cardOptions={{
-          primaryField: "name",
-          secondaryFields: [
-            { 
-              key: "sites", 
-              label: "Sites",
-              // @ts-expect-error
-              onClick: (company: Company) => {
-                const params = new URLSearchParams({
-                  clientCode: company.clientCode,
-                  companyName: company.name
-                })
-                router.push(`/dashboard/configuracoes/clientes/site/?${params.toString()}`)
-              }
-            },
-            { key: "occurrences", label: "Ocorrências"},
-          ],
-          onCardClick: (company) => {
-            const params = new URLSearchParams({
-              clientCode: company.clientCode,
-              companyName: company.name
-            })
-            router.push(`/dashboard/configuracoes/clientes/site/?${params.toString()}`)
-          },
-        }}
-        emptyMessage="Nenhuma empresa encontrada."
       />
            </div>
 
@@ -361,6 +395,39 @@ export default function CompanyTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Company Modal */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Empresa</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <Label htmlFor="editName">Nome:</Label>
+            <Input id="editName" value={editCompanyData.name || ""} onChange={e => setEditCompanyData({ ...editCompanyData, name: e.target.value })} />
+            <Label htmlFor="editClientCode">Código do Cliente:</Label>
+            <Input id="editClientCode" value={editCompanyData.clientCode || ""} onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleEditCompany} disabled={isSubmitting}>{isSubmitting ? "Salvando..." : "Salvar"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Disable Company Alert */}
+      <AlertDialog open={isDisableAlertOpen} onOpenChange={setIsDisableAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar Empresa</AlertDialogTitle>
+          </AlertDialogHeader>
+          <p>Tem certeza que deseja desativar esta empresa?</p>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDisableCompany} disabled={isSubmitting}>{isSubmitting ? "Desativando..." : "Desativar"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

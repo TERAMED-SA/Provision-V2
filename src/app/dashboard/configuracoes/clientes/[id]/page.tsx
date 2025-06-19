@@ -447,7 +447,6 @@ export default function CompanySites() {
           columns={columns}
           data={data}
           loading={isLoading}
-          title={t('table.title')}
           filterOptions={{
             enableSiteFilter: true,
             enableColumnVisibility: true,

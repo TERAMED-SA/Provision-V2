@@ -37,7 +37,7 @@ export function OccurrenceDetailModal({ notification, isOpen, onClose }: Occurre
         </AlertDialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-gray-500" />
@@ -46,6 +46,8 @@ export function OccurrenceDetailModal({ notification, isOpen, onClose }: Occurre
               <p>{notification.siteName}</p>
             </div>
 
+          
+          </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-gray-500" />
@@ -55,15 +57,15 @@ export function OccurrenceDetailModal({ notification, isOpen, onClose }: Occurre
                 {getPriorityLabel(notification.priority)}
               </Badge>
             </div>
-          </div>
 
           <div className="space-y-2">
             <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
              
-              <span className="text-sm font-medium text-gray-500"> <Info className="h-4 w-4 text-gray-500" /> Detalhes</span>
+              <span className="text-sm font-medium text-gray-500 flex gap-2"> <Info className="h-4 w-4 text-gray-500" /> Detalhes</span>
             <p className="text-sm">{notification.details}</p>
             </div>
           </div>
+
 
           <Tabs defaultValue="workers" className="w-full">
             <TabsList className="grid w-full grid-cols-2">

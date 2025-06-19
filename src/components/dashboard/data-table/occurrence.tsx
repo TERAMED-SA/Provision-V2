@@ -1,28 +1,23 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import { ArrowUpDown, Download, Eye } from "lucide-react";
-import { DataTable } from "../../ulils/data-table";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { toast } from "sonner";
-import { OccurrencePDF } from "../pdf/occurrence-pdf";
-import type { Column, Row } from "@tanstack/react-table";
-import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas";
-import { Button } from "../../ui/button";
-import { Badge } from "../../ui/badge";
-import { OccurrenceFactory } from "@/features/application/infrastructure/factories/OccurrenceFactory";
-import { Occurrence } from "@/features/application/domain/entities/Occurrence";
-import { OccurrenceDetailModal } from "./occurrence-detail-modal";
+import * as React from "react"
+import { format } from "date-fns"
+import { ArrowUpDown, Eye } from "lucide-react"
+import { DataTable } from "../../ulils/data-table"
+import { toast } from "sonner"
+import type { Column, Row } from "@tanstack/react-table"
+import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas"
+import { Button } from "../../ui/button"
+import { Badge } from "../../ui/badge"
+import type { Occurrence } from "@/features/application/domain/entities/Occurrence"
+import { OccurrenceDetailModal } from "./occurrence-detail-modal"
+import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
+import instance from "@/lib/api"
+import { ptBR } from "date-fns/locale"
 
-export type Notification = Occurrence;
+export type Notification = Occurrence
 
-const PriorityBadge = ({
-  priority,
-}: {
-  priority: Notification["priority"];
-}) => {
+const PriorityBadge = ({ priority }: { priority: Notification["priority"] }) => {
   const priorityConfig = {
     BAIXA: {
       variant: "outline",
@@ -44,181 +39,132 @@ const PriorityBadge = ({
       className: "bg-red-100 text-red-800",
       label: "Crítica",
     },
-  };
+  }
 
   const config = priorityConfig[priority] || {
     variant: "outline",
     className: "bg-gray-100 text-gray-800",
     label: priority ?? "Desconhecido",
-  };
+  }
 
   return (
     <Badge variant="outline" className={config.className}>
       {config.label}
     </Badge>
-  );
-};
+  )
+}
 
 export const getPriorityLabel = (priority: string): string => {
   switch (priority) {
     case "BAIXA":
-      return "Baixa";
+      return "Baixa"
     case "MEDIA":
-      return "Média";
+      return "Média"
     case "ALTA":
-      return "Alta";
+      return "Alta"
     case "CRITICA":
-      return "Crítica";
+      return "Crítica"
     default:
-      return priority;
+      return priority
   }
-};
+}
 
 export const getPriorityClass = (priority: string): string => {
   switch (priority) {
     case "BAIXA":
-      return "bg-green-100 text-green-800";
+      return "bg-green-100 text-green-800"
     case "MEDIA":
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-yellow-100 text-yellow-800"
     case "ALTA":
-      return "bg-orange-100 text-orange-800";
+      return "bg-orange-100 text-orange-800"
     case "CRITICA":
-      return "bg-red-100 text-red-800";
+      return "bg-red-100 text-red-800"
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-gray-100 text-gray-800"
   }
-};
+}
 
 export function OccurrenceTable() {
-  const router = useRouter();
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
-  const [notifications, setNotifications] = React.useState<Notification[]>([]);
-  const [metricsData, setMetricsData] = React.useState<any[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [data, setData] = React.useState<Notification[]>([]);
-  const [dataInitialized, setDataInitialized] = React.useState(false);
-  const [selectedNotification, setSelectedNotification] = React.useState<Notification | null>(null);
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [date, setDate] = React.useState<Date | undefined>(undefined)
+  const [data, setData] = React.useState<Notification[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [selectedNotification, setSelectedNotification] = React.useState<Notification | null>(null)
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [sitesMap, setSitesMap] = React.useState<Map<string, any>>(new Map())
+  const [supervisors, setSupervisors] = React.useState<Map<string, string>>(new Map())
+  const pageSize = 10000
 
-  const fetchNotifications = React.useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const getOccurrencesUseCase = OccurrenceFactory.createGetOccurrencesUseCase();
-      const occurrences = await getOccurrencesUseCase.execute();
-      setNotifications(occurrences);
-    } catch (error: any) {
-      console.error("Error fetching notifications:", error.message);
-      toast.error("Erro ao carregar ocorrências");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
-  const fetchMetrics = React.useCallback(async () => {
-    try {
-      const response = await fetch('/api/metrics?size=100&page=1');
-      const data = await response.json();
-      setMetricsData(data.data.sites);
-    } catch (error: any) {
-      console.error("Error fetching metrics:", error.message);
-      toast.error("Erro ao carregar métricas");
-    }
-  }, []);
 
-  const updateNotificationsWithMetrics = React.useCallback(
-    (notifs: Notification[], metrics: any[]) => {
-      return notifs.map((notification) => {
-        const metricSite = metrics.find(
-          (site) => site.siteCostcenter === notification.costCenter
-        );
-        if (metricSite) {
-          const supervisorName = metricSite.supervisor
-            ? metricSite.supervisor.name
-            : "Não encontrado";
-          return {
-            ...notification,
-            supervisorName: supervisorName,
-            siteName:
-              metricSite.siteName || notification.siteName || "Sem site",
-          };
+  const fetchOccurrences = React.useCallback(
+       async (page = 1000, supervisorMap?: Map<string, string>) => {
+      try {
+        setIsLoading(true)
+        const response = await instance.get(`/occurrence?page=${page}&size=${pageSize}`)
+
+        if (!response.data?.data?.data) {
+          console.error("Estrutura de resposta inválida:", response.data)
+          toast.error("Erro na estrutura dos dados recebidos")
+          return
         }
-        return notification;
-      });
+
+        const currentSupervisors = supervisorMap || supervisors
+
+        const formattedNotifications = response.data.data.data
+          .map((notification: any) => {
+            const createdAtDate = new Date(notification.createdAt)
+            const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
+            const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
+               return {
+              ...notification,
+              createdAt: formattedDate,
+              createdAtTime: formattedTime,
+              createdAtDate: createdAtDate,
+              siteName: notification.name || "Site não informado",
+              coordinates: notification.coordinates || "-",
+              duration: notification.duration || "-",
+            }
+          })
+          .sort((a: Notification, b: Notification) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
+
+        setData(formattedNotifications)
+
+
+      } catch (error: any) {
+        console.error("Erro ao buscar ocorrências:", error)
+        toast.error("Erro ao carregar ocorrências")
+      } finally {
+        setIsLoading(false)
+      }
     },
-    []
-  );
+    [sitesMap, pageSize],
+  )
 
   React.useEffect(() => {
     const loadInitialData = async () => {
-      await fetchNotifications();
-      await fetchMetrics();
-    };
-    loadInitialData();
-  }, [fetchNotifications, fetchMetrics]);
-
-  React.useEffect(() => {
-    if (notifications.length > 0 && !dataInitialized) {
-      const sorted = [...notifications].sort(
-        (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-      );
-      setData(sorted);
-      setDataInitialized(true);
+      await fetchOccurrences(1)
     }
-  }, [notifications, dataInitialized]);
 
-  React.useEffect(() => {
-    if (notifications.length > 0 && metricsData.length > 0) {
-      const updatedNotifications = updateNotificationsWithMetrics(
-        notifications,
-        metricsData
-      );
-      const sorted = [...updatedNotifications].sort(
-        (a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime()
-      );
-      setData(sorted);
+    loadInitialData()
+  }, [])
+
+ 
+  const handleViewDetails = React.useCallback((notification: Notification) => {
+    if (!notification || !notification._id) {
+      toast.error("Dados da ocorrência inválidos")
+      return
     }
-  }, [notifications, metricsData, updateNotificationsWithMetrics]);
 
-  const handleViewDetails = React.useCallback(
-    (notification: Notification) => {
-      try {
-        if (!notification || !notification._id) {
-          toast.error("Dados da ocorrência inválidos");
-          return;
-        }
-
-        setSelectedNotification(notification);
-        setIsModalOpen(true);
-      } catch (error) {
-        console.error("Erro ao abrir detalhes:", error);
-        toast.error("Erro ao abrir detalhes da ocorrência");
-      }
-    },
-    []
-  );
+    setSelectedNotification(notification)
+    setIsModalOpen(true)
+  }, [])
 
   const columns = React.useMemo(
     () => [
       {
-        accessorKey: "idNotification",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button variant="ghost">ID</Button>
-        ),
-        cell: ({ row }: { row: Row<Notification> }) => {
-          return (
-            <div className="max-w-[100px] truncate" title={`#${row.index + 1}`}>
-              {row.index + 1}
-            </div>
-          );
-        },
-      },
-      {
         accessorKey: "createdAt",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Data
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -227,101 +173,79 @@ export function OccurrenceTable() {
       {
         accessorKey: "createdAtTime",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Hora
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         filterFn: (row: Row<Notification>, id: string, value: string) => {
-          if (!value) return true;
-          const rowDate = row.getValue(id) as string;
-          const [day, month, year] = rowDate
-            .split("/")
-            .map((n) => Number.parseInt(n, 10));
-          const date = new Date(year, month - 1, day);
-          return format(date, "yyyy-MM-dd") === value;
+          if (!value) return true
+          const rowDate = row.getValue(id) as string
+          const [day, month, year] = rowDate.split("/").map((n) => Number.parseInt(n, 10))
+          const date = new Date(year, month - 1, day)
+          return format(date, "yyyy-MM-dd") === value
         },
       },
       {
         accessorKey: "siteName",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Site
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
       },
       {
-        accessorKey: "supervisorName",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Supervisor
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-      },
-      {
-        accessorKey: "details",
-        header: "Detalhes",
+        accessorKey: "coordenadas",
+        header: "Coordenadas",
         cell: ({ row }: { row: Row<Notification> }) => {
-          const details = row.getValue("details") as string;
-          return (
-            <div className="max-w-[200px] truncate" title={details}>
-              {details}
-            </div>
-          );
+          const lat = row.original.latitude
+          const lng = row.original.longitude
+          return lat && lng ? `${lat}, ${lng}` : "-"
         },
       },
       {
-        accessorKey: "priority",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Prioridade
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }: { row: Row<Notification> }) => (
-          <PriorityBadge priority={row.getValue("priority")} />
-        ),
-        filterFn: (row: Row<Notification>, id: string, value: string[]) => {
-          return value.includes(row.getValue(id));
+        accessorKey: "aria",
+        header: "Aria",
+        cell: ({ row }: { row: Row<Notification> }) => {
+          return row.original.aria || "-"
+        },
+      },
+      {
+        accessorKey: "referencia",
+        header: "Referência",
+        cell: ({ row }: { row: Row<Notification> }) => {
+          return row.original.referencia || "-"
+        },
+      },
+      {
+        accessorKey: "ocorrencia",
+        header: "Ocorrência",
+        cell: ({ row }: { row: Row<Notification> }) => {
+          return row.original.ocorrencia || "-"
         },
       },
       {
         id: "actions",
-        header: "Ações",  
+        header: "Ação",
         cell: ({ row }: { row: Row<Notification> }) => {
-          const notification = row.original;
+          const notification = row.original
 
           return (
-            <div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="cursor-pointer text-gray-600 hover:text-gray-100 hover:bg-gray-800"
-                onClick={() => handleViewDetails(notification)}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </div>
-          );
+            <Button
+              variant="ghost"
+              size="icon"
+              className="cursor-pointer text-gray-600 hover:text-gray-100 hover:bg-gray-800"
+              onClick={() => handleViewDetails(notification)}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )
         },
       },
     ],
-    [handleViewDetails]
-  );
+    [handleViewDetails],
+  )
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -355,5 +279,5 @@ export function OccurrenceTable() {
         onClose={() => setIsModalOpen(false)}
       />
     </div>
-  );
+  )
 }

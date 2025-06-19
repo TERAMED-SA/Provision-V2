@@ -246,7 +246,11 @@
       "genderPlaceholder": "Sélectionnez le genre",
       "male": "Masculin",
       "female": "Féminin"
-    }
+    },
+    "disableConfirmTitle": "Désactiver le superviseur",
+    "disableConfirmDesc": "Êtes-vous sûr de vouloir désactiver {name} ?",
+    "disableCancel": "Annuler",
+    "disableConfirm": "Désactiver"
   },
     "companySites": {
     "title": "Sites",
