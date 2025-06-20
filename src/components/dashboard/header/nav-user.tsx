@@ -15,7 +15,6 @@ export function NavUser() {
   const { user , logout } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-console.log(user);
 
   if (!user) {
     return <LoadingScreen message="Carregando usuário..." />;

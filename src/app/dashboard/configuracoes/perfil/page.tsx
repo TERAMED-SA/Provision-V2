@@ -1,9 +1,8 @@
+import { SupervisorTable } from '@/components/dashboard/data-table/supervisor'
 import React from 'react'
 
 function Perfil() {
-  return (
-    <div>Perfil</div>
-  )
+  return <SupervisorTable/>
 }
 
 export default Perfil

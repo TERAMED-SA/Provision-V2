@@ -15,9 +15,10 @@ import { Label } from "../../ui/label"
 import instance from "@/lib/api"
 import { companyAdapter } from "@/features/application/infrastructure/factories/CompanyFactory"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../../ui/alert-dialog"
+import { useAuth } from "@/hooks/useAuth"
 
 interface Company {
-  id: string
+  _id: string
   name: string
   logo?: string
   clientCode: string
@@ -40,10 +41,10 @@ interface ApiResponse<T> {
 
 export default function CompanyTable() {
   const router = useRouter()
+  const { user } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
-  const [searchTerm, setSearchTerm] = useState<string>("")
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState<boolean>(false)
@@ -121,11 +122,7 @@ export default function CompanyTable() {
         const dataArray = Array.isArray(response.data.data.data)
           ? response.data.data.data
           : [response.data.data.data]
-        const sorted = [...dataArray].sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        })
-        setCompanies(sorted)
+        setCompanies(dataArray)
         setLoading(false)
       }, 1000)
     } catch (error) {
@@ -138,10 +135,7 @@ export default function CompanyTable() {
     fetchCompanies()
   }, [])
 
-  const sortedCompanies = [...companies].sort((a, b) => {
-    if (!a.createdAt || !b.createdAt) return 0
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
+
 
   const handleCompanyClick = (company: Company): void => {
     setSelectedCompany(company)
@@ -204,9 +198,14 @@ export default function CompanyTable() {
 
   const handleEditCompany = async () => {
     if (!selectedCompany) return
+    if (!user?._id) {
+      toast.error("Usuário não autenticado")
+      return
+    }
     setIsSubmitting(true)
     try {
-      await companyAdapter.updateCompany(selectedCompany.id, selectedCompany.clientCode, editCompanyData)
+      const { clientCode, ...dataToUpdate } = editCompanyData;
+      await companyAdapter.updateCompany(selectedCompany._id, user._id, dataToUpdate)
       toast.success("Empresa atualizada com sucesso")
       setIsEditDialogOpen(false)
       fetchCompanies()
@@ -219,9 +218,13 @@ export default function CompanyTable() {
 
   const handleDisableCompany = async () => {
     if (!selectedCompany) return
+    if (!user?._id) {
+      toast.error("Usuário não autenticado")
+      return
+    }
     setIsSubmitting(true)
     try {
-      await companyAdapter.disableCompany(selectedCompany.id, selectedCompany.clientCode)
+      await companyAdapter.disableCompany(selectedCompany._id, user._id)
       toast.success("Empresa desativada com sucesso")
       setIsDisableAlertOpen(false)
       fetchCompanies()
@@ -241,7 +244,7 @@ export default function CompanyTable() {
 
       <DataTable
         columns={columns}
-        data={sortedCompanies}
+        data={companies}
         loading={loading}
         title="Clientes"
         filterOptions={{

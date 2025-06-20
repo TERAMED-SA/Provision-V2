@@ -36,9 +36,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return <LoadingScreen message="Validando sessão do usuário..." />;
   }
 
-  if (!isAuthenticated || !user) {
-    return <LoadingScreen message="Redirecionando..." />;
-  }
+
 
   return (
     <div className="flex h-screen">

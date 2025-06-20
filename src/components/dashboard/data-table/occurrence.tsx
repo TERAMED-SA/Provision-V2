@@ -93,9 +93,6 @@ export function OccurrenceTable() {
   const [sitesMap, setSitesMap] = React.useState<Map<string, any>>(new Map())
   const [supervisors, setSupervisors] = React.useState<Map<string, string>>(new Map())
   const pageSize = 10000
-
-
-
   const fetchOccurrences = React.useCallback(
        async (page = 1000, supervisorMap?: Map<string, string>) => {
       try {
@@ -209,13 +206,6 @@ export function OccurrenceTable() {
         header: "Aria",
         cell: ({ row }: { row: Row<Notification> }) => {
           return row.original.aria || "-"
-        },
-      },
-      {
-        accessorKey: "referencia",
-        header: "Referência",
-        cell: ({ row }: { row: Row<Notification> }) => {
-          return row.original.referencia || "-"
         },
       },
       {

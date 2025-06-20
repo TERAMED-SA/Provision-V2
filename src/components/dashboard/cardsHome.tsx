@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import instance from "@/lib/api";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function SectionCards() {
   const [userCount, setUserCount] = useState<number | null>(null);
@@ -36,7 +41,7 @@ export function SectionCards() {
     {
       title: t("supervisores"),
       value: userCount,
-      link: "/dashboard/supervisores",
+      link: "/dashboard/configuracoes/perfil",
       description: t("totalSupervisores"),
       icon: <UserIcon className="size-5" />,
       color: "bg-blue-100 text-blue-500",
@@ -60,34 +65,45 @@ export function SectionCards() {
   ];
 
   return (
-    <div className=" gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {cardsData.map((card, index) => (
-        <Link key={index} href={card.link} className="block">
-          <div className="bg-white dark:bg-gray-800 rounded-sm p-5  border border-gray-200 dark:border-gray-700">
-            <div className="flex items-start">
-              <div className={`${card.color} p-3 rounded-full mr-4`}>
-                {card.icon}
-              </div>
-              <div>
-                <div className="flex flex-col">
-                  <span className="text-3xl font-bold text-gray-800 dark:text-white">
-                    {card.value !== null ? (
-                      `${card.value}`
-                    ) : (
-                    <div className="flex  w-full items-center justify-center">
-      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-500"></div>
-    </div>
-                    )}
-                  </span>
-
-                  <span className="text-sm text-gray-500 dark:text-gray-500 mt-0.5">
-                    {card.description}
-                  </span>
+        <Tooltip key={index}>
+          <TooltipTrigger asChild>
+            <Link href={card.link} className="block">
+              <div
+                className={`
+                  bg-white dark:bg-gray-800 rounded-sm p-5 border border-gray-200 dark:border-gray-700
+                  transform transition-transform duration-300 hover:-translate-y-2
+                `}
+              >
+                <div className="flex items-start">
+                  <div className={`${card.color} p-3 rounded-full mr-4`}>
+                    {card.icon}
+                  </div>
+                  <div>
+                    <div className="flex flex-col">
+                      <span className="text-3xl font-bold text-gray-800 dark:text-white">
+                        {card.value !== null ? (
+                          `${card.value}`
+                        ) : (
+                          <div className="flex w-full items-center justify-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-500"></div>
+                          </div>
+                        )}
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-500 mt-0.5">
+                        {card.description}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </Link>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent className="bg-zinc-400  dark:bg-gray-800">
+            <p className="text-sm text-white">Click para ver tudo</p>
+          </TooltipContent>
+        </Tooltip>
       ))}
     </div>
   );

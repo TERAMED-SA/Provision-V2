@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Edit, Trash, Plus,  Eye } from "lucide-react"
+import { Edit, Trash, Plus,  Eye, MapPin } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -64,6 +64,7 @@ export default function CompanySites() {
   const [isCompanyInfoModalOpen, setIsCompanyInfoModalOpen] = useState(false)
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null)
   const [supervisionCount, setSupervisionCount] = useState<number>(0)
+  const [isSiteDetailModalOpen, setIsSiteDetailModalOpen] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -156,7 +157,7 @@ export default function CompanySites() {
               variant="ghost" 
               size="sm" 
               className="cursor-pointer" 
-              onClick={() => handleViewSupervisions(site)}
+              onClick={() => handleOpenSiteDetail(site)}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -333,9 +334,13 @@ export default function CompanySites() {
 
   const handleViewSupervisions = async (site: Site) => {
     await fetchCompanyInfo(site.costCenter)
-    await fetchSupervisionCount(site.supervisorCode)
     setSelectedSite(site)
     setIsCompanyInfoModalOpen(true)
+  }
+
+  const handleOpenSiteDetail = (site: Site) => {
+    setSelectedSite(site)
+    setIsSiteDetailModalOpen(true)
   }
 
   return (
@@ -561,6 +566,32 @@ export default function CompanySites() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Modal de detalhe do site */}
+        <Dialog open={isSiteDetailModalOpen} onOpenChange={setIsSiteDetailModalOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Detalhes do Site</DialogTitle>
+            </DialogHeader>
+            {selectedSite ? (
+              <div className="space-y-4 p-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <MapPin className="text-blue-500" size={22} />
+                  <span className="text-lg font-bold">{selectedSite.name}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Cost Center:</span> {selectedSite.costCenter || "N/A"}</div>
+                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Nº Trabalhadores:</span> {selectedSite.numberOfWorkers || "N/A"}</div>
+                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Zona:</span> {selectedSite.zone || "N/A"}</div>
+                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Supervisor Code:</span> {selectedSite.supervisorCode || "N/A"}</div>
+                </div>
+              </div>
+            ) : (
+              <div>Carregando informações...</div>
+            )}
+          </DialogContent>
+        </Dialog>
+        {/* Fim do modal de detalhe do site */}
       </div>
     </div>
   )

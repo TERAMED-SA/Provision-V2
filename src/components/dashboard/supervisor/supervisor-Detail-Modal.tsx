@@ -61,7 +61,7 @@ export function SupervisorDetailModal() {
               </Avatar>
               <div>
                 <h3 className="text-xl font-semibold">{supervisor.name}</h3>
-                <p className="text-sm text-muted-foreground">Código: {supervisor.supervisorCode || "N/A"}</p>
+                <p className="text-sm text-muted-foreground">Código: {supervisor.employeeId || "N/A"}</p>
               </div>
             </div>
 

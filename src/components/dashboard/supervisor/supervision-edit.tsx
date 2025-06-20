@@ -49,9 +49,8 @@ export function SupervisorEditForm({
       await onSave(editedSupervisor)
       toast.success("Supervisor atualizado com sucesso")
       onOpenChange(false)
-    } catch (error) {
-      console.error("Erro ao atualizar supervisor:", error)
-      toast.error("Erro ao atualizar supervisor")
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Erro ao atualizar supervisor")
     } finally {
       setIsSubmitting(false)
     }
@@ -78,21 +77,31 @@ export function SupervisorEditForm({
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="supervisorCode">Código do Supervisor</label>
+              <label htmlFor="supervisorCode">Telefone</label>
               <Input
                 id="supervisorCode"
                 name="supervisorCode"
-                value={editedSupervisor.supervisorCode || ""}
+                value={editedSupervisor.phoneNumber || ""}
                 onChange={handleChange}
                 required
               />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="costCenter">Centro de Custo</label>
+              <label htmlFor="email">Email</label>
               <Input
-                id="costCenter"
-                name="costCenter"
-                value={editedSupervisor.costCenter || ""}
+                id="email"
+                name="email"
+                value={editedSupervisor.email || ""}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="address">Endereço</label>
+              <Input
+                id="address"
+                name="address"
+                value={editedSupervisor.address || ""}
                 onChange={handleChange}
                 required
               />

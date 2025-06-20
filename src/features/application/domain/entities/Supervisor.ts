@@ -1,8 +1,13 @@
 export interface Supervisor {
+  deletedAt: string | null;
   _id: string;
   name: string;
   createdAt: string;
   updatedAt: string;
+  phoneNumber: string;
+  email: string;
+  employeeId: string;
+  address: string;
   supervisorCode: string;
   taskId: string | null;
   time: string;
