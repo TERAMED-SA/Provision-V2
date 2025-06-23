@@ -381,7 +381,7 @@ export function SupervisorTable() {
               {paginatedSites.map(site => (
                 <li key={site._id} className="flex items-center justify-between py-2 px-1 hover:bg-accent rounded transition">
                   <div>
-                    <div className="font-semibold text-base">{site.name}</div>
+                    <div className="font-semibold text-sm">{site.name}</div>
                     <div className="text-xs text-muted-foreground">Cost Center: {site.costCenter}</div>
                   </div>
                   <Button size="sm" variant="outline" className="cursor-pointer" onClick={() => {

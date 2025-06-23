@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, LogOut, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import SettingsModal from "../settings";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../../ui/alert-dialog";
 import LoadingScreen from "../../ui/loadingScreen";
@@ -23,7 +23,7 @@ export function NavUser() {
     <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <div className="flex gap-2 items-center justify-center border-l pl-3 ml-3 pr-3 border-gray-300 cursor-pointer">
+          <div className="flex gap-2 items-center justify-center cursor-pointer">
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage src={user.avatar} alt={user.name} />
               {!user.avatar && user.name ? (
@@ -38,10 +38,7 @@ export function NavUser() {
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="hidden md:grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{user.name}</span>
-            </div>
-            <ChevronDown className="ml-auto size-4" />
+           
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent

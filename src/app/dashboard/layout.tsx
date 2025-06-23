@@ -49,7 +49,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={isMobile ? "hidden" : ""}
       />
       <div className="flex flex-col flex-1 h-screen">   
-        <div className="sticky top-0 z-50 bg-white dark:bg-gray-800 ">
+        <div className="sticky top-0 z-50  ">
           <Header
             collapsed={sidebarCollapsed}
             isDarkMode={false}
@@ -58,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onOpenSheet={() => setIsSheetOpen(true)}
           />
         </div>
-        <main className="flex-1 overflow-y-auto bg-[#F0F5F9] p-3 md:px-6 md:py-4 dark:bg-gray-900">
+        <main className="flex-1 overflow-y-auto  p-3 md:px-6 md:py-4 ">
           {children}
         </main>
       </div>

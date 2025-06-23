@@ -79,19 +79,7 @@ export default function Login() {
   };
   return  (
      <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="bg-muted  relative hidden lg:block">
-          <div className="absolute top-4 left-6 flex justify-between items-center z-20">
-          <LocaleSwitcher className="shadow-sm" showLabel />
-        </div>
-        <Image
-        width={1000}
-        height={1000}
-          src="/left.jpeg"
-          alt="Image"
-          className="absolute inset-0  h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
-      </div>
-      <div className="flex flex-col items-center gap-4 p-6 md:p-10">
+          <div className="flex flex-col items-center gap-4 p-6 md:p-10">
         <div className="flex justify-center   md:justify-start">
           <Link
             href="/"
@@ -200,6 +188,19 @@ export default function Login() {
           </div>
         </div>
       </div>
+      <div className="bg-muted  relative hidden lg:block">
+          <div className="absolute top-4 left-6 flex justify-between items-center z-20">
+          <LocaleSwitcher className="shadow-sm" showLabel />
+        </div>
+        <Image
+        width={1000}
+        height={1000}
+          src="/left.jpeg"
+          alt="Image"
+          className="absolute inset-0  h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        />
+      </div>
+  
     </div>
   ) 
  

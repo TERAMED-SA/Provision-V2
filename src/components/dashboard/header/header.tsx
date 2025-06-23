@@ -5,6 +5,7 @@ import { Bells } from "./bells";
 import { Mode } from "./mode";
 import { SidebarToggleButton } from "../SidebarToggleButton";
 import LocaleSwitcher from "../locale-switcher";
+import { GreetingMessage } from "../greetingMessage";
 
 interface HeaderProps {
   collapsed: boolean;
@@ -14,14 +15,14 @@ interface HeaderProps {
   onOpenSheet?: () => void;
 }
 
-function Header({ 
-  collapsed, 
-  isDarkMode, 
-  toggleSidebar, 
+function Header({
+  collapsed,
+  isDarkMode,
+  toggleSidebar,
   isMobile,
-  onOpenSheet 
+  onOpenSheet
 }: HeaderProps) {
-  
+
   const handleToggle = () => {
     if (isMobile && onOpenSheet) {
       onOpenSheet();
@@ -31,19 +32,22 @@ function Header({
   };
 
   return (
-    <div className="flex border-b bg-white dark:bg-gray-800 w-full flex-wrap p-1 items-center justify-between gap-4">
-      <div>
-        <SidebarToggleButton
-          collapsed={collapsed}
-          isDarkMode={isDarkMode}
-          isMobile={isMobile}
-          onToggleSidebar={handleToggle}
-          onOpenSheet={onOpenSheet}
-        />
+    <div className="flex w-full flex-wrap px-5.5 my-6 items-center justify-between gap-4">
+      <div className="flex items-center gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-full ">
+          <SidebarToggleButton
+            collapsed={collapsed}
+            isDarkMode={isDarkMode}
+            isMobile={isMobile}
+            onToggleSidebar={handleToggle}
+            onOpenSheet={onOpenSheet}
+          />
+        </div>
+        <GreetingMessage />
       </div>
-      <div className="flex items-center gap-1">
-        <LocaleSwitcher showLabel />
+      <div className="flex items-center gap-4">
         <SearchDasboardh />
+        <LocaleSwitcher showLabel />
         <Mode />
         <Bells />
         <NavUser />

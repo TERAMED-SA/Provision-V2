@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState, useMemo } from "react"
-import { format, startOfDay, endOfDay, subDays, startOfWeek,startOfMonth } from "date-fns"
+import { format, startOfDay, endOfDay, subDays, startOfWeek, startOfMonth } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { TrendingUp, Activity, Shield } from "lucide-react"
 import { toast } from "sonner"
@@ -28,7 +28,7 @@ interface BaseItem {
 function LoadingSpinner() {
   return (
     <div className="flex h-[350px] w-full items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-gray-500"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
     </div>
   )
 }
@@ -37,7 +37,7 @@ function OccurrencesChart({ data, loading, timeFilter }: { data: ChartData[], lo
   const chartConfig = {
     occurrences: {
       label: "Ocorrências",
-      color: "#ef4444",
+      color: "#3b82f6",
     },
   }
 
@@ -51,7 +51,7 @@ function OccurrencesChart({ data, loading, timeFilter }: { data: ChartData[], lo
     return (
       <div className="flex h-[350px] items-center justify-center text-muted-foreground">
         <div className="text-center">
-          <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <Activity className="h-12 w-12 mx-auto mb-4 opacity-50 text-blue-500" />
           <p className="text-lg font-medium">Nenhuma ocorrência registrada</p>
           <p className="text-sm">neste período</p>
         </div>
@@ -64,55 +64,69 @@ function OccurrencesChart({ data, loading, timeFilter }: { data: ChartData[], lo
   return (
     <ChartContainer config={chartConfig} className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart 
-          accessibilityLayer 
+        <BarChart
+          accessibilityLayer
           data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <defs>
             <linearGradient id="colorOccurrences" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.2}/>
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
+              <stop offset="50%" stopColor="#1d4ed8" stopOpacity={0.8} />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity={0.6} />
+            </linearGradient>
+            <linearGradient id="colorOccurrencesHover" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.9} />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.7} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis 
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.6} />
+          <XAxis
             dataKey={dataKey}
-            tickLine={false} 
-            tickMargin={10} 
-            axisLine={false} 
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
             fontSize={12}
             stroke="#64748b"
             angle={timeFilter === "month" ? -45 : 0}
             textAnchor={timeFilter === "month" ? "end" : "middle"}
             height={timeFilter === "month" ? 60 : 30}
+            tick={{ fill: '#64748b', fontSize: 11 }}
           />
-          <YAxis 
-            tickLine={false} 
-            axisLine={false} 
-            tickMargin={10} 
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={10}
             fontSize={12}
             stroke="#64748b"
             tickFormatter={(value) => Number.isInteger(value) ? value : ''}
+            tick={{ fill: '#64748b', fontSize: 11 }}
           />
-          <ChartTooltip 
-            cursor={{ fill: 'rgba(239, 68, 68, 0.1)' }} 
-            content={<ChartTooltipContent 
-              indicator="dashed" 
-              labelStyle={{ color: '#1e293b' }}
-              contentStyle={{ 
-                backgroundColor: 'white', 
+          <ChartTooltip
+            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+            content={<ChartTooltipContent
+              indicator="dashed"
+              labelStyle={{ color: '#1e293b', fontWeight: '600' }}
+              contentStyle={{
+                backgroundColor: 'white',
                 border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
+                padding: '12px 16px'
               }}
-            />} 
+            />}
           />
-          <Bar 
-            dataKey="occurrences" 
-            fill="url(#colorOccurrences)" 
-            radius={[6, 6, 0, 0]} 
+          <Bar
+            dataKey="occurrences"
+            fill="url(#colorOccurrences)"
+            radius={[8, 8, 0, 0]}
             name="Ocorrências"
+            animationDuration={1500}
+            animationEasing="ease-out"
+            onMouseOver={(data, index) => {
+              // Enhanced hover effect
+            }}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -137,7 +151,7 @@ function SupervisionsChart({ data, loading, timeFilter }: { data: ChartData[], l
     return (
       <div className="flex h-[350px] items-center justify-center text-muted-foreground">
         <div className="text-center">
-          <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <Shield className="h-12 w-12 mx-auto mb-4 opacity-50 text-blue-500" />
           <p className="text-lg font-medium">Nenhuma supervisão registrada</p>
           <p className="text-sm">neste período</p>
         </div>
@@ -157,52 +171,75 @@ function SupervisionsChart({ data, loading, timeFilter }: { data: ChartData[], l
         >
           <defs>
             <linearGradient id="colorSupervisions" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6}/>
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
+              <stop offset="50%" stopColor="#1d4ed8" stopOpacity={0.6} />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity={0.3} />
+            </linearGradient>
+            <linearGradient id="colorSupervisionsStroke" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis 
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.6} />
+          <XAxis
             dataKey={dataKey}
-            tickLine={false} 
-            axisLine={false} 
-            tickMargin={8} 
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
             fontSize={12}
             stroke="#64748b"
             angle={timeFilter === "month" ? -45 : 0}
             textAnchor={timeFilter === "month" ? "end" : "middle"}
             height={timeFilter === "month" ? 60 : 30}
+            tick={{ fill: '#64748b', fontSize: 11 }}
           />
-          <YAxis 
-            tickLine={false} 
-            axisLine={false} 
-            tickMargin={10} 
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={10}
             fontSize={12}
             stroke="#64748b"
             tickFormatter={(value) => Number.isInteger(value) ? value : ''}
+            tick={{ fill: '#64748b', fontSize: 11 }}
           />
-          <ChartTooltip 
-            cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '5 5', pointerEvents: 'auto' }} 
-            content={<ChartTooltipContent 
-              indicator="dot" 
-              labelStyle={{ color: '#1e293b' }}
-              contentStyle={{ 
-                backgroundColor: 'white', 
+          <ChartTooltip
+            cursor={{ stroke: '#3b82f6', strokeWidth: 3, strokeDasharray: '5 5', pointerEvents: 'auto' }}
+            content={<ChartTooltipContent
+              indicator="dot"
+              labelStyle={{ color: '#1e293b', fontWeight: '600' }}
+              contentStyle={{
+                backgroundColor: 'white',
                 border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
+                padding: '12px 16px'
               }}
-            />} 
+            />}
           />
           <Area
             dataKey="supervisions"
             type="monotone"
             fill="url(#colorSupervisions)"
-            stroke="#3b82f6"
-            strokeWidth={3}
+            stroke="url(#colorSupervisionsStroke)"
+            strokeWidth={4}
             name="Supervisões"
-            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2, fill: 'white' }}
+            animationDuration={2000}
+            animationEasing="ease-out"
+            dot={{
+              fill: '#3b82f6',
+              strokeWidth: 3,
+              r: 5,
+              stroke: 'white',
+              filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))'
+            }}
+            activeDot={{
+              r: 8,
+              stroke: '#3b82f6',
+              strokeWidth: 3,
+              fill: 'white',
+              filter: 'drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4))'
+            }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -222,11 +259,11 @@ export default function AnalyticsView() {
     occurrences: 0,
     supervisions: 0
   })
- const t = useTranslations('analytics');
-  
+  const t = useTranslations('analytics');
+
   const getDateRange = useCallback((timeFilter: string) => {
     const now = new Date()
-    
+
     switch (timeFilter) {
       case "day":
         return {
@@ -260,13 +297,13 @@ export default function AnalyticsView() {
   const processItemDate = useCallback((item: any): BaseItem | null => {
     try {
       let createdAtDate: Date | null = null
-      
+
       if (item.createdAt) {
         const dateString = item.createdAt.toString()
         createdAtDate = new Date(dateString)
         if (isNaN(createdAtDate.getTime())) {
           createdAtDate = new Date(dateString.replace(/\s/, 'T'))
-          
+
           if (isNaN(createdAtDate.getTime())) {
             console.warn('Data inválida encontrada:', item.createdAt)
             return null
@@ -293,11 +330,11 @@ export default function AnalyticsView() {
     switch (timeFilter) {
       case "day":
       case "yesterday":
-        return 500 
+        return 500
       case "week":
-        return 1000 
+        return 1000
       case "month":
-        return 2000 
+        return 2000
       default:
         return 500
     }
@@ -315,13 +352,13 @@ export default function AnalyticsView() {
     try {
       setOccurrencesLoading(true)
       setError(null)
-      
+
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 15000) 
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
 
       const response = await instance.get('/occurrence', {
         params: {
-          size: 10000, 
+          size: 10000,
           sort: 'createdAt',
           order: 'desc'
         },
@@ -329,7 +366,7 @@ export default function AnalyticsView() {
       })
 
       clearTimeout(timeoutId)
-      
+
       if (response.data?.data?.data) {
         const processedData = response.data.data.data
           .map(processItemDate)
@@ -355,7 +392,7 @@ export default function AnalyticsView() {
 
   const fetchSupervisions = useCallback(async (forceRefresh = false) => {
     const now = Date.now()
-    const CACHE_DURATION = 2 * 60 * 1000 
+    const CACHE_DURATION = 2 * 60 * 1000
 
     if (!forceRefresh && rawSupervisions.length > 0 && (now - lastFetchTime.supervisions) < CACHE_DURATION) {
       setSupervisionsLoading(false)
@@ -414,7 +451,7 @@ export default function AnalyticsView() {
         })
         .map(([day, count]) => ({
           day,
-          hour: "", 
+          hour: "",
           occurrences: count,
           supervisions: count,
         }))
@@ -424,7 +461,7 @@ export default function AnalyticsView() {
       daysOfWeek.forEach((d) => { weekGroups[d] = 0 })
       data.forEach((item) => {
         if (item.createdAtDate && !isNaN(item.createdAtDate.getTime())) {
-          const dayIndex = item.createdAtDate.getDay() 
+          const dayIndex = item.createdAtDate.getDay()
           const weekDay = daysOfWeek[(dayIndex + 6) % 7]
           weekGroups[weekDay] = (weekGroups[weekDay] || 0) + 1
         }
@@ -442,7 +479,7 @@ export default function AnalyticsView() {
         const hour = i.toString().padStart(2, "0")
         hourlyGroups[hour] = 0
       }
-      
+
       data.forEach((item) => {
         if (item.createdAtDate && !isNaN(item.createdAtDate.getTime())) {
           const hour = format(item.createdAtDate, "HH")
@@ -466,7 +503,7 @@ export default function AnalyticsView() {
 
   const filteredOccurrences = useMemo(() => {
     if (!rawOccurrences.length) return []
-    
+
     const { start, end } = getDateRange(occurrencesTimeFilter)
     return rawOccurrences.filter((item) => {
       try {
@@ -479,7 +516,7 @@ export default function AnalyticsView() {
 
   const filteredSupervisions = useMemo(() => {
     if (!rawSupervisions.length) return []
-    
+
     const { start, end } = getDateRange(supervisionsTimeFilter)
     return rawSupervisions.filter((item) => {
       try {
@@ -501,7 +538,7 @@ export default function AnalyticsView() {
   useEffect(() => {
     fetchOccurrences()
     fetchSupervisions()
-  }, []) 
+  }, [])
 
 
   const getPeriodTitle = useCallback((timeFilter: string) => {
@@ -523,51 +560,7 @@ export default function AnalyticsView() {
   return (
     <div className="flex flex-col gap-6 ">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card className="w-full shadow-sm rounded-sm border-0 bg-white dark:bg-gray-800">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-red-700">
-                <Activity className="h-5 w-5" />
-                {t('occurrences.title')}
-              </CardTitle>
-              <CardDescription className="text-red-600/70">
-                {getPeriodTitle(occurrencesTimeFilter)}
-              </CardDescription>
-            </div>
-            <Tabs value={occurrencesTimeFilter} onValueChange={setOccurrencesTimeFilter}>
-              <TabsList className="grid w-full grid-cols-4 bg-white/50">
-                <TabsTrigger value="day" className="data-[state=active]:bg-red-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
-                  {t('timeFilters.today')}
-                </TabsTrigger>
-                <TabsTrigger value="yesterday" className="data-[state=active]:bg-red-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
-                  {t('timeFilters.yesterday')}
-                </TabsTrigger>
-                <TabsTrigger value="week" className="data-[state=active]:bg-red-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
-                  {t('timeFilters.week')}
-                </TabsTrigger>
-                <TabsTrigger value="month" className="data-[state=active]:bg-red-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
-                  {t('timeFilters.month')}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardHeader>
-          <CardContent className="pb-4">
-            <OccurrencesChart data={occurrencesChartData} loading={occurrencesLoading} timeFilter={occurrencesTimeFilter} />
-          </CardContent>
-          <CardFooter className="flex-col items-start gap-2 text-sm ">
-            <div className="flex gap-2 font-semibold leading-none text-red-700">
-              {t('occurrences.total', { count: filteredOccurrences.length })}
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <div className="leading-none text-gray-700/70">
-              {occurrencesTimeFilter === "month"
-                ? t('occurrences.distributionDay')
-                : t('occurrences.distributionHour')}
-            </div>
-          </CardFooter>
-        </Card>
-
-        <Card className="w-full shadow-sm rounded-sm border-0 bg-white dark:bg-gray-800">
+      <Card className="w-full shadow-lg rounded-lg border-0 bg-white dark:bg-gray-800 hover:shadow-xl transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2 text-blue-700">
@@ -580,23 +573,23 @@ export default function AnalyticsView() {
             </div>
             <Tabs value={supervisionsTimeFilter} onValueChange={setSupervisionsTimeFilter}>
               <TabsList className="grid w-full grid-cols-4 bg-white/50">
-                <TabsTrigger value="day" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
+                <TabsTrigger value="day" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
                   {t('timeFilters.today')}
                 </TabsTrigger>
-                <TabsTrigger value="yesterday" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
+                <TabsTrigger value="yesterday" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
                   {t('timeFilters.yesterday')}
                 </TabsTrigger>
-                <TabsTrigger value="week" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
+                <TabsTrigger value="week" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
                   {t('timeFilters.week')}
                 </TabsTrigger>
-                <TabsTrigger value="month" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white">
+                <TabsTrigger value="month" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
                   {t('timeFilters.month')}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
           <CardContent className="pb-4">
-            <SupervisionsChart data={supervisionsChartData} loading={supervisionsLoading}  timeFilter={supervisionsTimeFilter}/>
+            <SupervisionsChart data={supervisionsChartData} loading={supervisionsLoading} timeFilter={supervisionsTimeFilter} />
           </CardContent>
           <CardFooter className="flex-col items-start gap-2 text-sm ">
             <div className="flex gap-2 font-semibold leading-none text-blue-700">
@@ -608,6 +601,51 @@ export default function AnalyticsView() {
             </div>
           </CardFooter>
         </Card>
+        <Card className="w-full shadow-lg rounded-lg border-0 bg-white dark:bg-gray-800 hover:shadow-xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2 text-blue-700">
+                <Activity className="h-5 w-5" />
+                {t('occurrences.title')}
+              </CardTitle>
+              <CardDescription className="text-blue-600/70">
+                {getPeriodTitle(occurrencesTimeFilter)}
+              </CardDescription>
+            </div>
+            <Tabs value={occurrencesTimeFilter} onValueChange={setOccurrencesTimeFilter}>
+              <TabsList className="grid w-full grid-cols-4 bg-white/50">
+                <TabsTrigger value="day" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
+                  {t('timeFilters.today')}
+                </TabsTrigger>
+                <TabsTrigger value="yesterday" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
+                  {t('timeFilters.yesterday')}
+                </TabsTrigger>
+                <TabsTrigger value="week" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
+                  {t('timeFilters.week')}
+                </TabsTrigger>
+                <TabsTrigger value="month" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
+                  {t('timeFilters.month')}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardHeader>
+          <CardContent className="pb-4">
+            <OccurrencesChart data={occurrencesChartData} loading={occurrencesLoading} timeFilter={occurrencesTimeFilter} />
+          </CardContent>
+          <CardFooter className="flex-col items-start gap-2 text-sm ">
+            <div className="flex gap-2 font-semibold leading-none text-blue-700">
+              {t('occurrences.total', { count: filteredOccurrences.length })}
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <div className="leading-none text-gray-700/70">
+              {occurrencesTimeFilter === "month"
+                ? t('occurrences.distributionDay')
+                : t('occurrences.distributionHour')}
+            </div>
+          </CardFooter>
+        </Card>
+
+    
       </div>
     </div>
   )

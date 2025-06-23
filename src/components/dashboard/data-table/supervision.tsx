@@ -189,6 +189,16 @@ export function NewSupervionTable() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
+        filterFn: (row: Row<Notification>, id: string, value: Date) => {
+          if (!value) return true;
+          const [day, month, year] = (row.getValue(id) as string).split("/");
+          const rowDate = new Date(Number(year), Number(month) - 1, Number(day));
+          return (
+            rowDate.getDate() === value.getDate() &&
+            rowDate.getMonth() === value.getMonth() &&
+            rowDate.getFullYear() === value.getFullYear()
+          );
+        },
       },
       {
         accessorKey: "createdAtTime",
@@ -319,6 +329,7 @@ export function NewSupervionTable() {
           initialColumnVisibility={{
             details: false,
           }}    
+          handleViewDetails={handleViewDetails}
         />
 
         <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -442,7 +453,7 @@ export function NewSupervionTable() {
 
             <AlertDialogFooter className="flex items-center justify-between mt-4">
               <PDFDownloadLink
-                document={<OccurrencePDF notification={selectedNotification!}  />}
+                document={<OccurrencePDF notification={{ ...selectedNotification!, priority: 'BAIXA' }} />}
                 fileName={`supervisao-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
                 style={{ textDecoration: "none" }}
               >

@@ -1,7 +1,7 @@
 "use client"
 
 import { useLocale } from "next-intl"
-import { Check, ChevronDown } from "lucide-react"
+import { Check } from "lucide-react"
 import Image from "next/image"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { cn, locales } from "@/lib/utils"
@@ -34,7 +34,7 @@ export default function LocaleSwitcher({
         <button
           aria-label={locale}
           className={cn(
-            "flex items-center gap-2 cursor-pointer focus:border-gray-700 dark:focus:border-gray-300 rounded-lg px-3 py-2 bg-white/20 dark:bg-gray-800/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all",
+            "flex items-center gap-2 cursor-pointer focus:border-gray-700 dark:focus:border-gray-300 rounded-full p-2 bg-white dark:bg-gray-800/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 hover:bg-white/90 dark:hover:bg-gray-800/90 transition-all",
             className,
           )}
         >
@@ -45,7 +45,6 @@ export default function LocaleSwitcher({
             height={20}
             className="rounded-full object-contain"
           />
-          <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className={cn("w-48 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border border-white/20 dark:border-gray-700/20", selectClassName)}>

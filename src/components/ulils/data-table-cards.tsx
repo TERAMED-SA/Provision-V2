@@ -212,7 +212,7 @@ export function DataTableCards<TData>({ rows, loading, cardConfig, onCardClick }
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {/* Avatar com ícone específico */}
-                  <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                  <div className="h-10 w-10 bg-gray-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-200 text-sm font-medium flex-shrink-0">
                     {cardConfig.type === "supervision" ? (
                       <Building className="h-5 w-5" />
                     ) : cardConfig.type === "occurrence" ? (
@@ -250,16 +250,19 @@ export function DataTableCards<TData>({ rows, loading, cardConfig, onCardClick }
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                    {actions.map((action, index) => (
-                      <DropdownMenuItem
-                        key={index}
-                        onClick={action.onClick}
-                        className={action.className}
-                      >
-                        {action.icon}
-                        {action.label}
-                      </DropdownMenuItem>
-                    ))}
+                    {actions.map((action, index) => {
+                      const extraProps = (action as any).className ? { className: (action as any).className } : {};
+                      return (
+                        <DropdownMenuItem
+                          key={index}
+                          onClick={action.onClick}
+                          {...extraProps}
+                        >
+                          {action.icon}
+                          {action.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

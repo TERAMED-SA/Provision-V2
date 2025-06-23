@@ -89,7 +89,7 @@ interface GenericPDFProps {
   footer?: string
 }
 
-export function GenericPDF({ title, sections, footer = "Gerado pelo sistema" }: GenericPDFProps) {
+export function GenericPDF({ title, sections }: GenericPDFProps) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -116,7 +116,7 @@ export function GenericPDF({ title, sections, footer = "Gerado pelo sistema" }: 
           </View>
         ))}
 
-        <Text style={styles.footer}>{footer}</Text>
+      
 
         <Text
           style={styles.pageNumber}

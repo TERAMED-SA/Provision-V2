@@ -68,8 +68,8 @@ export default function SearchDialog() {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Search className="h-5 w-5 text-foreground dark:text-white" />
+        <Button variant="ghost" size="icon" className="rounded-full bg-white p-2  dark:text-white dark:hover:text-white  cursor-pointer dark:hover:bg-zinc-800">
+          <Search className="h-6 w-6 text-foreground" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] p-4 bg-background dark:bg-zinc-900">

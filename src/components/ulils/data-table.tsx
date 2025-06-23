@@ -47,6 +47,7 @@ interface DataTableProps<TData, TValue> {
     dateField?: string
     avatarField?: string
   }
+  handleViewDetails?: (data: any) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -69,6 +70,7 @@ export function DataTable<TData, TValue>({
     dateField: "createdAt",
     avatarField: "name",
   },
+  handleViewDetails,
 }: DataTableProps<TData, TValue>) {
   const [searchTerm, setSearchTerm] = useState("")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
@@ -104,6 +106,15 @@ export function DataTable<TData, TValue>({
 
     return () => clearTimeout(timer)
   }, [searchTerm, date])
+
+  // Propagar filtro de data para coluna 'createdAt'
+  useEffect(() => {
+    if (date) {
+      table.getColumn("createdAt")?.setFilterValue(date);
+    } else {
+      table.getColumn("createdAt")?.setFilterValue(undefined);
+    }
+  }, [date]);
 
   // Ajustar pageSize quando mudar o viewMode
   const handleViewModeChange = (mode: "table" | "card") => {
@@ -216,15 +227,15 @@ export function DataTable<TData, TValue>({
         <div className="relative">
           {viewMode === "table" ? (
             <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden">
-              <div className="max-h-[600px] overflow-auto">
-                <Table>
-                  <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
+              <div className="max-h-[600px] overflow-y-auto w-full">
+                <Table className="table-auto min-w-full bg-white dark:bg-gray-900">
+                  <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800/50">
                     {table.getHeaderGroups().map((headerGroup) => (
                       <TableRow key={headerGroup.id} className="hover:bg-transparent">
                         {headerGroup.headers.map((header) => (
                           <TableHead
                             key={header.id}
-                            className="py-0 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
+                            className="py-0 px-2 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap"
                           >
                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                           </TableHead>
@@ -237,7 +248,7 @@ export function DataTable<TData, TValue>({
                       Array.from({ length: 5 }).map((_, index) => (
                         <TableRow key={index} className="animate-pulse">
                           {columns.map((_, colIndex) => (
-                            <TableCell key={colIndex} className="py-3 px-4">
+                            <TableCell key={colIndex} className="py-3 px-2 whitespace-nowrap">
                               <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
                             </TableCell>
                           ))}
@@ -256,7 +267,7 @@ export function DataTable<TData, TValue>({
                           {row.getVisibleCells().map((cell) => (
                             <TableCell
                               key={cell.id}
-                              className="py-0 px-4 text-sm border-r border-gray-100 dark:border-gray-800 last:border-r-0"
+                              className="py-0 px-2 text-sm border-r border-gray-100 dark:border-gray-800 last:border-r-0 whitespace-nowrap"
                             >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </TableCell>
@@ -299,7 +310,19 @@ export function DataTable<TData, TValue>({
                 rows={table.getRowModel().rows}
                 loading={loading || isFiltering}
                 cardConfig={cardConfig}
-                onCardClick={(row) => console.log("Card clicked:", row.original)}
+                onCardClick={(row) => {
+                  if (typeof row?.original !== 'undefined' && typeof (row as any).showDetails === 'function') {
+                    (row as any).showDetails(row.original)
+                  } else if (typeof (row as any).onCardClick === 'function') {
+                    (row as any).onCardClick(row.original)
+                  } else if (typeof (row as any).handleViewDetails === 'function') {
+                    (row as any).handleViewDetails(row.original)
+                  } else if (typeof handleViewDetails === 'function') {
+                    handleViewDetails(row.original)
+                  } else {
+                    // fallback: nada
+                  }
+                }}
               />
             </div>
           )}

@@ -7,6 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialo
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar"
 import type { Supervisor } from "@/features/application/domain/entities/Supervisor"
 import { Loader2 } from "lucide-react"
+import { PDFDownloadLink } from "@react-pdf/renderer"
+import { Download } from "lucide-react"
+import { Button } from "../../ui/button"
+import { GenericPDF } from "../pdf/generic-pdf"
 
 export function SupervisorDetailModal() {
   const [isOpen, setIsOpen] = useState(false)
@@ -119,6 +123,53 @@ export function SupervisorDetailModal() {
                   <p className="text-sm whitespace-pre-wrap">{supervisor.report}</p>
                 </div>
               )}
+            </div>
+
+            {/* Botão de download PDF */}
+            <div className="flex justify-end mt-4">
+              <PDFDownloadLink
+                document={
+                  <GenericPDF
+                    title="Detalhes do Supervisor"
+                    sections={[
+                      {
+                        title: "Informações Básicas",
+                        fields: [
+                          { label: "Nome", value: supervisor.name || "N/A" },
+                          { label: "Código", value: supervisor.employeeId || "N/A" },
+                          { label: "Email", value: supervisor.email || "N/A" },
+                          { label: "Telefone", value: supervisor.phoneNumber || "N/A" },
+                        ],
+                      },
+                      supervisor.equipment && supervisor.equipment.length > 0
+                        ? {
+                            title: "Equipamentos",
+                            fields: supervisor.equipment.map((equip, idx) => ({
+                              label: `Equipamento ${idx + 1}`,
+                              value: `${equip.name || "N/A"} (Nº Série: ${equip.serialNumber || "N/A"})`,
+                            })),
+                          }
+                        : null,
+                      supervisor.report
+                        ? {
+                            title: "Relatório",
+                            fields: [
+                              { label: "Relatório", value: supervisor.report },
+                            ],
+                          }
+                        : null,
+                    ].filter(Boolean) as any}
+                  />
+                }
+                fileName={`supervisor-${supervisor.name || supervisor.employeeId}.pdf`}
+                style={{ textDecoration: "none" }}
+              >
+                {({ loading }) => (
+                  <Button variant="outline" disabled={loading}>
+                    <Download className="h-4 w-4 mr-2" /> Baixar PDF
+                  </Button>
+                )}
+              </PDFDownloadLink>
             </div>
           </div>
         ) : (

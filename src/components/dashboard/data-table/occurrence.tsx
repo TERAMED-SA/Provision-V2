@@ -14,6 +14,7 @@ import { OccurrenceDetailModal } from "./occurrence-detail-modal"
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
 import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
+import { useEffect } from "react"
 
 export type Notification = Occurrence
 
@@ -166,6 +167,16 @@ export function OccurrenceTable() {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
+        filterFn: (row: Row<Notification>, id: string, value: Date) => {
+          if (!value) return true;
+          const [day, month, year] = (row.getValue(id) as string).split("/");
+          const rowDate = new Date(Number(year), Number(month) - 1, Number(day));
+          return (
+            rowDate.getDate() === value.getDate() &&
+            rowDate.getMonth() === value.getMonth() &&
+            rowDate.getFullYear() === value.getFullYear()
+          );
+        },
       },
       {
         accessorKey: "createdAtTime",
@@ -260,6 +271,7 @@ export function OccurrenceTable() {
           initialColumnVisibility={{
             details: false,
           }}
+          handleViewDetails={handleViewDetails}
         />
       </div>
 
