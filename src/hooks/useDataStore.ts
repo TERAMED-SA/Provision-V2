@@ -2,8 +2,31 @@ import { create } from "zustand"
 import { devtools } from "zustand/middleware"
 import { isSameDay } from "date-fns"
 import toast from "react-hot-toast"
-import { format } from "date-fns"
-import { Shield, AlertTriangle } from "lucide-react"
+import { CheckCircle, AlertCircle } from "lucide-react"
+
+// Sistema global de controle de toasts otimizado
+const createToastManager = () => {
+  let shownToasts = new Set<string>()
+  let lastClearTime = Date.now()
+  const CLEAR_INTERVAL = 30000 // 30 segundos
+
+  return {
+    shouldShow: (id: string) => {
+      const now = Date.now()
+      // Limpar cache periodicamente
+      if (now - lastClearTime > CLEAR_INTERVAL) {
+        shownToasts.clear()
+        lastClearTime = now
+      }
+      
+      if (shownToasts.has(id)) return false
+      shownToasts.add(id)
+      return true
+    }
+  }
+}
+
+const toastManager = createToastManager()
 
 declare global {
   interface Window {
@@ -144,9 +167,16 @@ export const useSupervisionStore = create<SupervisionStore>()(
       updateNotifications: () => {
         const { supervisions, occurrences, selectedDate } = get()
 
-        // Filter data for selected date
-        const selectedDateSupervisions = supervisions.filter((item) => isSameDay(item.createdAtDate, selectedDate))
-        const selectedDateOccurrences = occurrences.filter((item) => isSameDay(item.createdAtDate, selectedDate))
+        // Otimização: verificar se há dados antes de processar
+        if (!supervisions.length && !occurrences.length) return
+
+        // Filter data for selected date - otimizado
+        const selectedDateSupervisions = supervisions.filter((item) => 
+          item.createdAtDate && isSameDay(item.createdAtDate, selectedDate)
+        )
+        const selectedDateOccurrences = occurrences.filter((item) => 
+          item.createdAtDate && isSameDay(item.createdAtDate, selectedDate)
+        )
 
         // Update counts
         set({
@@ -178,7 +208,7 @@ export const useSupervisionStore = create<SupervisionStore>()(
           isNew: true,
         }))
 
-        // Combine and sort by time (most recent first)
+        // Combine and sort by time (most recent first) - otimizado
         const allNotifications = [...supervisionNotifications, ...occurrenceNotifications].sort(
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
         )
@@ -195,65 +225,75 @@ export const useSupervisionStore = create<SupervisionStore>()(
         const { notifications, shownNotificationIds, lastNotificationCheck } = get()
         const now = new Date()
 
-        // Controle para evitar toast duplicado
-        if (!window.__shownToasts) {
-          window.__shownToasts = new Set()
-        }
-        const shownToasts = window.__shownToasts as Set<string>
+        // Otimização: verificar se há notificações
+        if (!notifications.length) return
 
-        // Filter new notifications that haven't been shown yet
+        // Filter new notifications that haven't been shown yet - otimizado
         const newNotifications = notifications.filter((notif) => {
           const isNew = !shownNotificationIds.has(notif.id)
           const isRecent = !lastNotificationCheck || notif.createdAt > lastNotificationCheck
-          return isNew && isRecent && notif.isNew && !shownToasts.has(notif.id)
+          const shouldShow = toastManager.shouldShow(notif.id)
+          return isNew && isRecent && notif.isNew && shouldShow
         })
 
-        // Show toast for new notifications (max 3 at a time), sem delay
-        newNotifications.slice(0, 3).forEach((notif) => {
-          const hora = notif.createdAt
-            ? `${notif.createdAt.getHours().toString().padStart(2, "0")}:${notif.createdAt.getMinutes().toString().padStart(2, "0")}`
-            : ""
-          const message = notif.type === "supervision"
-            ? `Recebeste uma nova Supervisão às ${hora}`
-            : `Recebeste uma nova Ocorrência às ${hora}`
-          toast(message, {
-            duration: 10000,
-            position: "top-right",
-            style: {
-              fontSize: "14px",
-              minWidth: 220,
-              borderRadius: "1rem",
-              background: "#fff",
-              color: "#1f2937",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-              padding: "1rem 1rem",
-              lineHeight: 1.4,
-              whiteSpace: "pre-line",
-              position: "relative"
-            },
+        // Show toast for new notifications (max 3 at a time) - corrigido e otimizado
+        if (newNotifications.length > 0) {
+          newNotifications.slice(0, 3).forEach((notif) => {
+            const hora = notif.createdAt
+              ? `${notif.createdAt.getHours().toString().padStart(2, "0")}:${notif.createdAt.getMinutes().toString().padStart(2, "0")}`
+              : ""
+            
+            const message = notif.type === "supervision"
+              ? ` Recebeste uma nova Supervisão às ${hora}`
+              : ` Recebeste uma nova Ocorrência às ${hora}`
+            
+            // Toast otimizado com melhor estilo
+            toast(message, {
+              duration: 15000,
+              position: "top-right",
+              style: {
+                fontSize: "14px",
+                minWidth: 280,
+                borderRadius: "12px",
+                background: notif.type === "supervision" ? "#f0f9ff" : "#fefce8",
+                color: "#1f2937",
+                border: notif.type === "supervision" ? "1px solid #0ea5e9" : "1px solid #eab308",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                padding: "12px 16px",
+                lineHeight: 1.4,
+              },
+              icon:
+                notif.type === "supervision"
+                  ? CheckCircle({ size: 22, color: "#0ea5e9" })
+                  : AlertCircle({ size: 22, color: "#eab308" }),
+            })
           })
-          shownToasts.add(notif.id)
-        })
 
-        // Update shown notifications
-        const newShownIds = new Set([...shownNotificationIds, ...newNotifications.map((n) => n.id)])
+          // Update shown notifications
+          const newShownIds = new Set([...shownNotificationIds, ...newNotifications.map((n) => n.id)])
 
-        set({
-          shownNotificationIds: newShownIds,
-          lastNotificationCheck: now,
-        })
+          set({
+            shownNotificationIds: newShownIds,
+            lastNotificationCheck: now,
+          })
+        }
       },
 
-      // Getters
+      // Getters - otimizados
       getRecentActivities: () => {
         const { supervisions, occurrences, selectedDate } = get()
 
-        // Filter data for selected date
-        const selectedDateSupervisions = supervisions.filter((item) => isSameDay(item.createdAtDate, selectedDate))
-        const selectedDateOccurrences = occurrences.filter((item) => isSameDay(item.createdAtDate, selectedDate))
+        // Filter data for selected date - otimizado com slice antecipado
+        const selectedDateSupervisions = supervisions
+          .filter((item) => item.createdAtDate && isSameDay(item.createdAtDate, selectedDate))
+          .slice(0, 5)
+
+        const selectedDateOccurrences = occurrences
+          .filter((item) => item.createdAtDate && isSameDay(item.createdAtDate, selectedDate))
+          .slice(0, 5)
 
         // Get 5 most recent supervisions from selected date
-        const recentSupervisions = selectedDateSupervisions.slice(0, 5).map((item) => ({
+        const recentSupervisions = selectedDateSupervisions.map((item) => ({
           id: `supervision-${item.id}`,
           type: "supervision" as const,
           title: item.siteName,
@@ -265,7 +305,7 @@ export const useSupervisionStore = create<SupervisionStore>()(
         }))
 
         // Get 5 most recent occurrences from selected date
-        const recentOccurrences = selectedDateOccurrences.slice(0, 5).map((item) => ({
+        const recentOccurrences = selectedDateOccurrences.map((item) => ({
           id: `occurrence-${item.id}`,
           type: "occurrence" as const,
           title: item.siteName,
@@ -284,11 +324,13 @@ export const useSupervisionStore = create<SupervisionStore>()(
 
       getSelectedDateCounts: () => {
         const { supervisions, occurrences, selectedDate } = get()
-        const supervision = supervisions.filter((item) => isSameDay(item.createdAtDate, selectedDate)).length
-        const occurrence = occurrences.filter((item) => isSameDay(item.createdAtDate, selectedDate)).length
         return {
-          supervision,
-          occurrence,
+          supervision: supervisions.filter((item) => 
+            item.createdAtDate && isSameDay(item.createdAtDate, selectedDate)
+          ).length,
+          occurrence: occurrences.filter((item) => 
+            item.createdAtDate && isSameDay(item.createdAtDate, selectedDate)
+          ).length,
         }
       },
 
@@ -296,23 +338,38 @@ export const useSupervisionStore = create<SupervisionStore>()(
         // Sempre usar a data de hoje para os badges do sidebar
         const today = new Date()
         const { supervisions, occurrences } = get()
-        const supervision = supervisions.filter((item) => isSameDay(item.createdAtDate, today)).length
-        const occurrence = occurrences.filter((item) => isSameDay(item.createdAtDate, today)).length
         return {
-          supervision,
-          occurrence,
+          supervision: supervisions.filter((item) => 
+            item.createdAtDate && isSameDay(item.createdAtDate, today)
+          ).length,
+          occurrence: occurrences.filter((item) => 
+            item.createdAtDate && isSameDay(item.createdAtDate, today)
+          ).length,
         }
       },
 
       getAvailableDates: () => {
         const { supervisions, occurrences } = get()
 
-        // Get all unique dates from data
-        const allDates = [...supervisions.map((s) => s.createdAtDate), ...occurrences.map((o) => o.createdAtDate)]
-          .filter((date, index, self) => self.findIndex((d) => d.toDateString() === date.toDateString()) === index)
-          .sort((a, b) => b.getTime() - a.getTime()) // Most recent first
+        // Otimização: usar Set para datas únicas
+        const dateSet = new Set<string>()
+        
+        supervisions.forEach(s => {
+          if (s.createdAtDate) {
+            dateSet.add(s.createdAtDate.toDateString())
+          }
+        })
+        
+        occurrences.forEach(o => {
+          if (o.createdAtDate) {
+            dateSet.add(o.createdAtDate.toDateString())
+          }
+        })
 
-        return allDates
+        // Convert back to Date objects and sort
+        return Array.from(dateSet)
+          .map(dateStr => new Date(dateStr))
+          .sort((a, b) => b.getTime() - a.getTime()) // Most recent first
       },
     }),
     {

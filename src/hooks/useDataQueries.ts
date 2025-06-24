@@ -2,19 +2,24 @@
 
 import React from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import instance from "@/lib/api"
 import { OccurrenceData, SupervisionData, useSupervisionStore } from "./useDataStore"
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
 
+// Constantes para melhor performance
+const REFETCH_INTERVAL = 500 // 0.5s conforme solicitado
+const STALE_TIME = 100 // Dados considerados frescos por 100ms
+const PAGE_SIZE = 1000000 // 1M registros para escalabilidade
+
 export function useSupervisionData() {
   const queryClient = useQueryClient()
   const { setSupervisions, setOccurrences, setLoadingSupervisions, setLoadingOccurrences, showNewNotifications } =
     useSupervisionStore()
 
-  // Load supervisors
+  // Load supervisors - otimizado com cache mais longo
   const { data: supervisors } = useQuery({
     queryKey: ["supervisors"],
     queryFn: async () => {
@@ -29,14 +34,92 @@ export function useSupervisionData() {
       return supervisorMap
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes no cache
   })
 
-  // Fetch supervisions
+  // Função memoizada para formatar dados de supervisão
+  const formatSupervisionData = useCallback((data: any[], currentSupervisors: Map<string, string>) => {
+    return data
+      .map((notification: any) => {
+        const createdAtDate = new Date(notification.createdAt)
+        
+        // Validação de data
+        if (isNaN(createdAtDate.getTime())) {
+          console.warn('Data inválida:', notification.createdAt)
+          return null
+        }
+
+        const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
+        const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
+
+        const supervisorName =
+          currentSupervisors.get(notification.supervisorCode) || `Supervisor ${notification.supervisorCode}`
+
+        let formattedDuration = "-"
+        if (notification.time) {
+          const timeDate = new Date(notification.time)
+          if (!isNaN(timeDate.getTime())) {
+            formattedDuration = format(timeDate, "HH:mm")
+          } else if (typeof notification.time === "string") {
+            const match = notification.time.match(/^(\d{1,2}):(\d{2})/)
+            if (match) {
+              formattedDuration = `${match[1].padStart(2, "0")}:${match[2]}`
+            }
+          }
+        }
+
+        return {
+          ...notification,
+          createdAt: formattedDate,
+          createdAtTime: formattedTime,
+          createdAtDate: createdAtDate,
+          supervisorName,
+          siteName: notification.name || "Site não informado",
+          coordinates: notification.coordinates || "-",
+          tlAbsent: notification.tlAbsent || "-",
+          time: formattedDuration,
+        }
+      })
+      .filter(Boolean) // Remove valores null
+      .sort((a: SupervisionData, b: SupervisionData) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
+  }, [])
+
+  // Função memoizada para formatar dados de ocorrência
+  const formatOccurrenceData = useCallback((data: any[]) => {
+    return data
+      .map((notification: any) => {
+        const createdAtDate = new Date(notification.createdAt)
+        
+        // Validação de data
+        if (isNaN(createdAtDate.getTime())) {
+          console.warn('Data inválida:', notification.createdAt)
+          return null
+        }
+
+        const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
+        const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
+
+        return {
+          ...notification,
+          createdAt: formattedDate,
+          createdAtTime: formattedTime,
+          createdAtDate: createdAtDate,
+          siteName: notification.name || "Site não informado",
+          coordinates: notification.coordinates || "-",
+          duration: notification.duration || "-",
+          description: notification.description || "Ocorrência registrada",
+        }
+      })
+      .filter(Boolean) // Remove valores null
+      .sort((a: OccurrenceData, b: OccurrenceData) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
+  }, [])
+
+  // Fetch supervisions - otimizado
   const { data: supervisionData, isLoading: isLoadingSupervisions } = useQuery({
     queryKey: ["supervisions"],
     queryFn: async () => {
       try {
-        const response = await instance.get(`/supervision?page=1&size=100000`)
+        const response = await instance.get(`/supervision?page=1&size=${PAGE_SIZE}`)
 
         if (!response.data?.data?.data) {
           console.error("Estrutura de resposta inválida:", response.data)
@@ -44,113 +127,68 @@ export function useSupervisionData() {
         }
 
         const currentSupervisors = supervisors || new Map()
-        const formattedData: SupervisionData[] = response.data.data.data
-          .map((notification: any) => {
-            const createdAtDate = new Date(notification.createdAt)
-            const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
-            const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
-
-            const supervisorName =
-              currentSupervisors.get(notification.supervisorCode) || `Supervisor ${notification.supervisorCode}`
-
-            let formattedDuration = "-"
-            if (notification.time) {
-              const timeDate = new Date(notification.time)
-              if (!isNaN(timeDate.getTime())) {
-                formattedDuration = format(timeDate, "HH:mm")
-              } else if (typeof notification.time === "string") {
-                const match = notification.time.match(/^(\d{1,2}):(\d{2})/)
-                if (match) {
-                  formattedDuration = `${match[1].padStart(2, "0")}:${match[2]}`
-                }
-              }
-            }
-
-            return {
-              ...notification,
-              createdAt: formattedDate,
-              createdAtTime: formattedTime,
-              createdAtDate: createdAtDate,
-              supervisorName,
-              siteName: notification.name || "Site não informado",
-              coordinates: notification.coordinates || "-",
-              tlAbsent: notification.tlAbsent || "-",
-              time: formattedDuration,
-            }
-          })
-          // Sort by creation date/time (most recent first)
-          .sort((a: SupervisionData, b: SupervisionData) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
-
-        return formattedData
+        return formatSupervisionData(response.data.data.data, currentSupervisors)
       } catch (error) {
         console.error("Erro ao buscar supervisões:", error)
         throw error
       }
     },
     enabled: !!supervisors,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 1000, // Consider data stale after 10 seconds
+    refetchInterval: REFETCH_INTERVAL,
+    staleTime: STALE_TIME,
+    gcTime: 2 * 60 * 1000, // 2 minutos
+    refetchOnWindowFocus: true,
   })
 
-  // Fetch occurrences
+  // Fetch occurrences - otimizado
   const { data: occurrenceData, isLoading: isLoadingOccurrences } = useQuery({
     queryKey: ["occurrences"],
     queryFn: async () => {
       try {
-        const response = await instance.get("/occurrence?page=1&size=100000")
+        const response = await instance.get(`/occurrence?page=1&size=${PAGE_SIZE}`)
 
         if (!response.data?.data?.data) {
           throw new Error("Invalid response structure")
         }
 
-        const formattedData: OccurrenceData[] = response.data.data.data
-          .map((notification: any) => {
-            const createdAtDate = new Date(notification.createdAt)
-            const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
-            const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
-
-            return {
-              ...notification,
-              createdAt: formattedDate,
-              createdAtTime: formattedTime,
-              createdAtDate: createdAtDate,
-              siteName: notification.name || "Site não informado",
-              coordinates: notification.coordinates || "-",
-              duration: notification.duration || "-",
-              description: notification.description || "Ocorrência registrada",
-            }
-          })
-          // Sort by creation date/time (most recent first)
-          .sort((a: OccurrenceData, b: OccurrenceData) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
-
-        return formattedData
+        return formatOccurrenceData(response.data.data.data)
       } catch (error) {
         console.error("Erro ao buscar ocorrências:", error)
         throw error
       }
     },
-    refetchInterval: 30000, 
-    staleTime: 1000, 
+    refetchInterval: REFETCH_INTERVAL, 
+    staleTime: STALE_TIME,
+    gcTime: 2 * 60 * 1000, // 2 minutos
+    refetchOnWindowFocus: true,
   })
 
-  // Update store when data changes
+  // Referências para detectar mudanças reais
+  const prevSupervisionCount = React.useRef(0)
+  const prevOccurrenceCount = React.useRef(0)
+
+  // Update store when data changes - otimizado para detectar mudanças reais
   React.useEffect(() => {
-    if (supervisionData) {
+    if (supervisionData && supervisionData.length !== prevSupervisionCount.current) {
       setSupervisions(supervisionData)
-      // Check for new notifications
+      prevSupervisionCount.current = supervisionData.length
+      
+      // Check for new notifications apenas quando há mudanças
       setTimeout(() => {
         showNewNotifications()
-      }, 1000)
+      }, 100) // Reduzido de 1000ms para 100ms
     }
   }, [supervisionData, setSupervisions, showNewNotifications])
 
   React.useEffect(() => {
-    if (occurrenceData) {
+    if (occurrenceData && occurrenceData.length !== prevOccurrenceCount.current) {
       setOccurrences(occurrenceData)
-      // Check for new notifications
+      prevOccurrenceCount.current = occurrenceData.length
+      
+      // Check for new notifications apenas quando há mudanças
       setTimeout(() => {
         showNewNotifications()
-      }, 1000)
+      }, 100) // Reduzido de 1000ms para 100ms
     }
   }, [occurrenceData, setOccurrences, showNewNotifications])
 
@@ -162,14 +200,22 @@ export function useSupervisionData() {
     setLoadingOccurrences(isLoadingOccurrences)
   }, [isLoadingOccurrences, setLoadingOccurrences])
 
-  // Manual refresh function
-  const refreshData = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["supervisions"] })
-    queryClient.invalidateQueries({ queryKey: ["occurrences"] })
+  // Manual refresh function - otimizado com Promise.all
+  const refreshData = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["supervisions"] }),
+      queryClient.invalidateQueries({ queryKey: ["occurrences"] })
+    ])
   }, [queryClient])
+
+  // Memoizar estado de loading
+  const isLoading = useMemo(() => 
+    isLoadingSupervisions || isLoadingOccurrences, 
+    [isLoadingSupervisions, isLoadingOccurrences]
+  )
 
   return {
     refreshData,
-    isLoading: isLoadingSupervisions || isLoadingOccurrences,
+    isLoading,
   }
 }

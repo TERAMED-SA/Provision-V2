@@ -4,7 +4,6 @@ import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Clock, MapPin, User, Shield, AlertTriangle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useSupervisionStore } from "@/hooks/useDataStore"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { DataTable } from "@/components/ulils/data-table"
@@ -32,10 +31,10 @@ export function ActivityTable() {
   const activities = getRecentActivities()
   const supervisions = activities.filter(a => a.type === "supervision")
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 2)
+    .slice(0, 3)
   const occurrences = activities.filter(a => a.type === "occurrence")
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 1)
+    .slice(0, 3)
   const notifications: Notification[] = [...supervisions, ...occurrences]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .map((activity: any) => ({
