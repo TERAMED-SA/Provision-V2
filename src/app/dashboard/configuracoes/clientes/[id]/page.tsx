@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Edit, Trash, Plus,  Eye, MapPin } from "lucide-react"
+import { Edit, Trash, Plus,  Eye, MapPin, Info } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -14,6 +14,14 @@ import instance from "@/lib/api"
 import { BreadcrumbRoutas } from "@/components/ulils/breadcrumbRoutas"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ulils/data-table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { GenericDetailModal } from "@/components/dashboard/generic-detail-modal"
 
 
 
@@ -33,6 +41,7 @@ interface CompanyInfo {
   name: string
   address: string
   contactInfo: string
+  zone: string
 }
 
 interface SupervisionInfo {
@@ -77,7 +86,7 @@ export default function CompanySites() {
   })
 
   const columns: ColumnDef<Site>[] = [
-     {
+    {
       accessorKey: "costCenter",
       header: t('table.costCenter'),
       cell: ({ row }) => (
@@ -112,7 +121,6 @@ export default function CompanySites() {
         return (cellValue || "").toLowerCase().includes(value.toLowerCase())
       },
     },
-   
     {
       accessorKey: "numberOfWorkers",
       header: t('table.numberOfWorkers'),
@@ -153,30 +161,24 @@ export default function CompanySites() {
         const site = row.original
         return (
           <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="cursor-pointer" 
-              onClick={() => handleOpenSiteDetail(site)}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="cursor-pointer" 
-              onClick={() => handleEditClick(site)}
+            <span
+              className="cursor-pointer"
+              onClick={e => {
+                e.stopPropagation();
+                handleEditClick(site)
+              }}
             >
               <Edit className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="cursor-pointer text-red-600" 
-              onClick={() => handleDeleteSite(site._id)}
+            </span>
+            <span
+              className="cursor-pointer text-red-600"
+              onClick={e => {
+                e.stopPropagation(); 
+                handleDeleteSite(site._id)
+              }}
             >
               <Trash className="h-4 w-4" />
-            </Button>
+            </span>
           </div>
         )
       },
@@ -195,6 +197,7 @@ export default function CompanySites() {
         setIsLoading(true)
         const response = await instance.get(`/companySite?size=500`)
         const fetchedSites = response.data.data.data.filter((site: Site) => site.clientCode === clientCode)
+        console.log("Fetched Sites:", fetchedSites)
         setData(fetchedSites)
       } catch (error) {
         console.error("Error fetching sites:", error)
@@ -209,7 +212,9 @@ export default function CompanySites() {
   const fetchCompanyInfo = async (costCenter: string) => {
     try {
       const response = await instance.get(`/companySite/getCompanyInfo/${costCenter}`)
+      console.log("Company Info Response:", response.data)
       setCompanyInfo(response.data.data)
+      
     } catch (error) {
       console.error("Error fetching company info:", error)
       toast.error(t('errors.failedToLoadCompanyInfo'))
@@ -252,18 +257,14 @@ export default function CompanySites() {
         zone: formData.zone,
       })
 
-      setData((prevList) => [...prevList, response.data.data])
-      toast.success(t('success.siteAdded'))
-      setFormData({
-        name: "",
-        address: "",
-        ctClient: "",
-        costCenter: "",
-        numberOfWorkers: "",
-        supervisorCode: "",
-        zone: "",
-      })
-      setIsAddModalOpen(false)
+      if (response.status === 201) {
+        toast.success(t('success.siteAdded'))
+        setIsAddModalOpen(false)
+        // Refresh data
+        const refreshResponse = await instance.get(`/companySite?size=500`)
+        const refreshedSites = refreshResponse.data.data.data.filter((site: Site) => site.clientCode === clientCode)
+        setData(refreshedSites)
+      }
     } catch (error) {
       console.error("Error adding site:", error)
       toast.error(t('errors.failedToAddSite'))
@@ -276,19 +277,19 @@ export default function CompanySites() {
       name: site.name,
       address: site.address || "",
       ctClient: site.ctClient || "",
-      costCenter: site.costCenter || "",
-      numberOfWorkers: site.numberOfWorkers?.toString() || "",
-      supervisorCode: site.supervisorCode || "",
-      zone: site.zone || "",
+      costCenter: site.costCenter,
+      numberOfWorkers: site.numberOfWorkers.toString(),
+      supervisorCode: site.supervisorCode,
+      zone: site.zone,
     })
     setIsEditModalOpen(true)
   }
 
   const handleUpdateSite = async () => {
-    if (!selectedSite || !clientCode) return
+    if (!selectedSite) return
 
     try {
-      await instance.put(`/companySite/update/${selectedSite._id}/${clientCode}`, {
+      const response = await instance.put(`/companySite/update/${selectedSite._id}`, {
         name: formData.name,
         address: formData.address,
         ctClient: formData.ctClient,
@@ -298,25 +299,14 @@ export default function CompanySites() {
         zone: formData.zone,
       })
 
-      setData((prevList) =>
-        prevList.map((site) =>
-          site._id === selectedSite._id
-            ? {
-                ...site,
-                name: formData.name,
-                address: formData.address,
-                ctClient: formData.ctClient,
-                costCenter: formData.costCenter,
-                numberOfWorkers: parseInt(formData.numberOfWorkers),
-                supervisorCode: formData.supervisorCode,
-                zone: formData.zone,
-              }
-            : site,
-        ),
-      )
-
-      toast.success(t('success.siteUpdated'))
-      setIsEditModalOpen(false)
+      if (response.status === 200) {
+        toast.success(t('success.siteUpdated'))
+        setIsEditModalOpen(false)
+        // Refresh data
+        const refreshResponse = await instance.get(`/companySite?size=500`)
+        const refreshedSites = refreshResponse.data.data.data.filter((site: Site) => site.clientCode === clientCode)
+        setData(refreshedSites)
+      }
     } catch (error) {
       console.error("Error updating site:", error)
       toast.error(t('errors.failedToUpdateSite'))
@@ -324,24 +314,34 @@ export default function CompanySites() {
   }
 
   const handleDeleteSite = async (siteId: string) => {
-    if (!clientCode) {
-      toast.error(t('errors.clientCodeNotFound'))
-      return
-    }
-
-    
+    // Implement delete logic here, probably with a confirmation dialog
+    toast.info("Delete functionality not implemented yet.")
   }
 
   const handleViewSupervisions = async (site: Site) => {
-    await fetchCompanyInfo(site.costCenter)
-    setSelectedSite(site)
-    setIsCompanyInfoModalOpen(true)
+    if (site.supervisorCode) {
+      await fetchSupervisionCount(site.supervisorCode)
+      // Open modal to show supervisions. For now, just logging.
+      console.log(`Total supervisions for ${site.supervisorCode}: ${supervisionCount}`)
+      toast.info(`Total de ${supervisionCount} supervisões para o supervisor ${site.supervisorCode}.`)
+    } else {
+      toast.info(t('warnings.noSupervisorCode'))
+    }
   }
 
   const handleOpenSiteDetail = (site: Site) => {
     setSelectedSite(site)
+    if (site.costCenter) {
+      fetchCompanyInfo(site.costCenter)
+    }
+    if (site.supervisorCode) {
+      fetchSupervisionCount(site.supervisorCode)
+    }
     setIsSiteDetailModalOpen(true)
   }
+
+  // Gere as zonas únicas dos sites do cliente
+  const zonasUnicas = Array.from(new Set(data.map(site => site.zone).filter(Boolean)));
 
   return (
     <div className="container p-8">
@@ -355,13 +355,19 @@ export default function CompanySites() {
             <AlertDialogTrigger asChild>
               <Button className="bg-black text-white cursor-pointer">
                 <Plus className="h-4 w-4" />
-                {t('buttons.addSite')}
+                {t('buttons.addSite')}{" "}
+               
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="max-w-md">
               <AlertDialogHeader>
-                <AlertDialogTitle>{t('modals.addSite.title')}</AlertDialogTitle>
-                <AlertDialogDescription>{t('modals.addSite.description')}</AlertDialogDescription>
+                <AlertDialogTitle>
+                  {t('modals.addSite.title')}{" "}
+                  {companyName ? `- ${companyName}` : ""}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('modals.addSite.description')}
+                </AlertDialogDescription>
               </AlertDialogHeader>
 
               <div className="grid grid-cols-2 gap-4 py-4 max-h-96 overflow-y-auto">
@@ -428,13 +434,25 @@ export default function CompanySites() {
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="zone">{t('fields.zone')}:</label>
-                  <Input 
-                    id="zone" 
-                    name="zone" 
-                    value={formData.zone} 
-                    onChange={handleInputChange}
-                    placeholder={t('placeholders.zone')} 
-                  />
+                  <Select
+                    value={formData.zone}
+                    onValueChange={value => setFormData(f => ({ ...f, zone: value }))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t('placeholders.zone')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {zonasUnicas.length > 0 ? (
+                        zonasUnicas.map(zona => (
+                          <SelectItem key={zona} value={zona}>{zona}</SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          Nenhuma zona disponível
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -453,19 +471,24 @@ export default function CompanySites() {
           data={data}
           loading={isLoading}
           filterOptions={{
-            enableSiteFilter: true,
+            enableNameFilter: true,
             enableColumnVisibility: true,
+            enableColumnFilters: true,
+            enableExportButton: true,
+            exportButtonLabel: "Exportar Sites",
+            exportFileName: `sites-${companyName}.xlsx`,
           }}
-          initialColumnVisibility={{
-            details: false,
-          }}
+          onAddClick={() => setIsAddModalOpen(true)}
+          handleViewDetails={handleOpenSiteDetail} 
         />
         
         {/* Edit Modal */}
         <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle>{t('modals.editSite.title')}</AlertDialogTitle>
+              <AlertDialogTitle>
+                {selectedSite?.name ? `Editar Site - ${selectedSite.name}` : t('modals.editSite.title')}
+              </AlertDialogTitle>
               <AlertDialogDescription>{t('modals.editSite.description')}</AlertDialogDescription>
             </AlertDialogHeader>
 
@@ -507,91 +530,102 @@ export default function CompanySites() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Dialog open={isCompanyInfoModalOpen} onOpenChange={setIsCompanyInfoModalOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-gray-900">{t('modals.companyInfo.title')}</DialogTitle>
-              <DialogDescription className="text-gray-600">{t('modals.companyInfo.description')}</DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-6 py-4">
-              {selectedSite && (
-                <>
+        <GenericDetailModal
+          isOpen={isCompanyInfoModalOpen}
+          onClose={() => setIsCompanyInfoModalOpen(false)}
+          title={t('modals.companyInfo.title')}
+          description={t('modals.companyInfo.description')}
+          icon={Info}
+        >
+          <div className="space-y-6 py-4">
+            {selectedSite && (
+              <>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-3 text-gray-900 border-b pb-2">{t('modals.companyInfo.siteInfo')}</h3>
+                  <div className="space-y-2">
+                    <p className="flex justify-between">
+                      <span className="font-medium text-gray-700">{t('fields.name')}:</span>
+                      <span className="text-gray-900">{selectedSite.name}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="font-medium text-gray-700">{t('fields.costCenter')}:</span>
+                      <span className="text-gray-900">{selectedSite.costCenter}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="font-medium text-gray-700">{t('fields.supervisorCode')}:</span>
+                      <span className="text-gray-900">{selectedSite.supervisorCode}</span>
+                    </p>
+                  </div>
+                </div>
+                
+                {companyInfo && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-lg mb-3 text-gray-900 border-b pb-2">{t('modals.companyInfo.siteInfo')}</h3>
+                    <h3 className="font-semibold text-lg mb-3 text-gray-900 border-b pb-2">{t('modals.companyInfo.companyDetails')}</h3>
                     <div className="space-y-2">
                       <p className="flex justify-between">
                         <span className="font-medium text-gray-700">{t('fields.name')}:</span>
-                        <span className="text-gray-900">{selectedSite.name}</span>
+                        <span className="text-gray-900">{companyInfo.name}</span>
                       </p>
                       <p className="flex justify-between">
-                        <span className="font-medium text-gray-700">{t('fields.costCenter')}:</span>
-                        <span className="text-gray-900">{selectedSite.costCenter}</span>
+                        <span className="font-medium text-gray-700">{t('fields.address')}:</span>
+                        <span className="text-gray-900">{companyInfo.address}</span>
                       </p>
                       <p className="flex justify-between">
-                        <span className="font-medium text-gray-700">{t('fields.supervisorCode')}:</span>
-                        <span className="text-gray-900">{selectedSite.supervisorCode}</span>
+                        <span className="font-medium text-gray-700">{t('modals.companyInfo.contactInfo')}:</span>
+                        <span className="text-gray-900">{companyInfo.contactInfo}</span>
                       </p>
                     </div>
                   </div>
-                  
-                  {companyInfo && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-lg mb-3 text-gray-900 border-b pb-2">{t('modals.companyInfo.companyDetails')}</h3>
-                      <div className="space-y-2">
-                        <p className="flex justify-between">
-                          <span className="font-medium text-gray-700">{t('fields.name')}:</span>
-                          <span className="text-gray-900">{companyInfo.name}</span>
-                        </p>
-                        <p className="flex justify-between">
-                          <span className="font-medium text-gray-700">{t('fields.address')}:</span>
-                          <span className="text-gray-900">{companyInfo.address}</span>
-                        </p>
-                        <p className="flex justify-between">
-                          <span className="font-medium text-gray-700">{t('modals.companyInfo.contactInfo')}:</span>
-                          <span className="text-gray-900">{companyInfo.contactInfo}</span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">{t('modals.companyInfo.totalSupervisions')}:</span>
-                      <span className="text-blue-600 font-semibold text-lg">{supervisionCount}</span>
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal de detalhe do site */}
-        <Dialog open={isSiteDetailModalOpen} onOpenChange={setIsSiteDetailModalOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Detalhes do Site</DialogTitle>
-            </DialogHeader>
-            {selectedSite ? (
-              <div className="space-y-4 p-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <MapPin className="text-blue-500" size={22} />
-                  <span className="text-lg font-bold">{selectedSite.name}</span>
+                )}
+                
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="flex justify-between items-center">
+                    <span className="font-medium text-gray-700">{t('modals.companyInfo.totalSupervisions')}:</span>
+                    <span className="text-blue-600 font-semibold text-lg">{supervisionCount}</span>
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Cost Center:</span> {selectedSite.costCenter || "N/A"}</div>
-                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Nº Trabalhadores:</span> {selectedSite.numberOfWorkers || "N/A"}</div>
-                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Zona:</span> {selectedSite.zone || "N/A"}</div>
-                  <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Supervisor Code:</span> {selectedSite.supervisorCode || "N/A"}</div>
-                </div>
-              </div>
-            ) : (
-              <div>Carregando informações...</div>
+              </>
             )}
-          </DialogContent>
-        </Dialog>
-        {/* Fim do modal de detalhe do site */}
+          </div>
+        </GenericDetailModal>
+
+        <GenericDetailModal
+          isOpen={isSiteDetailModalOpen}
+          onClose={() => setIsSiteDetailModalOpen(false)}
+          title={selectedSite ? `Detalhes - ${selectedSite.name}` : "Detalhes do Site"}
+          icon={Eye}
+        >
+          {selectedSite ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-3 flex flex-col">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Centro de Custo</span>
+                <span className="text-gray-900 dark:text-gray-100">{selectedSite.costCenter || "N/A"}</span>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-3 flex flex-col">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Nº de Tl</span>
+                <span className="text-gray-900 dark:text-gray-100">{selectedSite.numberOfWorkers ?? "N/A"}</span>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-3 flex flex-col">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Zona</span>
+                <span className="text-gray-900 dark:text-gray-100">{selectedSite.zone || "N/A"}</span>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-3 flex flex-col">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Código do Supervisor</span>
+                <span className="text-gray-900 dark:text-gray-100">{selectedSite.supervisorCode || "N/A"}</span>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-3 flex flex-col">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Código do Cliente</span>
+                <span className="text-gray-900 dark:text-gray-100">{selectedSite.clientCode || "N/A"}</span>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded p-3 flex flex-col sm:col-span-2">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">Endereço</span>
+                <span className="text-gray-900 dark:text-gray-100">{selectedSite.address || "N/A"}</span>
+              </div>
+            </div>
+          ) : (
+            <div>A carregar informações...</div>
+          )}
+        </GenericDetailModal>
       </div>
     </div>
   )

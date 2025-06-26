@@ -1,8 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { Bell, Clock, MapPin, Shield, AlertTriangle } from 'lucide-react'
+import { useState, useEffect, useRef } from "react"
+import { Bell, Clock, Shield, AlertTriangle } from 'lucide-react'
 import { format, isToday, isYesterday } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +15,7 @@ import { useSupervisionData } from "@/hooks/useDataQueries"
 export function Bells() {
   const router = useRouter()
   const [showAll, setShowAll] = useState(false)
+  const [bellShake, setBellShake] = useState(false)
 
   const { 
     notifications, 
@@ -22,47 +23,36 @@ export function Bells() {
     markNotificationAsRead, 
     markAllNotificationsAsRead, 
     selectedDate,
-    getTodayCounts 
   } = useSupervisionStore()
 
-  // Initialize data fetching
+  const prevCountRef = useRef(unreadNotificationsCount) 
+
   useSupervisionData()
+  const totalTodayActivities = unreadNotificationsCount
 
-  // Get today's counts for the notification badge
-  const todayCounts = getTodayCounts()
-  const totalTodayActivities = unreadNotificationsCount // Só mostrar badge se houver não lidas
-
-  const displayNotifications = showAll ? notifications : notifications.slice(0, 4)
-
-  // Separate notifications by type for better display
-  const supervisionNotifications = notifications.filter(n => n.type === "supervision")
-  const occurrenceNotifications = notifications.filter(n => n.type === "occurrence")
-
+  const displayNotifications = showAll 
+  ? notifications.filter(n => !n.isRead)
+  : notifications.filter(n => !n.isRead).slice(0, 4)
   const handleNotificationClick = (notification: NotificationItem) => {
     // Marcar como lida
     markNotificationAsRead(notification.id)
 
     if (notification.type === "supervision") {
-      // Dispatch event first to ensure modal opens
       window.dispatchEvent(
         new CustomEvent("view-supervisor-detail", {
           detail: notification.data,
         }),
       )
-      // Then navigate
       router.push(`/dashboard/supervisao?id=${notification.data.id}`)
     } else if (notification.type === "occurrence") {
-      // Dispatch event first to ensure modal opens
       window.dispatchEvent(
         new CustomEvent("view-occurrence-detail", {
           detail: notification.data,
         }),
       )
-      // Then navigate
       router.push(`/dashboard/ocorrencias?id=${notification.data.id}`)
     }
   }
-
   const getNotificationTypeLabel = (type: string) => {
     switch (type) {
       case "supervision":
@@ -73,7 +63,6 @@ export function Bells() {
         return "Atividade"
     }
   }
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "supervision":
@@ -105,6 +94,14 @@ export function Bells() {
     }
   }
 
+  useEffect(() => {
+    if (unreadNotificationsCount > prevCountRef.current) {
+      setBellShake(true)
+      setTimeout(() => setBellShake(false), 30000) 
+    }
+    prevCountRef.current = unreadNotificationsCount
+  }, [unreadNotificationsCount])
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -114,13 +111,13 @@ export function Bells() {
             size="icon"
             className="relative h-9 w-9 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-700"
           >
-            <Bell className="h-4 w-4" />
-            {totalTodayActivities > 0 && (
+            <Bell className={cn("h-4 w-4", bellShake && "animate-bell-shake")} />
+            {unreadNotificationsCount > 0 && (
               <Badge
                 variant="destructive"
                 className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-medium"
               >
-                {totalTodayActivities > 9 ? "9+" : totalTodayActivities}
+                {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
               </Badge>
             )}
           </Button>
@@ -205,10 +202,7 @@ export function Bells() {
                     </div>
                   )}
                   
-                  <div className="text-xs text-gray-600 dark:text-gray-300 truncate flex items-center gap-1">
-                    <MapPin className="h-3 w-3 flex-shrink-0" />
-                    {notification.description}
-                  </div>
+                 
                 </div>
                 
                 {!notification.isRead && (

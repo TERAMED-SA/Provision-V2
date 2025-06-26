@@ -17,7 +17,7 @@ export function NavUser() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (!user) {
-    return <LoadingScreen message="Carregando usuário..." />;
+    return <LoadingScreen message="A carregar perfil..." />;
   }
   return (
     <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>

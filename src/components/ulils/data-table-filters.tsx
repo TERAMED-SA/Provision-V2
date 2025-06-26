@@ -2,7 +2,8 @@
 import type { Table } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { CalendarIcon, ChevronDown, List, LayoutGrid, Plus, Search, Building, User, Filter, X, FilterX, Settings2 } from 'lucide-react'
+import { CalendarIcon, ChevronDown, List, LayoutGrid, Plus, Search, Building, User, Filter, X, FilterX, Settings2, Download } from 'lucide-react'
+import * as XLSX from "xlsx"
 import { Input } from "../ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Button } from "../ui/button"
@@ -25,6 +26,9 @@ interface DataTableFiltersProps<TData> {
     enableAddButton?: boolean
     enableColumnFilters?: boolean
     addButtonLabel?: string
+    enableExportButton?: boolean
+    exportButtonLabel?: string
+    exportFileName?: string
   }
   onAddClick?: () => void
   searchTerm?: string
@@ -59,6 +63,9 @@ export function DataTableFilters<TData>({
     enableAddButton = false,
     enableColumnFilters = false,
     addButtonLabel = "Adicionar",
+    enableExportButton = false,
+    exportButtonLabel = "Exportar",
+    exportFileName = "data.xlsx"
   } = filterOptions
 
   useEffect(() => {
@@ -95,6 +102,62 @@ export function DataTableFilters<TData>({
     }
   }
 
+  const handleExport = () => {
+    const headers = table
+      .getVisibleLeafColumns()
+      .filter(column => column.id !== "actions" && column.id !== "select")
+      .map(column => getColumnHeader(column))
+
+    const data = table.getFilteredRowModel().rows.map(row => {
+      const dataRow: { [key: string]: any } = {}
+      table
+        .getVisibleLeafColumns()
+        .filter(column => column.id !== "actions" && column.id !== "select")
+        .forEach(column => {
+          dataRow[getColumnHeader(column)] = row.getValue(column.id)
+        })
+      return dataRow
+    })
+
+    // Cria a planilha
+    const worksheet = XLSX.utils.json_to_sheet(data)
+
+    // Ajusta largura das colunas para o conteúdo
+    const cols = headers.map((header, colIdx) => {
+      // Pega o maior tamanho do conteúdo da coluna
+      const maxContentLength = Math.max(
+        header.length,
+        ...data.map(row => {
+          const value = row[header]
+          return value ? String(value).length : 0
+        })
+      )
+      return { wch: maxContentLength + 2 } // +2 para espaçamento
+    })
+    worksheet["!cols"] = cols
+
+    // Adiciona bordas horizontais e verticais em todas as células
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || "")
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = XLSX.utils.encode_cell({ r: R, c: C })
+        if (!worksheet[cell_address]) continue
+        if (!worksheet[cell_address].s) worksheet[cell_address].s = {}
+        worksheet[cell_address].s.border = {
+          top:    { style: "thin", color: { rgb: "71717A" } },
+          bottom: { style: "thin", color: { rgb: "71717A" } },
+          left:   { style: "thin", color: { rgb: "71717A" } },
+          right:  { style: "thin", color: { rgb: "71717A" } },
+        }
+      }
+    }
+
+    // Cria o workbook e exporta
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Dados")
+    XLSX.writeFile(workbook, exportFileName, { cellStyles: true })
+  }
+
   const clearColumnFilters = () => {
     setColumnFilters({})
     table.getAllColumns().forEach((column) => {
@@ -102,24 +165,16 @@ export function DataTableFilters<TData>({
     })
   }
 
-  const getColumnLabel = (columnId: string) => {
-    const labels: Record<string, string> = {
-      createdAtTime: "Hora",
-      createdAt: "Data",
-      siteName: "Site",
-      supervisorName: "Supervisor",
-      details: "Detalhes",
-      priority: "Prioridade",
-      name: "Nome",
-      phoneNumber: "Telefone",
-      email: "Email",
-      active: "Estado",
-      status: "Status",
-      description: "Descrição",
-      type: "Tipo",
-      category: "Categoria",
+  const getColumnHeader = (column: any) => {
+    if (typeof column.columnDef.header === 'string') return column.columnDef.header
+    if (typeof column.columnDef.header === 'function') {
+      try {
+        const header = column.columnDef.header({ column })
+        if (typeof header === 'string') return header
+        if (header && header.props && typeof header.props.children === 'string') return header.props.children
+      } catch {}
     }
-    return labels[columnId] || columnId.charAt(0).toUpperCase() + columnId.slice(1)
+    return column.id.charAt(0).toUpperCase() + column.id.slice(1)
   }
 
   const filterableColumns = table
@@ -127,7 +182,6 @@ export function DataTableFilters<TData>({
     .filter(
       (column) => column.getCanFilter() && column.id !== "actions" && column.id !== "select" && column.getIsVisible(),
     )
-
   const hasActiveColumnFilters = Object.values(columnFilters).some((value) => value.length > 0)
   const activeFiltersCount = Object.values(columnFilters).filter((value) => value.length > 0).length
 
@@ -317,11 +371,11 @@ export function DataTableFilters<TData>({
                                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
                                 tabIndex={-1}
                               />
-                              <span className="text-sm">{getColumnLabel(column.id)}</span>
+                              <span className="text-sm">{getColumnHeader(column)}</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="bg-gray-400 text-white text-sm">
-                            <p>{column.getIsVisible() ? 'Ocultar' : 'Mostrar'} coluna {getColumnLabel(column.id)}</p>
+                            <p>{column.getIsVisible() ? 'Ocultar' : 'Mostrar'} coluna {getColumnHeader(column)}</p>
                           </TooltipContent>
                         </Tooltip>
                       ))}
@@ -378,6 +432,20 @@ export function DataTableFilters<TData>({
                 </TooltipContent>
               </Tooltip>
             )}
+
+            {enableExportButton && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleExport} size="sm" className="h-9" variant="outline">
+                    <Download className="h-4 w-4 mr-1" />
+                    {exportButtonLabel}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-gray-400 text-white text-sm">
+                  <p>Exportar dados para Excel (.xlsx)</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         </div>
 
@@ -430,7 +498,7 @@ export function DataTableFilters<TData>({
               {filterableColumns.map((column) => (
                 <div key={column.id} className="space-y-1">
                   <label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                    {getColumnLabel(column.id)}
+                    {getColumnHeader(column)}
                     {columnFilters[column.id] && <div className="h-1.5 w-1.5 bg-blue-500 rounded-full" />}
                   </label>
                   <div className="relative">
@@ -445,7 +513,7 @@ export function DataTableFilters<TData>({
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-gray-400 text-white text-sm">
-                        <p>Filtrar por {getColumnLabel(column.id)}</p>
+                        <p>Filtrar por {getColumnHeader(column)}</p>
                       </TooltipContent>
                     </Tooltip>
                     {columnFilters[column.id] && (
@@ -461,7 +529,7 @@ export function DataTableFilters<TData>({
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent className="bg-gray-400 text-white text-sm">
-                          <p>Limpar filtro de {getColumnLabel(column.id)}</p>
+                          <p>Limpar filtro de {getColumnHeader(column)}</p>
                         </TooltipContent>
                       </Tooltip>
                     )}

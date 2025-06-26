@@ -6,7 +6,6 @@ import { Building2, BarChart2, ClipboardMinus, UserCheck, Trash2, MessageCircle,
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "../../ulils/data-table"
-import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
@@ -67,8 +66,8 @@ export default function CompanyTable() {
         header: "Nome",
         cell: ({ row }) => (
           <div className="flex items-center space-x-4">
-            <Button
-              variant="link"
+            <span
+              
               className="p-0 text-sm cursor-pointer"
               onClick={() => {
                 if (viewMode === "table") {
@@ -77,7 +76,7 @@ export default function CompanyTable() {
               }}
             >
               {row.original.name}
-            </Button>
+            </span>
           </div>
         ),
       },
@@ -88,24 +87,21 @@ export default function CompanyTable() {
           const company = row.original
           return (
             <div className="flex gap-2">
-              <button
+              <span
                 title="Editar"
-                onClick={() => { setSelectedCompany(company); setEditCompanyData(company); setIsEditDialogOpen(true); }}
-                className="p-2 rounded transition-colors text-blue-600 hover:bg-blue-100 cursor-pointer"
-                style={{ background: 'none', border: 'none' }}
-                type="button"
+                onClick={(e) => { e.stopPropagation(); setSelectedCompany(company); setEditCompanyData(company); setIsEditDialogOpen(true); }}
+                className=" hover:bg-blue-100 cursor-pointer"
               >
                 <Edit className="h-4 w-4" />
-              </button>
-              <button
+              </span>
+              <span
                 title="Desativar"
-                onClick={() => { setSelectedCompany(company); setIsDisableAlertOpen(true); }}
-                className="p-2 rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); setSelectedCompany(company); setIsDisableAlertOpen(true); }}
+                className=" rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
                 style={{ background: 'none', border: 'none' }}
-                type="button"
               >
                 <Trash2 className="h-4 w-4" />
-              </button>
+              </span>
             </div>
           )
         },
@@ -236,11 +232,8 @@ export default function CompanyTable() {
   }
 
   return (
-   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="col-span-1 md:col-span-2">
-        <BreadcrumbRoutas />
-      </div>
-           <div className="col-span-1 md:col-span-2">
+   <div className="grid grid-cols-1  gap-6">
+ 
 
       <DataTable
         columns={columns}
@@ -249,13 +242,15 @@ export default function CompanyTable() {
         title="Clientes"
         filterOptions={{
           enableNameFilter: true,
-          enableViewModeToggle: true,
           enableAddButton: true,
           addButtonLabel: "Adicionar Cliente",
+          enableExportButton: true,
+          exportButtonLabel: "Exportar Clientes",
+          exportFileName: "clientes.xlsx",
         }}
         onAddClick={() => setIsAddClientDialogOpen(true)}
       />
-           </div>
+      
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md lg:max-w-2xl">
@@ -293,8 +288,6 @@ export default function CompanyTable() {
                 <ClipboardMinus className="text-red-400" size={32} />
               </CardContent>
             </Card>
-
-            {/* Card Supervisão */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("supervisao")}
@@ -307,7 +300,6 @@ export default function CompanyTable() {
               </CardContent>
             </Card>
 
-            {/* Card Inspeccao */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("inspeccao")}
@@ -320,7 +312,6 @@ export default function CompanyTable() {
               </CardContent>
             </Card>
 
-            {/* Card Recolhas */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("recolhas")}
@@ -406,11 +397,12 @@ export default function CompanyTable() {
             <DialogTitle>Editar Empresa</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
+              <Label htmlFor="editClientCode">Código do Cliente:</Label>
+            <Input id="editClientCode" value={editCompanyData.clientCode || ""} onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })} />
+         
             <Label htmlFor="editName">Nome:</Label>
             <Input id="editName" value={editCompanyData.name || ""} onChange={e => setEditCompanyData({ ...editCompanyData, name: e.target.value })} />
-            <Label htmlFor="editClientCode">Código do Cliente:</Label>
-            <Input id="editClientCode" value={editCompanyData.clientCode || ""} onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })} />
-          </div>
+           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleEditCompany} disabled={isSubmitting}>{isSubmitting ? "Salvando..." : "Salvar"}</Button>

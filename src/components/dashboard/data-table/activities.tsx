@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useSupervisionStore } from "@/hooks/useDataStore"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { DataTable } from "@/components/ulils/data-table"
+import { ActivityDetailModal } from "./ActivityDetailModal"
 
 
 export type Notification = {
@@ -26,15 +27,17 @@ export function ActivityTable() {
   const [date, setDate] = useState<Date | undefined>(undefined)
   const { getRecentActivities } = useSupervisionStore()
   const { isLoading } = useSupervisionData()
+  const [modalData, setModalData] = useState<any>(null)
+  const [modalType, setModalType] = useState<"supervision" | "occurrence" | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Filtrar 2 supervisões + 1 ocorrência mais recente, todos ordenados por data/hora
   const activities = getRecentActivities()
   const supervisions = activities.filter(a => a.type === "supervision")
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 3)
+    .slice(0, 5)
   const occurrences = activities.filter(a => a.type === "occurrence")
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 3)
+    .slice(0, 5)
   const notifications: Notification[] = [...supervisions, ...occurrences]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .map((activity: any) => ({
@@ -51,60 +54,9 @@ export function ActivityTable() {
 
   const columns: ColumnDef<Notification>[] = [
     {
-      accessorKey: "type",
-      header: "Tipo",
-      cell: ({ row }) => {
-        const type = row.getValue("type") as string
-        return (
-          <span className="flex items-center gap-2 text-xs font-semibold py-1">
-            {type === "supervision" ? (
-              <Shield className="w-4 h-4 text-blue-600" />
-            ) : (
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-            )}
-            {type === "supervision" ? "Supervisão" : "Ocorrência"}
-          </span>
-        )
-      },
-    },
-    {
       accessorKey: "createdAt",
-      header: ({ column }) => {
-        return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            <Clock className="mr-2 h-4 w-4" />
-            Data
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      header: "Data",
       cell: ({ row }) => <div className="text-sm">{row.getValue("createdAt")}</div>,
-    },
-    {
-      accessorKey: "siteName",
-      header: ({ column }) => {
-        return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            <MapPin className="mr-2 h-4 w-4" />
-            Site
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => <div className="font-medium text-sm">{row.getValue("siteName")}</div>,
-    },
-    {
-      accessorKey: "supervisorName",
-      header: ({ column }) => {
-        return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            <User className="mr-2 h-4 w-4" />
-            Supervisor
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => <div className="text-sm">{row.getValue("supervisorName")}</div>,
     },
     {
       accessorKey: "createdAtTime",
@@ -114,12 +66,47 @@ export function ActivityTable() {
         return <div className="text-sm font-mono">{format(createdAtDate, "HH:mm")}</div>
       },
     },
+    {
+      accessorKey: "siteName",
+      header: "Site",
+      cell: ({ row }) => <div className="font-medium text-sm">{row.getValue("siteName")}</div>,
+    },
+    {
+      accessorKey: "type",
+      header: "Atividade",
+      cell: ({ row }) => {
+        const type = row.getValue("type") as string
+        const activity =
+          type === "supervision"
+            ? "Supervisão"
+            : type === "occurrence"
+            ? "Ocorrência"
+            : type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+        return (
+          <span className="flex items-center gap-2 text-xs font-semibold ">
+            {activity}
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "supervisorName",
+      header: "Supervisor",
+      cell: ({ row }) => <div className="text-sm">{row.getValue("supervisorName")}</div>,
+    },
   ]
+
+  // Função para abrir modal ao clicar na linha
+  const handleViewDetails = (row: any) => {
+    setModalData(row)
+    setModalType(row.type)
+    setIsModalOpen(true)
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Últimas Atividades</h3>
+        <h3 className="text-lg font-semibold">Últimas Atividades</h3>
       </div>
       <DataTable
         columns={columns}
@@ -127,12 +114,20 @@ export function ActivityTable() {
         loading={isLoading}
         filterOptions={{
           enableSupervisorFilter: true,
+          enableColumnVisibility: true,
         }}
         date={date}
         setDate={setDate}
         initialColumnVisibility={{
           createdAtTime: true,
         }}
+        handleViewDetails={handleViewDetails}
+      />
+      <ActivityDetailModal
+        type={modalType as any}
+        data={modalData}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </div>
   )

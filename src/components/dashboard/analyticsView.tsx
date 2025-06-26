@@ -1,19 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useState, useMemo } from "react"
+import { useCallback,  useState, useMemo } from "react"
 import { format, startOfDay, endOfDay, subDays, startOfWeek, startOfMonth } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { TrendingUp, Activity, Shield } from "lucide-react"
-import { toast } from "sonner"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Bar, BarChart } from "recharts"
+import {  Activity, Shield, AlertTriangle, BarChart3 } from "lucide-react"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
+import { Card, CardContent,  CardHeader } from "../ui/card"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { useTranslations } from "next-intl"
-import instance from "@/lib/api"
+import { useSupervisionData } from "@/hooks/useDataQueries"
+import { useSupervisionStore } from "@/hooks/useDataStore"
 
 interface ChartData {
   hour: string;
+  day?: string;
   occurrences?: number;
   supervisions?: number;
 }
@@ -27,142 +28,64 @@ interface BaseItem {
 
 function LoadingSpinner() {
   return (
-    <div className="flex h-[350px] w-full items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+    <div className="flex h-[340px] w-full items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 h-10 w-10" />
+        <span className="text-sm text-blue-700 font-medium">A carregar dados...</span>
+      </div>
     </div>
   )
 }
 
-function OccurrencesChart({ data, loading, timeFilter }: { data: ChartData[], loading: boolean, timeFilter: string }) {
-  const chartConfig = {
-    occurrences: {
-      label: "Ocorrências",
-      color: "#3b82f6",
-    },
-  }
-
-  if (loading) {
-    return <LoadingSpinner />
-  }
-
-  const filteredData = data.filter((item) => (item.occurrences || 0) > 0)
-
-  if (filteredData.length === 0) {
-    return (
-      <div className="flex h-[350px] items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <Activity className="h-12 w-12 mx-auto mb-4 opacity-50 text-blue-500" />
-          <p className="text-lg font-medium">Nenhuma ocorrência registrada</p>
-          <p className="text-sm">neste período</p>
+function EmptyState({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle: string }) {
+  return (
+    <div className="flex h-[380px] items-center justify-center">
+      <div className="text-center space-y-4">
+        <div className="">
+          <div className="w-20 h-20 mx-auto lex items-center justify-center">
+            <Icon className="h-10 w-10 text-blue-400" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="text-lg font-semibold text-gray-700">{title}</p>
+          <p className="text-sm text-gray-500">{subtitle}</p>
         </div>
       </div>
-    )
-  }
-
-  const dataKey = (timeFilter === "month" || timeFilter === "week") ? "day" : "hour"
-
-  return (
-    <ChartContainer config={chartConfig} className="h-[350px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          accessibilityLayer
-          data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <defs>
-            <linearGradient id="colorOccurrences" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
-              <stop offset="50%" stopColor="#1d4ed8" stopOpacity={0.8} />
-              <stop offset="100%" stopColor="#1e40af" stopOpacity={0.6} />
-            </linearGradient>
-            <linearGradient id="colorOccurrencesHover" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.9} />
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.7} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.6} />
-          <XAxis
-            dataKey={dataKey}
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            fontSize={12}
-            stroke="#64748b"
-            angle={timeFilter === "month" ? -45 : 0}
-            textAnchor={timeFilter === "month" ? "end" : "middle"}
-            height={timeFilter === "month" ? 60 : 30}
-            tick={{ fill: '#64748b', fontSize: 11 }}
-          />
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            tickMargin={10}
-            fontSize={12}
-            stroke="#64748b"
-            tickFormatter={(value) => Number.isInteger(value) ? value : ''}
-            tick={{ fill: '#64748b', fontSize: 11 }}
-          />
-          <ChartTooltip
-            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
-            content={<ChartTooltipContent
-              indicator="dashed"
-              labelStyle={{ color: '#1e293b', fontWeight: '600' }}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
-                padding: '12px 16px'
-              }}
-            />}
-          />
-          <Bar
-            dataKey="occurrences"
-            fill="url(#colorOccurrences)"
-            radius={[8, 8, 0, 0]}
-            name="Ocorrências"
-            animationDuration={1500}
-            animationEasing="ease-out"
-            onMouseOver={(data, index) => {
-              // Enhanced hover effect
-            }}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </ChartContainer>
+    </div>
   )
 }
-function SupervisionsChart({ data, loading, timeFilter }: { data: ChartData[], loading: boolean, timeFilter: string }) {
-  const chartConfig = {
-    supervisions: {
-      label: "Supervisões",
-      color: "#3b82f6",
-    },
-  }
+
+function ModernChart({ data, loading, timeFilter }: { 
+  data: ChartData[], 
+  loading: boolean, 
+  timeFilter: string
+}) {
+  const color = '#2563eb'
+  const lightColor = '#dbeafe'
 
   if (loading) {
     return <LoadingSpinner />
   }
 
-  const filteredData = data.filter((item) => (item.supervisions || 0) > 0)
+  const maxValue = Math.max(...data.map(d => (d.supervisions ?? d.occurrences ?? 0)), 8)
+  const yDomain = [0, Math.max(maxValue, 8)]
+
+  const filteredData = data.filter((item) => (item.occurrences || item.supervisions || 0) > 0)
 
   if (filteredData.length === 0) {
     return (
-      <div className="flex h-[350px] items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <Shield className="h-12 w-12 mx-auto mb-4 opacity-50 text-blue-500" />
-          <p className="text-lg font-medium">Nenhuma supervisão registrada</p>
-          <p className="text-sm">neste período</p>
-        </div>
-      </div>
+      <EmptyState 
+        icon={Activity}
+        title="Nenhum dado registado"
+        subtitle="Neste período selecionado"
+      />
     )
   }
 
-  const dataKey = (timeFilter === "month" || timeFilter === "week") ? "day" : "hour"
+  const xAxisKey = (timeFilter === "month" || timeFilter === "week") ? "day" : "hour"
 
   return (
-    <ChartContainer config={chartConfig} className="h-[350px] w-full" style={{ cursor: "pointer" }}>
+    <ChartContainer config={{}} className="h-[340px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           accessibilityLayer
@@ -170,75 +93,86 @@ function SupervisionsChart({ data, loading, timeFilter }: { data: ChartData[], l
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <defs>
-            <linearGradient id="colorSupervisions" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
-              <stop offset="50%" stopColor="#1d4ed8" stopOpacity={0.6} />
-              <stop offset="100%" stopColor="#1e40af" stopOpacity={0.3} />
-            </linearGradient>
-            <linearGradient id="colorSupervisionsStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="50%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#3b82f6" />
+            <linearGradient id="gradient-blue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+              <stop offset="50%" stopColor={color} stopOpacity={0.4} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.1} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.6} />
+          <CartesianGrid 
+            strokeDasharray="3 3" 
+            stroke="#e2e8f0" 
+            strokeOpacity={0.3}
+            vertical={false}
+          />
           <XAxis
-            dataKey={dataKey}
+            dataKey={xAxisKey}
             tickLine={false}
             axisLine={false}
-            tickMargin={8}
-            fontSize={12}
+            tickMargin={10}
+            fontSize={11}
             stroke="#64748b"
             angle={timeFilter === "month" ? -45 : 0}
             textAnchor={timeFilter === "month" ? "end" : "middle"}
             height={timeFilter === "month" ? 60 : 30}
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
           />
           <YAxis
+            domain={yDomain}
+            allowDecimals={false}
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            fontSize={12}
+            fontSize={11}
             stroke="#64748b"
-            tickFormatter={(value) => Number.isInteger(value) ? value : ''}
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tickFormatter={(value) => Number.isInteger(value) ? value.toString() : ''}
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
           />
           <ChartTooltip
-            cursor={{ stroke: '#3b82f6', strokeWidth: 3, strokeDasharray: '5 5', pointerEvents: 'auto' }}
+            cursor={{ 
+              stroke: color, 
+              strokeWidth: 2, 
+              strokeDasharray: '8 4',
+              strokeOpacity: 0.6
+            }}
             content={<ChartTooltipContent
               indicator="dot"
-              labelStyle={{ color: '#1e293b', fontWeight: '600' }}
+              labelStyle={{ 
+                color: '#1e293b', 
+                fontWeight: '600',
+                fontSize: '13px'
+              }}
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05)',
-                padding: '12px 16px'
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: `1px solid ${lightColor}`,
+                borderRadius: '16px',
+                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04)',
+                padding: '16px 20px',
+                backdropFilter: 'blur(10px)'
               }}
             />}
           />
           <Area
-            dataKey="supervisions"
+            dataKey={data[0]?.supervisions !== undefined ? "supervisions" : "occurrences"}
             type="monotone"
-            fill="url(#colorSupervisions)"
-            stroke="url(#colorSupervisionsStroke)"
-            strokeWidth={4}
-            name="Supervisões"
-            animationDuration={2000}
-            animationEasing="ease-out"
+            fill="url(#gradient-blue)"
+            stroke={color}
+            strokeWidth={3}
+            name="Total"
+            animationDuration={900}
+            animationEasing="ease-in-out"
             dot={{
-              fill: '#3b82f6',
-              strokeWidth: 3,
-              r: 5,
+              fill: color,
+              strokeWidth: 2,
+              r: 4,
               stroke: 'white',
-              filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))'
             }}
             activeDot={{
-              r: 8,
-              stroke: '#3b82f6',
+              r: 7,
+              stroke: color,
               strokeWidth: 3,
               fill: 'white',
-              filter: 'drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4))'
+              style: { cursor: 'pointer' }
             }}
           />
         </AreaChart>
@@ -250,189 +184,43 @@ function SupervisionsChart({ data, loading, timeFilter }: { data: ChartData[], l
 export default function AnalyticsView() {
   const [occurrencesTimeFilter, setOccurrencesTimeFilter] = useState("day")
   const [supervisionsTimeFilter, setSupervisionsTimeFilter] = useState("day")
-  const [occurrencesLoading, setOccurrencesLoading] = useState(true)
-  const [supervisionsLoading, setSupervisionsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [rawOccurrences, setRawOccurrences] = useState<BaseItem[]>([])
-  const [rawSupervisions, setRawSupervisions] = useState<BaseItem[]>([])
-  const [lastFetchTime, setLastFetchTime] = useState<{ occurrences: number, supervisions: number }>({
-    occurrences: 0,
-    supervisions: 0
-  })
-  const t = useTranslations('analytics');
+  const t = useTranslations('analytics')
+
+  const { isLoading } = useSupervisionData()
+  const { supervisions, occurrences } = useSupervisionStore()
+  const rawOccurrences = useMemo(() => 
+    occurrences.map(occ => ({
+      createdAt: occ.createdAt,
+      createdAtDate: occ.createdAtDate,
+      name: occ.siteName
+    })), [occurrences]
+  )
+
+  const rawSupervisions = useMemo(() => 
+    supervisions.map(sup => ({
+      createdAt: sup.createdAt,
+      createdAtDate: sup.createdAtDate,
+      supervisorName: sup.supervisorName,
+      name: sup.siteName
+    })), [supervisions]
+  )
 
   const getDateRange = useCallback((timeFilter: string) => {
     const now = new Date()
-
     switch (timeFilter) {
       case "day":
-        return {
-          start: startOfDay(now),
-          end: endOfDay(now)
-        }
+        return { start: startOfDay(now), end: endOfDay(now) }
       case "yesterday":
         const yesterday = subDays(now, 1)
-        return {
-          start: startOfDay(yesterday),
-          end: endOfDay(yesterday)
-        }
+        return { start: startOfDay(yesterday), end: endOfDay(yesterday) }
       case "week":
-        return {
-          start: startOfWeek(subDays(now, 6), { weekStartsOn: 1 }),
-          end: endOfDay(now)
-        }
+        return { start: startOfWeek(subDays(now, 6), { weekStartsOn: 1 }), end: endOfDay(now) }
       case "month":
-        return {
-          start: startOfMonth(now),
-          end: endOfDay(now)
-        }
+        return { start: startOfMonth(now), end: endOfDay(now) }
       default:
-        return {
-          start: startOfDay(now),
-          end: endOfDay(now)
-        }
+        return { start: startOfDay(now), end: endOfDay(now) }
     }
   }, [])
-
-  const processItemDate = useCallback((item: any): BaseItem | null => {
-    try {
-      let createdAtDate: Date | null = null
-
-      if (item.createdAt) {
-        const dateString = item.createdAt.toString()
-        createdAtDate = new Date(dateString)
-        if (isNaN(createdAtDate.getTime())) {
-          createdAtDate = new Date(dateString.replace(/\s/, 'T'))
-
-          if (isNaN(createdAtDate.getTime())) {
-            console.warn('Data inválida encontrada:', item.createdAt)
-            return null
-          }
-        }
-      } else {
-        console.warn('Item sem data de criação:', item)
-        return null
-      }
-
-      return {
-        ...item,
-        createdAtDate,
-        supervisorName: item.supervisorName || "N/A",
-        name: item.name || "N/A",
-      }
-    } catch (error) {
-      console.warn('Erro ao processar item:', error, item)
-      return null
-    }
-  }, [])
-
-  const getDataSize = useCallback((timeFilter: string) => {
-    switch (timeFilter) {
-      case "day":
-      case "yesterday":
-        return 500
-      case "week":
-        return 1000
-      case "month":
-        return 2000
-      default:
-        return 500
-    }
-  }, [])
-
-  const fetchOccurrences = useCallback(async (forceRefresh = false) => {
-    const now = Date.now()
-    const CACHE_DURATION = 2 * 60 * 1000
-
-    if (!forceRefresh && rawOccurrences.length > 0 && (now - lastFetchTime.occurrences) < CACHE_DURATION) {
-      setOccurrencesLoading(false)
-      return
-    }
-
-    try {
-      setOccurrencesLoading(true)
-      setError(null)
-
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 15000)
-
-      const response = await instance.get('/occurrence', {
-        params: {
-          size: 10000,
-          sort: 'createdAt',
-          order: 'desc'
-        },
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      if (response.data?.data?.data) {
-        const processedData = response.data.data.data
-          .map(processItemDate)
-          .filter(Boolean) as BaseItem[]
-
-        setRawOccurrences(processedData)
-        setLastFetchTime(prev => ({ ...prev, occurrences: now }))
-      } else {
-        throw new Error('Formato de resposta inválido')
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        toast.error("Timeout na requisição de ocorrências")
-      } else {
-        console.error("Error fetching occurrences:", error)
-        toast.error("Erro ao carregar ocorrências")
-      }
-      setError("Erro ao carregar ocorrências")
-    } finally {
-      setOccurrencesLoading(false)
-    }
-  }, [rawOccurrences.length, lastFetchTime.occurrences, processItemDate])
-
-  const fetchSupervisions = useCallback(async (forceRefresh = false) => {
-    const now = Date.now()
-    const CACHE_DURATION = 2 * 60 * 1000
-
-    if (!forceRefresh && rawSupervisions.length > 0 && (now - lastFetchTime.supervisions) < CACHE_DURATION) {
-      setSupervisionsLoading(false)
-      return
-    }
-
-    try {
-      setSupervisionsLoading(true)
-      setError(null)
-      const response = await instance.get('/supervision', {
-        params: {
-          size: 5000,
-          sort: 'createdAt',
-          order: 'desc'
-        }
-      })
-
-
-      if (response.data?.data?.data) {
-        const processedData = response.data.data.data
-          .map(processItemDate)
-          .filter(Boolean) as BaseItem[]
-
-        setRawSupervisions(processedData)
-        setLastFetchTime(prev => ({ ...prev, supervisions: now }))
-      } else {
-        throw new Error('Formato de resposta inválido')
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        toast.error("Timeout na requisição de supervisões")
-      } else {
-        console.error("Error fetching supervisions:", error)
-        toast.error("Erro ao carregar supervisões")
-      }
-      setError("Erro ao carregar supervisões")
-    } finally {
-      setSupervisionsLoading(false)
-    }
-  }, [rawSupervisions.length, lastFetchTime.supervisions, processItemDate])
 
   const processChartData = useCallback((data: BaseItem[], timeFilter: string): ChartData[] => {
     if (timeFilter === "month") {
@@ -474,7 +262,6 @@ export default function AnalyticsView() {
       }))
     } else {
       const hourlyGroups: Record<string, number> = {}
-      // Initialize all hours from 0 to 23
       for (let i = 0; i < 24; i++) {
         const hour = i.toString().padStart(2, "0")
         hourlyGroups[hour] = 0
@@ -489,7 +276,6 @@ export default function AnalyticsView() {
         }
       })
 
-      // Convert to array and sort by hour
       return Object.entries(hourlyGroups)
         .sort(([a], [b]) => parseInt(a) - parseInt(b))
         .map(([hour, count]) => ({
@@ -503,7 +289,6 @@ export default function AnalyticsView() {
 
   const filteredOccurrences = useMemo(() => {
     if (!rawOccurrences.length) return []
-
     const { start, end } = getDateRange(occurrencesTimeFilter)
     return rawOccurrences.filter((item) => {
       try {
@@ -516,7 +301,6 @@ export default function AnalyticsView() {
 
   const filteredSupervisions = useMemo(() => {
     if (!rawSupervisions.length) return []
-
     const { start, end } = getDateRange(supervisionsTimeFilter)
     return rawSupervisions.filter((item) => {
       try {
@@ -535,12 +319,6 @@ export default function AnalyticsView() {
     return processChartData(filteredSupervisions, supervisionsTimeFilter)
   }, [filteredSupervisions, supervisionsTimeFilter, processChartData])
 
-  useEffect(() => {
-    fetchOccurrences()
-    fetchSupervisions()
-  }, [])
-
-
   const getPeriodTitle = useCallback((timeFilter: string) => {
     switch (timeFilter) {
       case "day":
@@ -558,95 +336,146 @@ export default function AnalyticsView() {
   }, [])
 
   return (
-    <div className="flex flex-col gap-6 ">
+    <div className="flex flex-col gap-8 p-1">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <Card className="w-full shadow-lg rounded-lg border-0 bg-white dark:bg-gray-800 hover:shadow-xl transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-blue-700">
-                <Shield className="h-5 w-5" />
-                {t('supervisions.title')}
-              </CardTitle>
-              <CardDescription className="text-blue-600/70">
-                {getPeriodTitle(supervisionsTimeFilter)}
-              </CardDescription>
+
+        <Card className="bg-white shadow rounded-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center gap-2 mb-1">
+              <Shield className="h-5 w-5 text-blue-600" />
+              <span className="text-base font-semibold text-blue-700">
+                {t('supervisions.title', { default: 'Supervisões' })}
+              </span>
             </div>
-            <Tabs value={supervisionsTimeFilter} onValueChange={setSupervisionsTimeFilter}>
-              <TabsList className="grid w-full grid-cols-4 bg-white/50">
-                <TabsTrigger value="day" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.today')}
-                </TabsTrigger>
-                <TabsTrigger value="yesterday" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.yesterday')}
-                </TabsTrigger>
-                <TabsTrigger value="week" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.week')}
-                </TabsTrigger>
-                <TabsTrigger value="month" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.month')}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <span className="text-sm text-gray-500 mb-2">{getPeriodTitle(supervisionsTimeFilter)}</span>
+            <FilterTabs
+              value={supervisionsTimeFilter}
+              onChange={setSupervisionsTimeFilter}
+              data={rawSupervisions}
+              timeFilter={supervisionsTimeFilter}
+            />
           </CardHeader>
-          <CardContent className="pb-4">
-            <SupervisionsChart data={supervisionsChartData} loading={supervisionsLoading} timeFilter={supervisionsTimeFilter} />
+          <CardContent>
+            <ModernChart 
+              data={supervisionsChartData} 
+              loading={isLoading} 
+              timeFilter={supervisionsTimeFilter}
+            />
           </CardContent>
-          <CardFooter className="flex-col items-start gap-2 text-sm ">
-            <div className="flex gap-2 font-semibold leading-none text-blue-700">
-              {t('supervisions.total', { count: filteredSupervisions.length })}
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <div className="leading-none text-gray-700/70">
-              {t('supervisions.distributionHour')}
-            </div>
-          </CardFooter>
-        </Card>
-        <Card className="w-full shadow-lg rounded-lg border-0 bg-white dark:bg-gray-800 hover:shadow-xl transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-blue-700">
-                <Activity className="h-5 w-5" />
-                {t('occurrences.title')}
-              </CardTitle>
-              <CardDescription className="text-blue-600/70">
-                {getPeriodTitle(occurrencesTimeFilter)}
-              </CardDescription>
-            </div>
-            <Tabs value={occurrencesTimeFilter} onValueChange={setOccurrencesTimeFilter}>
-              <TabsList className="grid w-full grid-cols-4 bg-white/50">
-                <TabsTrigger value="day" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.today')}
-                </TabsTrigger>
-                <TabsTrigger value="yesterday" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.yesterday')}
-                </TabsTrigger>
-                <TabsTrigger value="week" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.week')}
-                </TabsTrigger>
-                <TabsTrigger value="month" className="data-[state=active]:bg-blue-500 text-xs rounded-4xl cursor-pointer data-[state=active]:text-white transition-all duration-200">
-                  {t('timeFilters.month')}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardHeader>
-          <CardContent className="pb-4">
-            <OccurrencesChart data={occurrencesChartData} loading={occurrencesLoading} timeFilter={occurrencesTimeFilter} />
-          </CardContent>
-          <CardFooter className="flex-col items-start gap-2 text-sm ">
-            <div className="flex gap-2 font-semibold leading-none text-blue-700">
-              {t('occurrences.total', { count: filteredOccurrences.length })}
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <div className="leading-none text-gray-700/70">
-              {occurrencesTimeFilter === "month"
-                ? t('occurrences.distributionDay')
-                : t('occurrences.distributionHour')}
-            </div>
-          </CardFooter>
         </Card>
 
-    
+
+        <Card className="bg-white shadow rounded-lg">
+          <CardHeader className="pb-2">
+            <div className="flex flex-row items-center gap-2 mb-1">
+              <AlertTriangle className="h-5 w-5 text-blue-600" />
+              <span className="text-base font-semibold text-blue-700">
+                {t('occurrences.title', { default: 'Ocorrências' })}
+              </span>
+            </div>
+            <span className="text-sm text-gray-500 mb-2">{getPeriodTitle(occurrencesTimeFilter)}</span>
+            <FilterTabs
+              value={occurrencesTimeFilter}
+              onChange={setOccurrencesTimeFilter}
+              data={rawOccurrences}
+              timeFilter={occurrencesTimeFilter}
+            />
+          </CardHeader>
+          <CardContent>
+            <ModernChart 
+              data={occurrencesChartData} 
+              loading={isLoading} 
+              timeFilter={occurrencesTimeFilter}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
+  )
+}
+
+
+function FilterTabs({ value, onChange, data }: {
+  value: string,
+  onChange: (value: string) => void,
+  data: BaseItem[],
+  timeFilter: string,
+}) {
+  const t = useTranslations('analytics')
+
+  const getDateRange = useCallback((filter: string) => {
+    const now = new Date()
+    switch (filter) {
+      case "day":
+        return { start: startOfDay(now), end: endOfDay(now) }
+      case "yesterday":
+        const yesterday = subDays(now, 1)
+        return { start: startOfDay(yesterday), end: endOfDay(yesterday) }
+      case "week":
+        return { start: startOfWeek(subDays(now, 6), { weekStartsOn: 1 }), end: endOfDay(now) }
+      case "month":
+        return { start: startOfMonth(now), end: endOfDay(now) }
+      default:
+        return { start: startOfDay(now), end: endOfDay(now) }
+    }
+  }, [])
+
+  const getTotalForFilter = useCallback((filter: string) => {
+    const { start, end } = getDateRange(filter)
+    return data.filter((item) => {
+      try {
+        return item.createdAtDate >= start && item.createdAtDate <= end
+      } catch {
+        return false
+      }
+    }).length
+  }, [data, getDateRange])
+
+  const filters = [
+    { key: 'day', label: 'Hoje' },
+    { key: 'yesterday', label: 'Ontem' },
+    { key: 'week', label: 'Semana' },
+    { key: 'month', label: 'Mês' },
+  ]
+
+  return (
+    <Tabs value={value} onValueChange={onChange} className="w-full">
+      <TabsList className="grid w-full grid-cols-4 bg-gray-50/80 p-0.5 rounded-xl border-0 shadow-sm gap-1">
+        {filters.map((filter) => {
+          const count = getTotalForFilter(filter.key)
+          const isActive = value === filter.key
+          return (
+            <TabsTrigger
+              key={filter.key}
+              value={filter.key}
+              className={`
+                transition-all duration-200
+                data-[state=active]:bg-blue-700
+                data-[state=active]:text-white
+                text-xs rounded-lg px-2 py-1
+                border-0 hover:bg-blue-50
+                flex flex-row items-center justify-center gap-1
+                font-medium
+                min-w-0
+              `}
+            >
+              <span className="truncate">{filter.label}</span>
+              <span
+                className={`
+                  ml-1  text-[11px] font-bold
+                  ${isActive
+                    ? " text-white"
+                    : " text-blue-700"}
+                  transition-all duration-200
+                `}
+                style={{ minWidth: 28, textAlign: "center" }}
+              >
+                {count}
+              </span>
+            </TabsTrigger>
+          )
+        })}
+      </TabsList>
+    </Tabs>
   )
 }

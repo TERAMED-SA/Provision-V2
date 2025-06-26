@@ -2,14 +2,13 @@
 
 import * as React from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Edit, Trash, Eye, MapPin, MoreVertical, MoreHorizontal, MoreHorizontalIcon } from "lucide-react"
+import { Edit, MapPin, Trash2 } from "lucide-react"
 import { DataTable } from "../../ulils/data-table"
 import { SupervisorDetailModal } from "../supervisor/supervisor-Detail-Modal"
 import { SupervisorAddForm } from "../supervisor/supervision-Add-Form"
 import { SupervisorEditForm } from "../supervisor/supervision-edit"
 import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas"
 import { useTranslations } from "next-intl"
-import { Button } from "../../ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +23,6 @@ import {
 import type { Supervisor } from "@/features/application/domain/entities/Supervisor"
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
 import { toast } from "sonner"
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog"
 
 export function SupervisorTable() {
@@ -37,15 +35,9 @@ export function SupervisorTable() {
   const [sites, setSites] = React.useState<any[]>([])
   const [isSitesDialogOpen, setIsSitesDialogOpen] = React.useState(false)
   const [companyInfo, setCompanyInfo] = React.useState<any | null>(null)
-  const [isCompanyInfoDialogOpen, setIsCompanyInfoDialogOpen] = React.useState(false)
-  const [selectedSite, setSelectedSite] = React.useState<any | null>(null)
-  const [selectedSupervisorId, setSelectedSupervisorId] = React.useState<string | null>(null)
   const [sitesLoading, setSitesLoading] = React.useState(false)
-  const [sitePage, setSitePage] = React.useState(1)
   const [siteSearch, setSiteSearch] = React.useState("")
   const [selectedSupervisorName, setSelectedSupervisorName] = React.useState<string>("")
-  const SITES_PER_PAGE = 7
-
   const handleAddClick = () => {
     setIsAddDialogOpen(true)
   }
@@ -208,18 +200,15 @@ export function SupervisorTable() {
     site.name?.toLowerCase().includes(siteSearch.toLowerCase()) ||
     site.costCenter?.toLowerCase().includes(siteSearch.toLowerCase())
   )
-  const totalPages = Math.ceil(filteredSites.length / SITES_PER_PAGE)
-  const paginatedSites = filteredSites.slice((sitePage - 1) * SITES_PER_PAGE, sitePage * SITES_PER_PAGE)
 
 
   const columns: ColumnDef<Supervisor>[] = [
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        <span  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           {t("table.name")}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </span>
       ),
       cell: ({ row }) => {
         const user = row.original
@@ -233,20 +222,18 @@ export function SupervisorTable() {
     {
       accessorKey: "phoneNumber",
       header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           {t("table.phone")}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </span>
       ),
       cell: ({ row }) => <div>{row.getValue("phoneNumber") || t("noPhone")}</div>,
     },
     {
       accessorKey: "email",
       header: ({ column }) => (
-        <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           {t("table.email")}
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        </span>
       ),
       cell: ({ row }) => <div>{row.getValue("email")}</div>,
     },
@@ -257,43 +244,28 @@ export function SupervisorTable() {
         const supervisor = row.original
         return (
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              title={t("view")}
-              className="text-gray-600 hover:text-white hover:bg-black cursor-pointer"
-              onClick={() => handleViewSupervisor(supervisor)}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+            <span
               title={t("edit")}
-              className="text-gray-600 hover:text-white hover:bg-black cursor-pointer"
+              className="cursor-pointer"
               onClick={() => handleEditSupervisor(supervisor)}
             >
               <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+            </span>
+            <span
               title="Ver Sites"
-              className="text-gray-600 hover:text-white hover:bg-black cursor-pointer"
+              className=" cursor-pointer"
               onClick={() => handleFetchSupervisorSites(supervisor.employeeId)}
             >
               <MapPin className="h-4 w-4" />
-            </Button>
+            </span>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <span
                   title={t("delete")}
-                  className="text-red-600 hover:text-white hover:bg-red-700 cursor-pointer"
+                   className="cursor-pointer text-red-600"
                 >
-                  <Trash className="h-4 w-4" />
-                </Button>
+                  <Trash2 className="h-4 w-4" />
+                </span>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -336,9 +308,7 @@ export function SupervisorTable() {
             addButtonLabel: t("add"),
           }}
           onAddClick={handleAddClick}
-          initialColumnVisibility={{
-            email: false,
-          }}
+          handleViewDetails={handleViewSupervisor}
         />
       </div>
       <SupervisorEditForm
@@ -369,74 +339,33 @@ export function SupervisorTable() {
               className="w-full border rounded px-3 py-2 text-sm"
               placeholder="Pesquisar por nome ou cost center..."
               value={siteSearch}
-              onChange={e => { setSiteSearch(e.target.value); setSitePage(1); }}
+              onChange={e => { setSiteSearch(e.target.value); }}
             />
           </div>
           {sitesLoading ? (
-            <div className="py-8 text-center">Carregando sites...</div>
-          ) : paginatedSites.length === 0 ? (
-            <div className="py-4 text-center text-muted-foreground">Nenhum site encontrado para este supervisor.</div>
+            <div className="py-8 text-center text-gray-500">Carregando sites...</div>
+          ) : filteredSites.length === 0 ? (
+            <div className="py-4 text-center text-gray-400">Nenhum site encontrado para este supervisor.</div>
           ) : (
-            <ul className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-              {paginatedSites.map(site => (
-                <li key={site._id} className="flex items-center justify-between py-2 px-1 hover:bg-accent rounded transition">
-                  <div>
-                    <div className="font-semibold text-sm">{site.name}</div>
-                    <div className="text-xs text-muted-foreground">Cost Center: {site.costCenter}</div>
+            <ul className="space-y-3 max-h-80 overflow-y-auto px-1">
+              {filteredSites.map(site => (
+                <li key={site._id} className="bg-white border rounded p-3">
+                  <div className="font-bold text-primary text-base mb-1 flex items-center gap-2">
+                    {site.name}
                   </div>
-                  <Button size="sm" variant="outline" className="cursor-pointer" onClick={() => {
-                    setSelectedSite(site)
-                    setIsSitesDialogOpen(false)
-                    setIsCompanyInfoDialogOpen(true)
-                  }}>
-                    Visualizar
-                  </Button>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <div><span className="font-semibold">Centro de Custo:</span> {site.costCenter || "N/A"}</div>
+                    <div><span className="font-semibold">Nº Trabalhadores:</span> {site.numberOfWorkers || "N/A"}</div>
+                    <div><span className="font-semibold">Zona:</span> {site.zone || "N/A"}</div>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
-          {totalPages > 1 && !sitesLoading && (
-            <div className="flex flex-col items-center gap-2 mt-4">
-              <div className="flex gap-2">
-                <Button size="sm" variant="ghost" disabled={sitePage === 1} onClick={() => setSitePage(sitePage - 1)}>
-                  Anterior
-                </Button>
-                <span className="self-center">Página {sitePage} de {totalPages}</span>
-                <Button size="sm" variant="ghost" disabled={sitePage === totalPages} onClick={() => setSitePage(sitePage + 1)}>
-                  Próxima
-                </Button>
-              </div>
-            </div>
-          )}
+         
         </DialogContent>
       </Dialog>
-      
-      <Dialog open={isCompanyInfoDialogOpen} onOpenChange={(open) => {
-        setIsCompanyInfoDialogOpen(open)
-        if (!open) setIsSitesDialogOpen(true)
-      }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Site</DialogTitle>
-          </DialogHeader>
-          {selectedSite ? (
-            <div className="space-y-4 p-2">
-              <div className="flex items-center gap-3 mb-2">
-                <MapPin className="text-blue-500" size={22} />
-                <span className="text-lg font-bold">{selectedSite.name}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Cost Center:</span> {selectedSite.costCenter || "N/A"}</div>
-                <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Nº Trabalhadores:</span> {selectedSite.numberOfWorkers || "N/A"}</div>
-                <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Zona:</span> {selectedSite.zone || "N/A"}</div>
-                <div className="bg-gray-50 rounded p-2"><span className="font-semibold">Criado em:</span> {selectedSite.createdAt ? new Date(selectedSite.createdAt).toLocaleDateString('pt-BR') : "-"}</div>
-              </div>
-            </div>
-          ) : (
-            <div>Carregando informações...</div>
-          )}
-        </DialogContent>
-      </Dialog>
+ 
     </div>
   )
 }

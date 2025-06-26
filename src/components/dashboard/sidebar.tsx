@@ -72,7 +72,6 @@ export function Sidebar({
   }
   const { getSelectedDateCounts } = useSupervisionStore()
 
-  // Initialize data fetching
   useSupervisionData()
 
   const counts = getSelectedDateCounts()

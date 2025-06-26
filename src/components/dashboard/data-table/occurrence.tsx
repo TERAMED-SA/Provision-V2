@@ -2,19 +2,15 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { ArrowUpDown, Eye } from "lucide-react"
 import { DataTable } from "../../ulils/data-table"
 import { toast } from "sonner"
 import type { Column, Row } from "@tanstack/react-table"
-import { BreadcrumbRoutas } from "../../ulils/breadcrumbRoutas"
 import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
 import type { Occurrence } from "@/features/application/domain/entities/Occurrence"
 import { OccurrenceDetailModal } from "./occurrence-detail-modal"
-import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
 import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
-import { useEffect } from "react"
 
 export type Notification = Occurrence
 
@@ -162,10 +158,9 @@ export function OccurrenceTable() {
       {
         accessorKey: "createdAt",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Data
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          </span>
         ),
         filterFn: (row: Row<Notification>, id: string, value: Date) => {
           if (!value) return true;
@@ -181,10 +176,9 @@ export function OccurrenceTable() {
       {
         accessorKey: "createdAtTime",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <span  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Hora
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          </span>
         ),
         filterFn: (row: Row<Notification>, id: string, value: string) => {
           if (!value) return true
@@ -197,10 +191,18 @@ export function OccurrenceTable() {
       {
         accessorKey: "siteName",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Site
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+          </span>
+        ),
+      }
+      ,
+      {
+        accessorKey: "supervisorName",
+        header: ({ column }: { column: Column<Notification, unknown> }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Supervisor
+          </span>
         ),
       },
       {
@@ -214,7 +216,7 @@ export function OccurrenceTable() {
       },
       {
         accessorKey: "aria",
-        header: "Aria",
+        header: "Área",
         cell: ({ row }: { row: Row<Notification> }) => {
           return row.original.aria || "-"
         },
@@ -226,33 +228,13 @@ export function OccurrenceTable() {
           return row.original.ocorrencia || "-"
         },
       },
-      {
-        id: "actions",
-        header: "Ação",
-        cell: ({ row }: { row: Row<Notification> }) => {
-          const notification = row.original
-
-          return (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="cursor-pointer text-gray-600 hover:text-gray-100 hover:bg-gray-800"
-              onClick={() => handleViewDetails(notification)}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          )
-        },
-      },
     ],
     [handleViewDetails],
   )
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="col-span-1 md:col-span-2">
-        <BreadcrumbRoutas />
-      </div>
+    <div className="grid grid-cols-1 gap-6">
+
       <div className="col-span-1 md:col-span-2">
         <DataTable
           columns={columns}
@@ -264,7 +246,6 @@ export function OccurrenceTable() {
             enableDateFilter: true,
             enableColumnVisibility: true,
             enableColumnFilters: true,
-            enableViewModeToggle: true,
           }}
           date={date}
           setDate={setDate}

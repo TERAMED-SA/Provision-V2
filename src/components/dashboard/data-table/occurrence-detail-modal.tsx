@@ -1,6 +1,5 @@
 import * as React from "react";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel } from "../../ui/alert-dialog";
-import { User, Package, AlertTriangle, Building, Info, Download } from "lucide-react";
+import { User, AlertTriangle, Info, Download, Loader2 } from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { getPriorityLabel } from "./occurrence";
 import { Occurrence } from "@/features/application/domain/entities/Occurrence";
@@ -8,6 +7,15 @@ import { Button } from "../../ui/button";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { OccurrencePDF } from "../pdf/occurrence-pdf";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { GenericDetailModal } from "../generic-detail-modal";
 
 interface OccurrenceDetailModalProps {
   notification: Occurrence | null;
@@ -27,143 +35,130 @@ export function OccurrenceDetailModal({ notification, isOpen, onClose }: Occurre
 
   const priorityColor = priorityColors[notification.priority] || "bg-gray-100 text-gray-800 border-gray-200";
 
+  const footer = (
+    <PDFDownloadLink
+      document={<OccurrencePDF notification={notification} getPriorityLabel={getPriorityLabel} />}
+      fileName={`ocorrencia-${notification.siteName}-${notification._id}.pdf`}
+      style={{ textDecoration: "none" }}
+    >
+      {({ loading: pdfLoading }) => (
+        <Button variant="outline" disabled={pdfLoading}>
+          {pdfLoading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
+          Baixar PDF
+        </Button>
+      )}
+    </PDFDownloadLink>
+  );
+
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" /> Detalhes da Ocorrência
-          </AlertDialogTitle>
-        </AlertDialogHeader>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Building className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-500">Local</span>
-              </div>
-              <p>{notification.siteName}</p>
-            </div>
-
-          
-          </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-500">Prioridade</span>
-              </div>
-              <Badge className={priorityColor}>
-                {getPriorityLabel(notification.priority)}
-              </Badge>
-            </div>
-
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-             
-              <span className="text-sm font-medium text-gray-500 flex gap-2"> <Info className="h-4 w-4 text-gray-500" /> Detalhes</span>
-            <p className="text-sm">{notification.details}</p>
-            </div>
-          </div>
-
-
-          <Tabs defaultValue="workers" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="workers">Trabalhadores</TabsTrigger>
-              <TabsTrigger value="equipment">Equipamentos</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="workers" className="mt-4">
-              {notification.workerInformation && notification.workerInformation.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {notification.workerInformation.map((worker, index) => (
-                    <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          <h4 className="font-medium">{worker.name}</h4>
-                        </div>
-                        <span className="text-sm text-muted-foreground">Nº {worker.employeeNumber}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Estado</p>
-                          <p>{worker.state}</p>
-                        </div>
-                        {worker.obs && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Observações</p>
-                            <p className="text-sm">{worker.obs}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <Info className="h-6 w-6 mx-auto mb-2" />
-                  <p>Nenhum trabalhador registrado nesta ocorrência.</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="equipment" className="mt-4">
-              {notification.equipment && notification.equipment.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {notification.equipment.map((equip, index) => (
-                    <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          <h4 className="font-medium">{equip.name}</h4>
-                        </div>
-                        <span className="text-sm text-muted-foreground">Nº Série: {equip.serialNumber}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Estado</p>
-                          <p>{equip.state}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Centro de Custo</p>
-                          <p>{equip.costCenter}</p>
-                        </div>
-                        {equip.obs && (
-                          <div className="col-span-2">
-                            <p className="text-sm font-medium text-muted-foreground">Observações</p>
-                            <p className="text-sm">{equip.obs}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <Info className="h-6 w-6 mx-auto mb-2" />
-                  <p>Nenhum equipamento registrado nesta ocorrência.</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+    <GenericDetailModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Detalhes da Ocorrência"
+      icon={AlertTriangle}
+      footerContent={footer}
+    >
+      <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Data</p>
+          <p>{(notification as any).createdAt} {(notification as any).createdAtTime}</p>
         </div>
+ 
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Supervisor</p>
+          <p>{notification.supervisorName || 'Não atribuído'}</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Prioridade</p>
+          <Badge className={priorityColor}>
+            {getPriorityLabel(notification.priority)}
+          </Badge>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-1 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <p className="text-sm font-medium text-muted-foreground">Site</p>
+        <p className="font-medium">{notification.siteName}</p>
+      </div>
+      <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <p className="text-sm font-medium text-muted-foreground mb-2">Detalhes</p>
+        <p className="whitespace-pre-line">{notification.details || "Sem detalhes disponíveis."}</p>
+      </div>
 
-        <AlertDialogFooter className="flex items-center justify-between mt-4">
-          <PDFDownloadLink
-            document={<OccurrencePDF notification={notification} getPriorityLabel={getPriorityLabel} />}
-            fileName={`ocorrencia-${notification.siteName}-${notification._id}.pdf`}
-            style={{ textDecoration: "none" }}
-          >
-            {({ loading: pdfLoading }) => (
-              <Button variant="outline" disabled={pdfLoading}>
-                <Download className="h-4 w-4 mr-2" /> Baixar PDF
-              </Button>
-            )}
-          </PDFDownloadLink>
-          <AlertDialogCancel>Fechar</AlertDialogCancel>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <Tabs defaultValue="workers" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="workers">Trabalhadores</TabsTrigger>
+          <TabsTrigger value="equipment">Equipamentos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="workers" className="mt-4">
+          {notification.workerInformation && notification.workerInformation.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3">
+              {notification.workerInformation.map((worker, index) => (
+                <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <h4 className="font-medium">{worker.name}</h4>
+                    </div>
+                    <span className="text-sm text-muted-foreground">Nº {worker.employeeNumber}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Estado</p>
+                      <p>{worker.state}</p>
+                    </div>
+                    {worker.obs && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Observações</p>
+                        <p className="text-sm">{worker.obs}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <Info className="h-6 w-6 mx-auto mb-2" />
+              <p>Nenhum trabalhador registado nesta ocorrência.</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="equipment" className="mt-4">
+          {notification.equipment && notification.equipment.length > 0 ? (
+            <div className="max-h-[300px] overflow-y-auto border rounded-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="p-1">Equipamento</TableHead>
+                    <TableHead className="p-1">Nº de Série</TableHead>
+                    <TableHead className="p-1">Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {notification.equipment.map((equip, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="p-1">{equip.name}</TableCell>
+                      <TableCell className="py-1">{equip.serialNumber}</TableCell>
+                      <TableCell className="py-1">{equip.state}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <Info className="h-6 w-6 mx-auto mb-2" />
+              <p>Nenhum equipamento registado nesta ocorrência.</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </GenericDetailModal>
   );
 } 

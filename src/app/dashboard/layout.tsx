@@ -33,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, router]);
 
   if (loading) {
-    return <LoadingScreen message="Validando sessão do usuário..." />;
+    return <LoadingScreen message="Validando sessão do utilizador..." />;
   }
 
 
