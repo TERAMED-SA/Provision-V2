@@ -59,7 +59,7 @@ export default function CompanyTable() {
         header: "Código",
         cell: ({ row }) => (
           <span 
-            className="cursor-pointer hover:text-blue-600 transition-colors"
+            className="cursor-pointer"
             onClick={() => handleCompanyClick(row.original)}
           >
             {row.original.clientCode}
@@ -71,7 +71,7 @@ export default function CompanyTable() {
         header: "Nome",
         cell: ({ row }) => (
           <span
-            className="cursor-pointer hover:text-blue-600 transition-colors"
+            className="cursor-pointer "
             onClick={() => handleCompanyClick(row.original)}
           >
             {row.original.name}
