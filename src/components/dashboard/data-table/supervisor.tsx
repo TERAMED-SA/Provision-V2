@@ -423,23 +423,22 @@ export function SupervisorTable() {
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-primary">
-              Detalhes do Supervisor
-            </DialogTitle>
-          </DialogHeader>
-          {selectedSupervisor ? (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 border-b pb-3">
+            <div className="flex items-center gap-3 border-b pb-3">
+              <DialogTitle className="text-lg font-bold text-primary">
                 <span className="text-base text-muted-foreground flex gap-2 items-center">
                   <span className="font-semibold text-gray-700">
-                    {selectedSupervisor.employeeId || "N/A"}
+                    {selectedSupervisor?.employeeId || "N/A"}
                   </span>
                   <span className="text-gray-400">-</span>
                   <span className="text-lg font-semibold text-gray-700">
-                    {selectedSupervisor.name}
+                    {selectedSupervisor?.name || "N/A"}
                   </span>
                 </span>
-              </div>
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+          {selectedSupervisor ? (
+            <div className="space-y-6">
               <div className="grid gap-4">
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 ">
                   <h4 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
@@ -466,7 +465,7 @@ export function SupervisorTable() {
                         {selectedSupervisor.equipment.map((equip, index) => (
                           <div
                             key={index}
-                            className=" rounded p-3 text-sm bg-white dark:bg-gray-800"
+                            className="rounded p-3 text-sm bg-white dark:bg-gray-800"
                           >
                             <div>
                               <span className="font-medium">Nome: </span>

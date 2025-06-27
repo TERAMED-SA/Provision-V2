@@ -383,12 +383,12 @@ export function Sidebar({
             className
           )}
         >
-          <Link href="/" className="flex items-center justify-center px-4">
+          <Link href="/" className="flex items-center justify-center px-4 py-5">
             {collapsed ? (
               <Image src="/logo.png" alt="Logo" width={60} height={60} />
             ) : (
               <div className="flex items-center pt-4">
-                <Image src="/logo.png" alt="Logo" width={80} height={80} className="mr-3" />
+                <Image src="/logo.png" alt="Logo" width={90} height={90} className="mr-3" />
               </div>
             )}
           </Link>
