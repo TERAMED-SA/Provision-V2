@@ -58,7 +58,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onOpenSheet={() => setIsSheetOpen(true)}
           />
         </div>
-        <main className="flex-1 overflow-y-auto  p-3 md:px-6 md:py-4 ">
+        <main className="flex-1 overflow-y-auto  p-3 md:px-6 ">
           {children}
         </main>
       </div>

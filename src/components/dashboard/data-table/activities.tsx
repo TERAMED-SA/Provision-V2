@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useSupervisionStore } from "@/hooks/useDataStore"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { DataTable } from "@/components/ulils/data-table"
-import { ActivityDetailModal } from "./ActivityDetailModal"
+import { GenericDetailModal } from "../generic-detail-modal"
 
 
 export type Notification = {
@@ -21,6 +21,8 @@ export type Notification = {
   type: "supervision" | "occurrence"
   costCenter?: string
   supervisorCode?: string
+  equipment: any[]
+  workerInformation: any[]
 }
 
 export function ActivityTable() {
@@ -28,7 +30,6 @@ export function ActivityTable() {
   const { getRecentActivities } = useSupervisionStore()
   const { isLoading } = useSupervisionData()
   const [modalData, setModalData] = useState<any>(null)
-  const [modalType, setModalType] = useState<"supervision" | "occurrence" | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const activities = getRecentActivities()
@@ -50,6 +51,8 @@ export function ActivityTable() {
       siteName: activity.type === "supervision" ? (activity.data as any).siteName : (activity.data as any).siteName,
       supervisorCode: activity.type === "supervision" ? (activity.data as any).supervisorCode : undefined,
       type: activity.type,
+      equipment: activity.data?.equipment || [],
+      workerInformation: activity.data?.workerInformation || [],
     }))
 
   const columns: ColumnDef<Notification>[] = [
@@ -99,7 +102,6 @@ export function ActivityTable() {
   // Função para abrir modal ao clicar na linha
   const handleViewDetails = (row: any) => {
     setModalData(row)
-    setModalType(row.type)
     setIsModalOpen(true)
   }
 
@@ -123,12 +125,18 @@ export function ActivityTable() {
         }}
         handleViewDetails={handleViewDetails}
       />
-      <ActivityDetailModal
-        type={modalType as any}
-        data={modalData}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {modalData && (
+        <GenericDetailModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={modalData.type === "supervision" ? "Detalhes da Supervisão" : "Detalhes da Ocorrência"}
+          icon={modalData.type === "supervision" ? Shield : AlertTriangle}
+          type={modalData.type}
+          occurrenceData={modalData.type === "occurrence" ? modalData : undefined}
+          supervisionData={modalData.type === "supervision" ? modalData : undefined}
+          footerContent={null}
+        />
+      )}
     </div>
   )
 }

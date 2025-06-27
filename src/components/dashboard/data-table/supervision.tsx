@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { ArrowUpDown, Download,  Shield, Loader2 } from "lucide-react"
+import {  Download,  Shield, Loader2 } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
 import { toast } from "sonner"
 import { OccurrencePDF } from "../pdf/occurrence-pdf"
@@ -10,19 +10,9 @@ import { Button } from "../../ui/button"
 import { DataTable } from "../../ulils/data-table"
 import instance from "@/lib/api"
 import { GenericDetailModal } from "../generic-detail-modal"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs"
-import { User, Info } from "lucide-react"
 import { ptBR } from "date-fns/locale"
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
 import { getPriorityLabel } from "./occurrence"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 
 export type WorkerInfo = {
   name: string
@@ -184,53 +174,38 @@ export function NewSupervionTable() {
     () => [
       {
         accessorKey: "createdAt",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Data
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Data</span>
         ),
-        filterFn: (row: Row<Notification>, id: string, value: Date) => {
+        filterFn: (row: Row<Notification>, id: string, value: string) => {
           if (!value) return true;
-          const [day, month, year] = (row.getValue(id) as string).split("/");
-          const rowDate = new Date(Number(year), Number(month) - 1, Number(day));
-          return (
-            rowDate.getDate() === value.getDate() &&
-            rowDate.getMonth() === value.getMonth() &&
-            rowDate.getFullYear() === value.getFullYear()
-          );
+          const filter = value.trim().toLowerCase();
+          const rowValue = (row.getValue(id) as string).trim().toLowerCase();
+          return rowValue.includes(filter);
         },
       },
       {
         accessorKey: "createdAtTime",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Hora
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Hora</span>
         ),
       },
       {
         accessorKey: "siteName",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Site
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Site</span>
         ),
       },
       {
         accessorKey: "supervisorName",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Supervisor
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Supervisor</span>
         ),
       },
-
       {
         accessorKey: "coordinates",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Coordenadas
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Coordenadas</span>
         ),
         cell: ({ row }: { row: Row<Notification> }) => {
           const value = row.getValue("coordinates") as string
@@ -239,23 +214,18 @@ export function NewSupervionTable() {
       },
       {
         accessorKey: "tlAbsent",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            TL 
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>TL </span>
         ),
         cell: ({ row }: { row: Row<Notification> }) => {
           const value = row.getValue("tlAbsent") as string
           return value || "-"
         },
       },
-
       {
         accessorKey: "time",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Duração
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Duração</span>
         ),
         cell: ({ row }: { row: Row<Notification> }) => {
           const value = row.getValue("time") as string
@@ -295,6 +265,8 @@ export function NewSupervionTable() {
             onClose={() => setIsModalOpen(false)}
             title="Detalhes da Supervisão"
             icon={Shield}
+            type="supervision"
+            supervisionData={selectedNotification}
             footerContent={
               <PDFDownloadLink
                 document={<OccurrencePDF notification={{ ...selectedNotification, priority: 'BAIXA' }} getPriorityLabel={getPriorityLabel} />}
@@ -309,110 +281,7 @@ export function NewSupervionTable() {
                 )}
               </PDFDownloadLink>
             }
-          >
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                   <div>
-                  <p className="text-sm font-medium text-muted-foreground">Data</p>
-                  <p>
-                    {selectedNotification.createdAt} {selectedNotification.createdAtTime}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Centro de Custo</p>
-                  <p className="font-medium">{selectedNotification.costCenter}</p>
-                </div>
-            
-           
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Supervisor</p>
-                  <p>{selectedNotification.supervisorName}</p>
-                </div>
-              </div>
-               <div className="grid grid-cols-1 gap-1 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground">Site</p>
-                  <p className="font-medium">{selectedNotification.siteName}</p>
-                </div>
-           
-
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Detalhes</p>
-                <p className="whitespace-pre-line">{selectedNotification.details || "Sem Detalhes."}</p>
-              </div>
-
-              <Tabs defaultValue="workers" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="workers">Trabalhadores</TabsTrigger>
-                  <TabsTrigger value="equipment">Equipamentos</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="workers" className="mt-4">
-                  {selectedNotification.workerInformation && selectedNotification.workerInformation.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-3">
-                      {selectedNotification.workerInformation.map((worker, index) => (
-                        <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              <h4 className="font-medium">{worker.name}</h4>
-                            </div>
-                            <span className="text-sm text-muted-foreground">Nº {worker.employeeNumber}</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <p className="text-sm font-medium text-muted-foreground">Estado</p>
-                              <p>{worker.state}</p>
-                            </div>
-                            {worker.obs && (
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">Observações</p>
-                                <p className="text-sm">{worker.obs}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                      <Info className="h-6 w-6 mx-auto mb-2" />
-                      <p>Nenhum trabalhador registrado nesta ocorrência.</p>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="equipment" className="mt-4">
-                  {selectedNotification.equipment && selectedNotification.equipment.length > 0 ? (
-                    <div className="w-full max-h-[300px] overflow-y-auto border rounded-sm">
-                      <Table className="w-full">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="p-1">Equipamento</TableHead>
-                            <TableHead className="p-1">Nº de Série</TableHead>
-                            <TableHead className="p-1">Estado</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {selectedNotification.equipment.map((equip, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="p-1">{equip.name}</TableCell>
-                              <TableCell className="py-1">{equip.serialNumber}</TableCell>
-                              <TableCell className="py-1">{equip.state}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                      <Info className="h-6 w-6 mx-auto mb-2" />
-                      <p>Nenhum equipamento registado nesta supervisão.</p>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </GenericDetailModal>
+          />
         )}
       </div>
     </div>

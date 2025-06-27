@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Building2, BarChart2, ClipboardMinus, UserCheck, Trash2, MessageCircle, Edit, UserPlus, Image as ImageIcon } from "lucide-react"
+import { Building2, UserCheck, Trash2, MessageCircle, Edit, Shield, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "../../ulils/data-table"
@@ -37,13 +37,11 @@ interface ApiResponse<T> {
   message: string
 }
 
-
 export default function CompanyTable() {
   const router = useRouter()
   const { user } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState<boolean>(true)
-  const [viewMode, setViewMode] = useState<"table" | "card">("table")
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false)
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState<boolean>(false)
@@ -59,25 +57,25 @@ export default function CompanyTable() {
       {
         accessorKey: "clientCode",
         header: "Código",
-        cell: ({ row }) => <span>{row.original.clientCode}</span>,
+        cell: ({ row }) => (
+          <span 
+            className="cursor-pointer hover:text-blue-600 transition-colors"
+            onClick={() => handleCompanyClick(row.original)}
+          >
+            {row.original.clientCode}
+          </span>
+        ),
       },
       {
         accessorKey: "name",
         header: "Nome",
         cell: ({ row }) => (
-          <div className="flex items-center space-x-4">
-            <span
-              
-              className="p-0 text-sm cursor-pointer"
-              onClick={() => {
-                if (viewMode === "table") {
-                  handleCompanyClick(row.original)
-                }
-              }}
-            >
-              {row.original.name}
-            </span>
-          </div>
+          <span
+            className="cursor-pointer hover:text-blue-600 transition-colors"
+            onClick={() => handleCompanyClick(row.original)}
+          >
+            {row.original.name}
+          </span>
         ),
       },
       {
@@ -86,28 +84,27 @@ export default function CompanyTable() {
         cell: ({ row }) => {
           const company = row.original
           return (
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <span
                 title="Editar"
                 onClick={(e) => { e.stopPropagation(); setSelectedCompany(company); setEditCompanyData(company); setIsEditDialogOpen(true); }}
-                className=" hover:bg-blue-100 cursor-pointer"
+                className="p-1 hover:bg-blue-100 cursor-pointer rounded transition-colors"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-3.5 w-3.5 text-blue-600" />
               </span>
               <span
                 title="Desativar"
                 onClick={(e) => { e.stopPropagation(); setSelectedCompany(company); setIsDisableAlertOpen(true); }}
-                className=" rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
-                style={{ background: 'none', border: 'none' }}
+                className="p-1 rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </span>
             </div>
           )
         },
       },
     ],
-    [viewMode]
+    []
   )
 
   const fetchCompanies = async (): Promise<void> => {
@@ -130,8 +127,6 @@ export default function CompanyTable() {
   useEffect(() => {
     fetchCompanies()
   }, [])
-
-
 
   const handleCompanyClick = (company: Company): void => {
     setSelectedCompany(company)
@@ -164,7 +159,6 @@ export default function CompanyTable() {
     }
   }
   
-
   const createCompany = async (): Promise<void> => {
     if (!clientName || !clientCode) {
       toast.error("Preencha todos os campos")
@@ -232,9 +226,7 @@ export default function CompanyTable() {
   }
 
   return (
-   <div className="grid grid-cols-1  gap-6">
- 
-
+   <div className="grid grid-cols-1 gap-6 pb-6">
       <DataTable
         columns={columns}
         data={companies}
@@ -251,9 +243,8 @@ export default function CompanyTable() {
         onAddClick={() => setIsAddClientDialogOpen(true)}
       />
       
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md lg:max-w-2xl">
+        <DialogContent className="sm:max-w-lg ">
           <DialogHeader>
             <DialogTitle className="text-base">
               <span>{selectedCompany?.clientCode} - </span>
@@ -262,17 +253,17 @@ export default function CompanyTable() {
             <DialogDescription>Selecione uma opção para ver mais detalhes</DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Card Sites */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("site")}
             >
-              <CardHeader className="pb-2 justify-center items-center">
-                <CardTitle className="text-lg">Sites</CardTitle>
+              <CardHeader className=" justify-center items-center">
+                <CardTitle className="text-base text-gray-700">Sites</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-2 justify-center items-center">
-                <Building2 className="text-blue-400" size={32} />
+              <CardContent className="flex flex-col gap-1 justify-center items-center">
+                <Building2 className="text-gray-500" size={22} />
               </CardContent>
             </Card>
 
@@ -281,22 +272,23 @@ export default function CompanyTable() {
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("occurrence")}
             >
-              <CardHeader className="pb-2 justify-center items-center">
-                <CardTitle className="text-lg">Ocorrências</CardTitle>
+              <CardHeader className="justify-center items-center">
+                <CardTitle className="text-base text-gray-700">Ocorrências</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 justify-center items-center">
-                <ClipboardMinus className="text-red-400" size={32} />
+                <AlertTriangle className="text-gray-500" size={24} />
               </CardContent>
             </Card>
+
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("supervisao")}
             >
-              <CardHeader className="pb-2 justify-center items-center">
-                <CardTitle className="text-lg">Supervisão</CardTitle>
+              <CardHeader className=" justify-center items-center">
+                <CardTitle className="text-base text-gray-700">Supervisão</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 justify-center items-center">
-                <BarChart2 className="text-red-400" size={32} />
+                <Shield className="text-gray-500" size={24} />
               </CardContent>
             </Card>
 
@@ -304,11 +296,11 @@ export default function CompanyTable() {
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("inspeccao")}
             >
-              <CardHeader className="pb-2 justify-center items-center">
-                <CardTitle className="text-lg">Inspecção</CardTitle>
+              <CardHeader className=" justify-center items-center">
+                <CardTitle className="text-base text-gray-700">Inspecção</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 justify-center items-center">
-                <UserCheck className="text-green-400" size={32} />
+                <UserCheck className="text-gray-500" size={23} />
               </CardContent>
             </Card>
 
@@ -316,11 +308,11 @@ export default function CompanyTable() {
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("recolhas")}
             >
-              <CardHeader className="pb-2 justify-center items-center">
-                <CardTitle className="text-lg">Recolhas</CardTitle>
+              <CardHeader className="justify-center items-center">
+                <CardTitle className="text-base text-gray-700">Recolhas</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 justify-center items-center">
-                <Trash2 className="text-yellow-500" size={32} />
+                <Trash2 className="text-gray-500" size={24} />
               </CardContent>
             </Card>
 
@@ -329,11 +321,11 @@ export default function CompanyTable() {
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("reclamacoes")}
             >
-              <CardHeader className="pb-2 justify-center items-center">
-                <CardTitle className="text-lg">Reclamações</CardTitle>
+              <CardHeader className="justify-center items-center">
+                <CardTitle className="text-base text-gray-700">Reclamações</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 justify-center items-center">
-                <MessageCircle className="text-purple-500" size={32} />
+                <MessageCircle className="text-gray-500" size={24} />
               </CardContent>
             </Card>
           </div>

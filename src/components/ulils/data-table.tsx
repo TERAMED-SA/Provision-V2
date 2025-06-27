@@ -10,11 +10,11 @@ import {
   type PaginationState,
   type VisibilityState,
 } from "@tanstack/react-table"
-import { useState, useEffect, useRef } from "react"
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useEffect } from "react"
+import { ChevronLeft, ChevronRight, Filter, FileQuestion } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DataTableFilters } from "./data-table-filters"
+import { useRouter } from "next/navigation"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -76,6 +76,11 @@ export function DataTable<TData, TValue>({
   },
   handleViewDetails,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter();
+  const handleBack = () => {
+    router.back();
+  };
+
   const [searchTerm, setSearchTerm] = useState("")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(initialColumnVisibility)
@@ -84,8 +89,6 @@ export function DataTable<TData, TValue>({
     pageSize: viewMode === "card" ? 12 : 100,
   })
   const [isFiltering, setIsFiltering] = useState(false)
-  const [columnWidths, setColumnWidths] = useState<number[]>([])
-  const tableRef = useRef<HTMLTableElement>(null)
 
   const table = useReactTable({
     data,
@@ -101,7 +104,6 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // Controlar estado de filtragem
   useEffect(() => {
     setIsFiltering(true)
     const timer = setTimeout(() => {
@@ -118,108 +120,166 @@ export function DataTable<TData, TValue>({
     }
   }, [date]);
 
-  const totalPages = table.getPageCount()
-  const currentPage = table.getState().pagination.pageIndex + 1
-  const startItem = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1
-  const endItem = Math.min(startItem + table.getState().pagination.pageSize - 1, data.length)
+  const renderPagination = () => {
+    const totalPages = table.getPageCount();
+    const currentPage = table.getState().pagination.pageIndex + 1;
+    const pageWindowSize = 3;
+    const [pageWindow, setPageWindow] = useState(0);
 
-  const renderPagination = () => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 sm:mt-6  dark:border-gray-700 pt-4">
-  
-      <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
+    useEffect(() => {
+      if (currentPage - 1 < pageWindow * pageWindowSize) {
+        setPageWindow(Math.floor((currentPage - 1) / pageWindowSize));
+      } else if (currentPage - 1 >= (pageWindow + 1) * pageWindowSize) {
+        setPageWindow(Math.floor((currentPage - 1) / pageWindowSize));
+      }
+    }, [currentPage, pageWindowSize]);
+
+    const startPage = pageWindow * pageWindowSize + 1;
+    const endPage = Math.min(startPage + pageWindowSize - 1, totalPages);
+
+    const pageButtons = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pageButtons.push(
         <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
+          key={i}
+          variant={currentPage === i ? "default" : "ghost"}
+          size="icon"
+          onClick={() => table.setPageIndex(i - 1)}
+          className={`h-7 w-7 p-0 text-xs font-medium border-none ${
+            currentPage === i
+              ? "bg-blue-600 text-white"
+              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          }`}
+          style={{ fontSize: "0.7rem" }}
         >
-          <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+          {i}
         </Button>
-        <div className="flex items-center gap-1">
-          {Array.from(
-            { length: Math.min(totalPages, typeof window !== "undefined" && window.innerWidth < 640 ? 2 : 4) },
-            (_, i) => {
-              const maxPages = typeof window !== "undefined" && window.innerWidth < 640 ? 5 : 7
-              let pageNumber
-              if (totalPages <= maxPages) {
-                pageNumber = i + 1
-              } else if (currentPage <= Math.floor(maxPages / 2) + 1) {
-                pageNumber = i + 1
-              } else if (currentPage >= totalPages - Math.floor(maxPages / 2)) {
-                pageNumber = totalPages - maxPages + 1 + i
-              } else {
-                pageNumber = currentPage - Math.floor(maxPages / 2) + i
-              }
-              if (pageNumber < 1 || pageNumber > totalPages) return null
-              return (
-                <Button
-                  key={pageNumber}
-                  variant={currentPage === pageNumber ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => table.setPageIndex(pageNumber - 1)}
-                  className={`h-7 w-7 sm:h-8 sm:w-8 p-0 text-xs font-medium transition-all ${
-                    currentPage === pageNumber
-                      ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm dark:bg-blue-600 dark:hover:bg-blue-700"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600"
-                  }`}
-                >
-                  {pageNumber}
-                </Button>
-              )
-            },
-          )}
-        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-1">
         <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600"
+          variant="ghost"
+          size="icon"
+          onClick={() => table.previousPage()}
+          disabled={currentPage === 1}
+          className="h-7 w-7 p-0 text-xs border-none"
+          style={{ fontSize: "0.7rem" }}
         >
-          <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        {startPage > 1 && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setPageWindow(pageWindow - 1);
+                table.setPageIndex(startPage - pageWindowSize - 1);
+              }}
+              className="h-7 w-7 p-0 text-xs border-none"
+              style={{ fontSize: "0.7rem" }}
+            >
+              ...
+            </Button>
+          </>
+        )}
+        {pageButtons}
+        {endPage < totalPages && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setPageWindow(pageWindow + 1);
+                table.setPageIndex(endPage);
+              }}
+              className="h-7 w-7 p-0 text-xs border-none"
+              style={{ fontSize: "0.7rem" }}
+            >
+              ...
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => table.setPageIndex(totalPages - 1)}
+              className="h-7 w-7 p-0 text-xs border-none"
+              style={{ fontSize: "0.7rem" }}
+            >
+              {totalPages}
+            </Button>
+          </>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => table.nextPage()}
+          disabled={currentPage === totalPages}
+          className="h-7 w-7 p-0 text-xs border-none"
+          style={{ fontSize: "0.7rem" }}
+        >
+          <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
-    </div>
-  )
+    );
+  }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center">
+          {title && (
+            <button onClick={handleBack} className="mr-2 cursor-pointer">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
-          {description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description}</p>}
         </div>
+        <div>{renderPagination()}</div>
       </div>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <DataTableFilters
-            table={table}
-            filterOptions={filterOptions}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            date={date}
-            setDate={setDate}
-            onAddClick={onAddClick}
-          />
-        </div>
         <div className="relative overflow-x-auto">
           <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden min-w-full">
-            <div className="max-h-[800px] overflow-y-auto w-full">
-              <Table className=" bg-white dark:bg-gray-900">
-                <TableHeader className=" bg-gray-50 dark:bg-gray-800/50 h-0">
+            <div className=" w-full ">
+              <Table className="bg-white dark:bg-gray-900">
+                <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id} className="hover:bg-transparent ">
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          key={header.id}
-                          className="py-0 px-3 text-sm  text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto "
-                         
-                        >
-                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      ))}
-                    </TableRow>
+                    <>
+                      <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                        {headerGroup.headers.map((header) => (
+                          <TableHead
+                            key={header.id}
+                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto"
+                          >
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                      <TableRow key={headerGroup.id + '-filter'} className="hover:bg-transparent">
+                        {headerGroup.headers.map((header) => (
+                          <TableHead
+                            key={header.id + '-filter'}
+                            className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 w-auto"
+                          >
+                            {header.column.getCanFilter() ? (
+                              <div className="flex items-center gap-2">
+                                <Filter className="h-3 w-3 text-gray-400" />
+                                <input
+                                  type="text"
+                                  value={
+                                    String(header.column.getFilterValue() ?? '')
+                                  }
+                                  onChange={e => header.column.setFilterValue(e.target.value)}
+                                  className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 p-0 m-0"
+                                  style={{ boxShadow: 'none', borderRadius: 0 }}
+                                />
+                              </div>
+                            ) : null}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </>
                   ))}
                 </TableHeader>
                 <TableBody>
@@ -227,7 +287,7 @@ export function DataTable<TData, TValue>({
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index} className="animate-pulse h-10">
                         {columns.map((_, colIndex) => (
-                          <TableCell key={colIndex} className="py-2 px-3 text-sm whitespace-nowrap w-auto max-w-[300px]">
+                          <TableCell key={colIndex} className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
                             <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
                           </TableCell>
                         ))}
@@ -238,14 +298,14 @@ export function DataTable<TData, TValue>({
                       <TableRow
                         key={row.id}
                         data-state={row.getIsSelected() && "selected"}
-                        className={`transition-colors hover:bg-blue-50/60 dark:hover:bg-gray-800/50  ${index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/30 dark:bg-gray-800/20"}`}
+                        className={`transition-colors hover:bg-blue-50/60 dark:hover:bg-gray-800/50 ${index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50/30 dark:bg-gray-800/20"}`}
                         onClick={() => handleViewDetails && handleViewDetails(row.original)}
                         style={{ cursor: handleViewDetails ? 'pointer' : 'default' }}
                       >
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="py-0.5 px-3 text-sm whitespace-nowrap w-auto max-w-[300px] overflow-hidden text-ellipsis"
+                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto"
                             title={String(cell.getValue() ?? '')}
                           >
                             <span className="block overflow-hidden text-ellipsis whitespace-nowrap" title={String(cell.getValue() ?? '')}>
@@ -260,14 +320,7 @@ export function DataTable<TData, TValue>({
                       <TableCell colSpan={columns.length} className="h-32 text-center py-8">
                         <div className="flex flex-col items-center gap-2">
                           <div className="h-8 w-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
+                            <FileQuestion className="h-4 w-4 text-gray-400" />
                           </div>
                           <div className="text-center">
                             <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -286,7 +339,6 @@ export function DataTable<TData, TValue>({
             </div>
           </div>
         </div>
-        <div className="px-4 pb-4">{renderPagination()}</div>
       </div>
     </div>
   )

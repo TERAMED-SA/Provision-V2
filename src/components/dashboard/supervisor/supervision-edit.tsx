@@ -62,7 +62,9 @@ export function SupervisorEditForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Supervisor</DialogTitle>
+          <DialogTitle>
+            Editar Supervisor{editedSupervisor.name ? ` - ${editedSupervisor.name.split(" ")[0]}` : ""}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="pt-4">
           <div className="grid grid-cols-2 gap-4">

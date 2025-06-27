@@ -5,12 +5,12 @@ import { format } from "date-fns"
 import { DataTable } from "../../ulils/data-table"
 import { toast } from "sonner"
 import type { Column, Row } from "@tanstack/react-table"
-import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
 import type { Occurrence } from "@/features/application/domain/entities/Occurrence"
-import { OccurrenceDetailModal } from "./occurrence-detail-modal"
+import { GenericDetailModal } from "../generic-detail-modal"
 import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
+import { AlertTriangle } from "lucide-react"
 
 export type Notification = Occurrence
 
@@ -256,10 +256,16 @@ export function OccurrenceTable() {
         />
       </div>
 
-      <OccurrenceDetailModal
-        notification={selectedNotification}
+      <GenericDetailModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        title="Detalhes da Ocorrência"
+        icon={AlertTriangle}
+        type="occurrence"
+        occurrenceData={selectedNotification}
+        getPriorityLabel={getPriorityLabel}
+        priorityColor={selectedNotification ? getPriorityClass(selectedNotification.priority) : undefined}
+        footerContent={null}
       />
     </div>
   )

@@ -40,7 +40,7 @@ export function GreetingMessage() {
       
     >
             <h1 className="text-lg md:text-2xl font-semibold text-gray-700 dark:text-white tracking-tight">
-              {greeting}, {user.name?.split(" ")[0]}! <span className="inline-block animate-wave">👋</span>
+              {greeting}, {user.name?.split(" ")[0]}!
             </h1>
        
     </motion.div>
