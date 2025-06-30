@@ -30,7 +30,7 @@ export function SidebarToggleButton({
     <button
       onClick={handleClick}
       className={cn(
-        "size-16 flex items-center justify-center cursor-pointer",
+        "size-12 flex items-center justify-center cursor-pointer p-2",
         isDarkMode ? "text-white" : "text-gray-700",
         className
       )}

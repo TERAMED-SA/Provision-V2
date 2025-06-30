@@ -34,7 +34,7 @@ function Header({
   return (
     <div className="flex w-full flex-wrap px-5.5 my-6 items-center justify-between gap-4">
       <div className="flex items-center gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-full ">
+        <div className="bg-white dark:bg-gray-800 rounded-full  size-12">
           <SidebarToggleButton
             collapsed={collapsed}
             isDarkMode={isDarkMode}

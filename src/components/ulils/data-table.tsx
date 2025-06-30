@@ -10,8 +10,8 @@ import {
   type PaginationState,
   type VisibilityState,
 } from "@tanstack/react-table"
-import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Filter, FileQuestion } from 'lucide-react'
+import { useState, useEffect, useRef } from "react"
+import { ChevronLeft, ChevronRight, Filter, FileQuestion, GripVertical } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useRouter } from "next/navigation"
@@ -89,6 +89,12 @@ export function DataTable<TData, TValue>({
     pageSize: viewMode === "card" ? 12 : 100,
   })
   const [isFiltering, setIsFiltering] = useState(false)
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({})
+  const [isResizing, setIsResizing] = useState<string | null>(null)
+  const tableRef = useRef<HTMLDivElement>(null)
+
+  const [pageWindow, setPageWindow] = useState(0)
+  const pageWindowSize = 3
 
   const table = useReactTable({
     data,
@@ -103,6 +109,15 @@ export function DataTable<TData, TValue>({
       columnVisibility,
     },
   })
+
+  useEffect(() => {
+    const currentPage = table.getState().pagination.pageIndex + 1
+    if (currentPage - 1 < pageWindow * pageWindowSize) {
+      setPageWindow(Math.floor((currentPage - 1) / pageWindowSize))
+    } else if (currentPage - 1 >= (pageWindow + 1) * pageWindowSize) {
+      setPageWindow(Math.floor((currentPage - 1) / pageWindowSize))
+    }
+  }, [table.getState().pagination.pageIndex, pageWindow, pageWindowSize])
 
   useEffect(() => {
     setIsFiltering(true)
@@ -120,24 +135,72 @@ export function DataTable<TData, TValue>({
     }
   }, [date]);
 
-  const renderPagination = () => {
-    const totalPages = table.getPageCount();
-    const currentPage = table.getState().pagination.pageIndex + 1;
-    const pageWindowSize = 3;
-    const [pageWindow, setPageWindow] = useState(0);
+  // Função para determinar largura inicial da coluna
+  const getInitialColumnWidth = (columnId: string) => {
+    const lowerCaseColumnId = columnId.toLowerCase();
+    if (lowerCaseColumnId.includes('time')) {
+      return 50;
+    }
+    if (lowerCaseColumnId.includes('clientcode')) {
+      return 40;
+    }
+    if (lowerCaseColumnId.includes('actions')) {
+      return 65;
+    }
+    // Colunas de data/hora têm largura fixa de 200px
+    if (lowerCaseColumnId.includes('date') || 
+        lowerCaseColumnId.includes('created') ||
+        lowerCaseColumnId.includes('updated')) {
+      return 65;
+    }
+    return 120; // largura padrão
+  };
 
-    useEffect(() => {
-      if (currentPage - 1 < pageWindow * pageWindowSize) {
-        setPageWindow(Math.floor((currentPage - 1) / pageWindowSize));
-      } else if (currentPage - 1 >= (pageWindow + 1) * pageWindowSize) {
-        setPageWindow(Math.floor((currentPage - 1) / pageWindowSize));
+  // Função para inicializar larguras das colunas
+  useEffect(() => {
+    const initialWidths: Record<string, number> = {};
+    table.getAllColumns().forEach(column => {
+      if (!columnWidths[column.id]) {
+        initialWidths[column.id] = getInitialColumnWidth(column.id);
       }
-    }, [currentPage, pageWindowSize]);
+    });
+    if (Object.keys(initialWidths).length > 0) {
+      setColumnWidths(prev => ({ ...prev, ...initialWidths }));
+    }
+  }, [table.getAllColumns().length]);
 
-    const startPage = pageWindow * pageWindowSize + 1;
-    const endPage = Math.min(startPage + pageWindowSize - 1, totalPages);
+  // Função para iniciar redimensionamento
+  const handleMouseDown = (e: React.MouseEvent, columnId: string) => {
+    e.preventDefault();
+    setIsResizing(columnId);
+    
+    const startX = e.clientX;
+    const startWidth = columnWidths[columnId] || getInitialColumnWidth(columnId);
 
-    const pageButtons = [];
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startX;
+      const newWidth = Math.max(20, startWidth + diff); // largura mínima de 50px
+      setColumnWidths(prev => ({ ...prev, [columnId]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const renderPagination = () => {
+    const totalPages = table.getPageCount()
+    const currentPage = table.getState().pagination.pageIndex + 1
+    
+    const startPage = pageWindow * pageWindowSize + 1
+    const endPage = Math.min(startPage + pageWindowSize - 1, totalPages)
+
+    const pageButtons = []
     for (let i = startPage; i <= endPage; i++) {
       pageButtons.push(
         <Button
@@ -236,48 +299,68 @@ export function DataTable<TData, TValue>({
           )}
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
         </div>
-        <div>{renderPagination()}</div>
+        {table.getPageCount() > 1 && <div>{renderPagination()}</div>}
       </div>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div className="relative overflow-x-auto">
           <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden min-w-full">
-            <div className=" w-full ">
-              <Table className="bg-white dark:bg-gray-900">
+            <div className="w-full" ref={tableRef}>
+              <Table className="bg-white dark:bg-gray-900" style={{ tableLayout: 'fixed' }}>
                 <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <>
                       <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                        {headerGroup.headers.map((header) => (
-                          <TableHead
-                            key={header.id}
-                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto"
-                          >
-                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                          </TableHead>
-                        ))}
+                        {headerGroup.headers.map((header) => {
+                          const columnWidth = columnWidths[header.id] || getInitialColumnWidth(header.id);
+                          return (
+                            <TableHead
+                              key={header.id}
+                              className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap relative"
+                              style={{ width: `${columnWidth}px` }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="overflow-hidden text-ellipsis whitespace-nowrap flex-1 py-0">
+                                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                </div>
+                                <div
+                                  className="absolute right-0 top-0 h-full w-2 cursor-col-resize flex items-center justify-center hover:bg-blue-200 dark:hover:bg-blue-800 group"
+                                  onMouseDown={(e) => handleMouseDown(e, header.id)}
+                                >
+                                  <GripVertical 
+                                    className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" 
+                                  />
+                                </div>
+                              </div>
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                       <TableRow key={headerGroup.id + '-filter'} className="hover:bg-transparent">
-                        {headerGroup.headers.map((header) => (
-                          <TableHead
-                            key={header.id + '-filter'}
-                            className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 w-auto"
-                          >
-                            {header.column.getCanFilter() ? (
-                              <div className="flex items-center gap-2">
-                                <Filter className="h-3 w-3 text-gray-400" />
-                                <input
-                                  type="text"
-                                  value={
-                                    String(header.column.getFilterValue() ?? '')
-                                  }
-                                  onChange={e => header.column.setFilterValue(e.target.value)}
-                                  className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 p-0 m-0"
-                                  style={{ boxShadow: 'none', borderRadius: 0 }}
-                                />
-                              </div>
-                            ) : null}
-                          </TableHead>
-                        ))}
+                        {headerGroup.headers.map((header) => {
+                          const columnWidth = columnWidths[header.id] || getInitialColumnWidth(header.id);
+                          return (
+                            <TableHead
+                              key={header.id + '-filter'}
+                              className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
+                              style={{ width: `${columnWidth}px` }}
+                            >
+                              {header.column.getCanFilter() ? (
+                                <div className="flex items-center gap-2 h-full py-0">
+                                  <Filter size={16} className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                  <input
+                                    type="text"
+                                    value={
+                                      String(header.column.getFilterValue() ?? '')
+                                    }
+                                    onChange={e => header.column.setFilterValue(e.target.value)}
+                                    className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 p-0 m-0"
+                                    style={{ boxShadow: 'none', borderRadius: 0 }}
+                                  />
+                                </div>
+                              ) : null}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                     </>
                   ))}
@@ -286,11 +369,19 @@ export function DataTable<TData, TValue>({
                   {(loading || isFiltering) ? (
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index} className="animate-pulse h-10">
-                        {columns.map((_, colIndex) => (
-                          <TableCell key={colIndex} className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
-                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-                          </TableCell>
-                        ))}
+                        {columns.map((_, colIndex) => {
+                          const header = table.getAllColumns()[colIndex];
+                          const columnWidth = columnWidths[header?.id] || getInitialColumnWidth(header?.id || '');
+                          return (
+                            <TableCell 
+                              key={colIndex} 
+                              className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap"
+                              style={{ width: `${columnWidth}px` }}
+                            >
+                              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     ))
                   ) : table.getRowModel().rows?.length ? (
@@ -302,17 +393,20 @@ export function DataTable<TData, TValue>({
                         onClick={() => handleViewDetails && handleViewDetails(row.original)}
                         style={{ cursor: handleViewDetails ? 'pointer' : 'default' }}
                       >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto"
-                            title={String(cell.getValue() ?? '')}
-                          >
-                            <span className="block overflow-hidden text-ellipsis whitespace-nowrap" title={String(cell.getValue() ?? '')}>
+                        {row.getVisibleCells().map((cell) => {
+                          const columnWidth = columnWidths[cell.column.id] || getInitialColumnWidth(cell.column.id);
+                          
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap overflow-hidden text-ellipsis"
+                              style={{ width: `${columnWidth}px` }}
+                              title={String(cell.getValue() ?? '')}
+                            >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </span>
-                          </TableCell>
-                        ))}
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     ))
                   ) : (

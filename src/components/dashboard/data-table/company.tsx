@@ -241,6 +241,11 @@ export default function CompanyTable() {
           exportFileName: "clientes.xlsx",
         }}
         onAddClick={() => setIsAddClientDialogOpen(true)}
+        initialColumnVisibility={{
+          clientCode: true,
+          name: true,
+          actions: true
+        }}
       />
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

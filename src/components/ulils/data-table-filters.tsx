@@ -31,8 +31,6 @@ interface DataTableFiltersProps<TData> {
     exportFileName?: string
   }
   onAddClick?: () => void
-  searchTerm?: string
-  setSearchTerm?: (value: string) => void
   date?: Date
   setDate?: (date: Date | undefined) => void
   viewMode?: "table" | "card"
@@ -43,38 +41,22 @@ export function DataTableFilters<TData>({
   table,
   filterOptions,
   onAddClick,
-  searchTerm = "",
-  setSearchTerm = () => {},
   date,
   setDate = () => {},
   viewMode = "table",
   setViewMode = () => {},
 }: DataTableFiltersProps<TData>) {
-  const [showColumnFilters, setShowColumnFilters] = useState(false)
-  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({})
-
   const {
-    enableNameFilter = false,
     enableDateFilter = false,
     enableSiteFilter = false,
-    enableSupervisorFilter = false,
     enableColumnVisibility = false,
     enableViewModeToggle = false,
     enableAddButton = false,
-    enableColumnFilters = false,
     addButtonLabel = "Adicionar",
     enableExportButton = false,
     exportButtonLabel = "Exportar",
     exportFileName = "data.xlsx"
   } = filterOptions
-
-  useEffect(() => {
-    if (searchTerm) {
-      table.setGlobalFilter(searchTerm)
-    } else {
-      table.resetGlobalFilter()
-    }
-  }, [table, searchTerm])
 
   const handleSiteFilter = (value: string) => {
     const column = table.getColumn("siteName")
@@ -87,18 +69,6 @@ export function DataTableFilters<TData>({
     const column = table.getColumn("supervisorName")
     if (column) {
       column.setFilterValue(value)
-    }
-  }
-
-  const handleColumnFilter = (columnId: string, value: string) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [columnId]: value,
-    }))
-
-    const column = table.getColumn(columnId)
-    if (column) {
-      column.setFilterValue(value || undefined)
     }
   }
 
@@ -158,13 +128,6 @@ export function DataTableFilters<TData>({
     XLSX.writeFile(workbook, exportFileName, { cellStyles: true })
   }
 
-  const clearColumnFilters = () => {
-    setColumnFilters({})
-    table.getAllColumns().forEach((column) => {
-      column.setFilterValue(undefined)
-    })
-  }
-
   const getColumnHeader = (column: any) => {
     if (typeof column.columnDef.header === 'string') return column.columnDef.header
     if (typeof column.columnDef.header === 'function') {
@@ -177,14 +140,6 @@ export function DataTableFilters<TData>({
     return column.id.charAt(0).toUpperCase() + column.id.slice(1)
   }
 
-  const filterableColumns = table
-    .getAllColumns()
-    .filter(
-      (column) => column.getCanFilter() && column.id !== "actions" && column.id !== "select" && column.getIsVisible(),
-    )
-  const hasActiveColumnFilters = Object.values(columnFilters).some((value) => value.length > 0)
-  const activeFiltersCount = Object.values(columnFilters).filter((value) => value.length > 0).length
-
   return (
     <TooltipProvider>
       <div className="space-y-3">
@@ -192,26 +147,6 @@ export function DataTableFilters<TData>({
         <div className="flex flex-wrap items-center justify-start gap-3">
           {/* Filtros básicos */}
           <div className="flex items-center gap-3">
-            {/* Busca geral */}
-            {enableNameFilter && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-800 cursor-pointer" />
-                    <Input
-                      placeholder="Buscar..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="bg-gray-400 text-white text-sm">
-                  <p>Buscar em todos os campos da tabela</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-
             {/* Filtros específicos */}
             {/* Filtro de Site como ícone popover */}
             {enableSiteFilter && (
@@ -242,37 +177,6 @@ export function DataTableFilters<TData>({
                 </PopoverContent>
               </Popover>
             )}
-
-            {/* Filtro de Supervisor como ícone popover */}
-            {enableSupervisorFilter && (
-              <Popover>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="icon" className="h-9 w-9 p-0 flex items-center justify-center cursor-pointer">
-                        <User className="h-5 w-5 text-gray-800 cursor-pointer" />
-                      </Button>
-                    </PopoverTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-gray-400 text-white text-sm">
-                    <p>Filtrar por Supervisor</p>
-                  </TooltipContent>
-                </Tooltip>
-                <PopoverContent className="w-56 p-3" align="start">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Filtrar por Supervisor</span>
-                    <Input
-                      placeholder="Supervisor..."
-                      value={(table.getColumn("supervisorName")?.getFilterValue() as string) ?? ""}
-                      onChange={(event) => handleSupervisorFilter(event.target.value)}
-                      className="h-9 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-900"
-                      autoFocus
-                    />
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-
             {/* Filtro de Data como ícone popover */}
             {enableDateFilter && (
               <Popover>
@@ -314,76 +218,6 @@ export function DataTableFilters<TData>({
 
           {/* Controles à direita */}
           <div className="flex items-center gap-2">
-            {enableColumnFilters && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={showColumnFilters ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowColumnFilters(!showColumnFilters)}
-                    className="h-9 relative"
-                  >
-                    <Filter className="h-4 w-4 mr-1" />
-                    Filtros
-                    {activeFiltersCount > 0 && (
-                      <Badge variant="secondary" className="ml-1 h-4 w-4 p-0 flex items-center justify-center text-xs">
-                        {activeFiltersCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-gray-400 text-white text-sm">
-                  <p>{showColumnFilters ? 'Ocultar' : 'Mostrar'} filtros avançados por coluna</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
-
-            {enableColumnVisibility && viewMode === "table" && (
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-9">
-                        <Settings2 className="h-4 w-4 mr-1" />
-                        Colunas
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-gray-400 text-white text-sm">
-                    <p>Mostrar/ocultar colunas da tabela</p>
-                  </TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent align="end" className="w-48 p-2">
-                  <div className="space-y-1">
-                    {table
-                      .getAllColumns()
-                      .filter((column) => column.getCanHide())
-                      .map((column) => (
-                        <Tooltip key={column.id}>
-                          <TooltipTrigger asChild>
-                            <div
-                              className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-sm"
-                              onClick={() => column.toggleVisibility(!column.getIsVisible())}
-                            >
-                              <Checkbox
-                                checked={column.getIsVisible()}
-                                onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                                tabIndex={-1}
-                              />
-                              <span className="text-sm">{getColumnHeader(column)}</span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-gray-400 text-white text-sm">
-                            <p>{column.getIsVisible() ? 'Ocultar' : 'Mostrar'} coluna {getColumnHeader(column)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             {enableViewModeToggle && (
               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-md p-0.5">
                 <Tooltip>
@@ -448,97 +282,6 @@ export function DataTableFilters<TData>({
             )}
           </div>
         </div>
-
-        {/* Filtros por coluna (expansível) */}
-        {enableColumnFilters && showColumnFilters && (
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white">Filtros por Coluna</h4>
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {activeFiltersCount}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {hasActiveColumnFilters && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={clearColumnFilters}
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs text-gray-500 hover:text-gray-700"
-                      >
-                        <FilterX size={12} className="mr-1" />
-                        Limpar
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-gray-400 text-white text-sm">
-                      <p>Limpar todos os filtros de coluna</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button onClick={() => setShowColumnFilters(false)} variant="ghost" size="sm" className="h-7 w-7 p-0">
-                      <X size={12} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-gray-400 text-white text-sm">
-                    <p>Fechar filtros por coluna</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {filterableColumns.map((column) => (
-                <div key={column.id} className="space-y-1">
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                    {getColumnHeader(column)}
-                    {columnFilters[column.id] && <div className="h-1.5 w-1.5 bg-blue-500 rounded-full" />}
-                  </label>
-                  <div className="relative">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Input
-                          type="text"
-                          placeholder={`Filtrar...`}
-                          value={columnFilters[column.id] || ""}
-                          onChange={(e) => handleColumnFilter(column.id, e.target.value)}
-                          className="h-8 text-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-gray-400 text-white text-sm">
-                        <p>Filtrar por {getColumnHeader(column)}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    {columnFilters[column.id] && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={() => handleColumnFilter(column.id, "")}
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                          >
-                            <X size={10} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-gray-400 text-white text-sm">
-                          <p>Limpar filtro de {getColumnHeader(column)}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </TooltipProvider>
   )

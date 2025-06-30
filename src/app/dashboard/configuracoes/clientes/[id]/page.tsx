@@ -480,6 +480,16 @@ export default function CompanySites() {
               </AlertDialogHeader>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-96 overflow-y-auto">
+                         <div className="space-y-2">
+                  <label htmlFor="costCenter">{t("fields.costCenter")}:</label>
+                  <Input
+                    id="costCenter"
+                    name="costCenter"
+                    value={formData.costCenter}
+                    onChange={handleInputChange}
+                    placeholder={t("placeholders.costCenter")}
+                  />
+                </div>
                 <div className="space-y-2">
                   <label htmlFor="name">{t("fields.name")}:</label>
                   <Input
@@ -500,16 +510,7 @@ export default function CompanySites() {
                     placeholder={t("placeholders.address")}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label htmlFor="costCenter">{t("fields.costCenter")}:</label>
-                  <Input
-                    id="costCenter"
-                    name="costCenter"
-                    value={formData.costCenter}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.costCenter")}
-                  />
-                </div>
+       
                 <div className="space-y-2">
                   <label htmlFor="numberOfWorkers">Tl:</label>
                   <Input
@@ -653,6 +654,17 @@ export default function CompanySites() {
             </AlertDialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-96 overflow-y-auto">
+                  <div className="space-y-2">
+                <label htmlFor="edit-costCenter">
+                  {t("fields.costCenter")}:
+                </label>
+                <Input
+                  id="edit-costCenter"
+                  name="costCenter"
+                  value={formData.costCenter}
+                  onChange={handleInputChange}
+                />
+              </div>
               <div className="space-y-2">
                 <label htmlFor="edit-name">{t("fields.name")}:</label>
                 <Input
@@ -671,17 +683,7 @@ export default function CompanySites() {
                   onChange={handleInputChange}
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-costCenter">
-                  {t("fields.costCenter")}:
-                </label>
-                <Input
-                  id="edit-costCenter"
-                  name="costCenter"
-                  value={formData.costCenter}
-                  onChange={handleInputChange}
-                />
-              </div>
+          
               <div className="space-y-2">
                 <label htmlFor="edit-numberOfWorkers">
                   {t("fields.numberOfWorkers")}:
@@ -732,7 +734,7 @@ export default function CompanySites() {
         >
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center text-sm gap-2">
                 <Eye className="h-5 w-5" />
                 {selectedSite
                   ? `Detalhes - ${selectedSite.name}`
@@ -740,11 +742,11 @@ export default function CompanySites() {
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-2">
               {selectedSite && (
                 <>
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       <div className="flex flex-col">
                         <span className="font-semibold text-gray-700">
                           Centro de Custo

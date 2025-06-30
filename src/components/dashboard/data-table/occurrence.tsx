@@ -10,7 +10,10 @@ import type { Occurrence } from "@/features/application/domain/entities/Occurren
 import { GenericDetailModal } from "../generic-detail-modal"
 import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Download, Loader2 } from "lucide-react"
+import { PDFDownloadLink } from "@react-pdf/renderer"
+import { Button } from "@/components/ui/button"
+import { OccurrencePDF } from "../pdf/occurrence-pdf"
 
 export type Notification = Occurrence
 
@@ -262,10 +265,29 @@ export function OccurrenceTable() {
         title="Detalhes da Ocorrência"
         icon={AlertTriangle}
         type="occurrence"
-        occurrenceData={selectedNotification}
+        occurrenceData={selectedNotification ?? undefined}
         getPriorityLabel={getPriorityLabel}
         priorityColor={selectedNotification ? getPriorityClass(selectedNotification.priority) : undefined}
-        footerContent={null}
+        footerContent={
+          selectedNotification ? (
+            <PDFDownloadLink
+              document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
+              fileName={`ocorrencia-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
+              style={{ textDecoration: "none" }}
+            >
+              {({ loading: pdfLoading }) => (
+                <Button variant="outline" disabled={pdfLoading}>
+                  {pdfLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                  )}
+                  Baixar PDF
+                </Button>
+              )}
+            </PDFDownloadLink>
+          ) : null
+        }
       />
     </div>
   )

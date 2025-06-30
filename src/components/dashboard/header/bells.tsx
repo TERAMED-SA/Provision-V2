@@ -28,7 +28,6 @@ export function Bells() {
   const prevCountRef = useRef(unreadNotificationsCount) 
 
   useSupervisionData()
-  const totalTodayActivities = unreadNotificationsCount
 
   const displayNotifications = showAll 
   ? notifications.filter(n => !n.isRead)
@@ -109,13 +108,13 @@ export function Bells() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative h-9 w-9 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-700"
+            className="relative cursor-pointer h-9 w-9 rounded-full bg-white dark:bg-gray-800 dark:hover:bg-gray-700  "
           >
             <Bell className={cn("h-4 w-4", bellShake && "animate-bell-shake")} />
             {unreadNotificationsCount > 0 && (
               <Badge
                 variant="destructive"
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs font-medium"
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center p-0 text-[10px] font-medium"
               >
                 {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
               </Badge>

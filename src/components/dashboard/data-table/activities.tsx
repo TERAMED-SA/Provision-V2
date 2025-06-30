@@ -2,12 +2,15 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Clock, MapPin, User, Shield, AlertTriangle } from 'lucide-react'
+import { Shield, AlertTriangle, Download, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { useSupervisionStore } from "@/hooks/useDataStore"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { DataTable } from "@/components/ulils/data-table"
 import { GenericDetailModal } from "../generic-detail-modal"
+import { PDFDownloadLink } from "@react-pdf/renderer"
+import { OccurrencePDF } from "../pdf/occurrence-pdf"
+import { getPriorityLabel } from "./occurrence"
 
 
 export type Notification = {
@@ -23,6 +26,7 @@ export type Notification = {
   supervisorCode?: string
   equipment: any[]
   workerInformation: any[]
+  data: any
 }
 
 export function ActivityTable() {
@@ -53,28 +57,32 @@ export function ActivityTable() {
       type: activity.type,
       equipment: activity.data?.equipment || [],
       workerInformation: activity.data?.workerInformation || [],
+      data: activity.data,
     }))
 
   const columns: ColumnDef<Notification>[] = [
     {
+      id: "createdAt",
       accessorKey: "createdAt",
       header: "Data",
-      cell: ({ row }) => <div className="text-sm">{row.getValue("createdAt")}</div>,
+      cell: ({ row }) => <span >{row.getValue("createdAt")}</span>,
     },
     {
-      accessorKey: "createdAtTime",
+      id: "createdAtTime",
       header: "Hora",
       cell: ({ row }) => {
         const createdAtDate = row.original.createdAtDate
-        return <div className="text-sm font-mono">{format(createdAtDate, "HH:mm")}</div>
+        return <span >{format(createdAtDate, "HH:mm")}</span>
       },
     },
     {
+      id: "siteName",
       accessorKey: "siteName",
       header: "Site",
-      cell: ({ row }) => <div className="font-medium text-sm">{row.getValue("siteName")}</div>,
+      cell: ({ row }) => <span>{row.getValue("siteName")}</span>,
     },
     {
+      id: "type",
       accessorKey: "type",
       header: "Atividade",
       cell: ({ row }) => {
@@ -93,9 +101,10 @@ export function ActivityTable() {
       },
     },
     {
+      id: "supervisorName",
       accessorKey: "supervisorName",
       header: "Supervisor",
-      cell: ({ row }) => <div className="text-sm">{row.getValue("supervisorName")}</div>,
+      cell: ({ row }) => <span className="text-sm">{row.getValue("supervisorName")}</span>,
     },
   ]
 
@@ -104,6 +113,34 @@ export function ActivityTable() {
     setModalData(row)
     setIsModalOpen(true)
   }
+
+  const footerContent = modalData ? (
+    <PDFDownloadLink
+      document={
+        <OccurrencePDF
+          notification={{
+            ...(modalData.data as any),
+            _id: modalData.id,
+            priority: modalData.type === "supervision" ? "BAIXA" : (modalData.data as any)?.priority,
+          }}
+          getPriorityLabel={getPriorityLabel}
+        />
+      }
+      fileName={`${modalData.type}-${modalData.siteName ?? "local"}-${modalData.id}.pdf`}
+      style={{ textDecoration: "none" }}
+    >
+      {({ loading: pdfLoading }) => (
+        <Button variant="outline" disabled={pdfLoading}>
+          {pdfLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          Baixar PDF
+        </Button>
+      )}
+    </PDFDownloadLink>
+  ) : null
 
   return (
     <div className="space-y-4">
@@ -115,7 +152,6 @@ export function ActivityTable() {
         data={notifications}
         loading={isLoading}
         filterOptions={{
-          enableSupervisorFilter: true,
           enableColumnVisibility: true,
         }}
         date={date}
@@ -134,7 +170,7 @@ export function ActivityTable() {
           type={modalData.type}
           occurrenceData={modalData.type === "occurrence" ? modalData : undefined}
           supervisionData={modalData.type === "supervision" ? modalData : undefined}
-          footerContent={null}
+          footerContent={footerContent}
         />
       )}
     </div>
