@@ -236,7 +236,7 @@ export function DataTable<TData, TValue>({
           )}
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
         </div>
-        <div>{renderPagination()}</div>
+        <div>{table.getPageCount() > 1 && renderPagination()}</div>
       </div>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div className="relative overflow-x-auto">
@@ -264,7 +264,7 @@ export function DataTable<TData, TValue>({
                           >
                             {header.column.getCanFilter() ? (
                               <div className="flex items-center gap-2">
-                                <Filter className="h-3 w-3 text-gray-400" />
+                                <Filter size={12} className="h-3 w-3 text-gray-400 flex-shrink-0" />
                                 <input
                                   type="text"
                                   value={

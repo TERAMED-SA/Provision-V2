@@ -316,6 +316,7 @@ export function SupervisorTable() {
           </div>
         );
       },
+      size: 80,
     },
   ];
 

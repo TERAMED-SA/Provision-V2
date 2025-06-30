@@ -65,6 +65,7 @@ export default function CompanyTable() {
             {row.original.clientCode}
           </span>
         ),
+        size: 80,
       },
       {
         accessorKey: "name",
@@ -102,6 +103,7 @@ export default function CompanyTable() {
             </div>
           )
         },
+        size: 80,
       },
     ],
     []

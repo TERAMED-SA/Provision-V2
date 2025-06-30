@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Clock, MapPin, User, Shield, AlertTriangle } from 'lucide-react'
@@ -8,7 +8,7 @@ import { useSupervisionStore } from "@/hooks/useDataStore"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { DataTable } from "@/components/ulils/data-table"
 import { GenericDetailModal } from "../generic-detail-modal"
-
+import { isSameDay } from 'date-fns';
 
 export type Notification = {
   id: string
@@ -33,33 +33,42 @@ export function ActivityTable() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const activities = getRecentActivities()
-  const supervisions = activities.filter(a => a.type === "supervision")
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 5)
-  const occurrences = activities.filter(a => a.type === "occurrence")
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 5)
-  const notifications: Notification[] = [...supervisions, ...occurrences]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .map((activity: any) => ({
-      id: activity.id,
-      title: activity.title,
-      description: activity.description,
-      createdAt: format(activity.createdAt, "dd/MM/yyyy"),
-      createdAtDate: activity.createdAt,
-      supervisorName: activity.type === "supervision" ? (activity.data as any).supervisorName : "N/A",
-      siteName: activity.type === "supervision" ? (activity.data as any).siteName : (activity.data as any).siteName,
-      supervisorCode: activity.type === "supervision" ? (activity.data as any).supervisorCode : undefined,
-      type: activity.type,
-      equipment: activity.data?.equipment || [],
-      workerInformation: activity.data?.workerInformation || [],
-    }))
+
+  const notifications = useMemo(() => {
+    const allActivities = activities
+      .map((activity: any) => ({
+        id: activity.id,
+        title: activity.title,
+        description: activity.description,
+        createdAt: format(activity.createdAt, "dd/MM/yyyy"),
+        createdAtDate: activity.createdAt,
+        supervisorName: activity.type === "supervision" ? (activity.data as any).supervisorName : "N/A",
+        siteName: activity.data?.siteName || "N/A",
+        supervisorCode: activity.type === "supervision" ? (activity.data as any).supervisorCode : undefined,
+        type: activity.type,
+        equipment: activity.data?.equipment || [],
+        workerInformation: activity.data?.workerInformation || [],
+      }))
+      .sort((a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime());
+
+    if (date) {
+      return allActivities.filter(item => isSameDay(item.createdAtDate, date));
+    }
+
+    // Retorna apenas as 5 supervisões e 5 ocorrências mais recentes se nenhuma data for selecionada
+    const supervisions = allActivities.filter(a => a.type === "supervision").slice(0, 5);
+    const occurrences = allActivities.filter(a => a.type === "occurrence").slice(0, 5);
+    
+    return [...supervisions, ...occurrences].sort((a, b) => b.createdAtDate.getTime() - a.createdAtDate.getTime());
+
+  }, [activities, date]);
 
   const columns: ColumnDef<Notification>[] = [
     {
       accessorKey: "createdAt",
       header: "Data",
       cell: ({ row }) => <div className="text-sm">{row.getValue("createdAt")}</div>,
+      size: 90,
     },
     {
       accessorKey: "createdAtTime",
@@ -68,11 +77,13 @@ export function ActivityTable() {
         const createdAtDate = row.original.createdAtDate
         return <div className="text-sm font-mono">{format(createdAtDate, "HH:mm")}</div>
       },
+      size: 60,
     },
     {
       accessorKey: "siteName",
       header: "Site",
       cell: ({ row }) => <div className="font-medium text-sm">{row.getValue("siteName")}</div>,
+      size: 100,
     },
     {
       accessorKey: "type",
@@ -91,6 +102,7 @@ export function ActivityTable() {
           </span>
         )
       },
+      size: 100,
     },
     {
       accessorKey: "supervisorName",
@@ -115,7 +127,7 @@ export function ActivityTable() {
         data={notifications}
         loading={isLoading}
         filterOptions={{
-          enableSupervisorFilter: true,
+          enableDateFilter: true,
           enableColumnVisibility: true,
         }}
         date={date}

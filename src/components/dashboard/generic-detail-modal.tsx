@@ -108,7 +108,7 @@ export function GenericDetailModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          "p-0 max-h-[95vh] flex flex-col w-full max-w-[95vw] lg:max-w-md  xl:max-w-xl",
+          "p-0 max-h-[95vh] flex flex-col w-full max-w-[95vw] lg:max-w-md  ",
           className
         )}
       >
@@ -127,10 +127,10 @@ export function GenericDetailModal({
         </DialogHeader>
 
         <div className="px-4 lg:px-6 py-2 overflow-y-auto flex-grow bg-muted/10 dark:bg-muted/20">
-          <div className="space-y-1 lg:space-y-2">
+          <div className="space-y-1 ">
             {/* Header Information - Data, Supervisor, Prioridade/Cost Center em linha, Site embaixo */}
             <div className="p-3 lg:p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-center">
                 <div>
                   <p className="text-xs lg:text-sm font-medium text-muted-foreground">
                     Data

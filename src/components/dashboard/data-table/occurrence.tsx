@@ -11,6 +11,10 @@ import { GenericDetailModal } from "../generic-detail-modal"
 import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
 import { AlertTriangle } from "lucide-react"
+import { PDFDownloadLink } from "@react-pdf/renderer"
+import { OccurrencePDF } from "../pdf/occurrence-pdf"
+import { Button } from "../../ui/button"
+import { Download, Loader2 } from "lucide-react"
 
 export type Notification = Occurrence
 
@@ -172,6 +176,10 @@ export function OccurrenceTable() {
             rowDate.getFullYear() === value.getFullYear()
           );
         },
+        size: 90,
+        minSize: 90,
+        maxSize: 90,
+        enableResizing: false,
       },
       {
         accessorKey: "createdAtTime",
@@ -187,6 +195,10 @@ export function OccurrenceTable() {
           const date = new Date(year, month - 1, day)
           return format(date, "yyyy-MM-dd") === value
         },
+        size: 70,
+        minSize: 70,
+        maxSize: 70,
+        enableResizing: false,
       },
       {
         accessorKey: "siteName",
@@ -195,8 +207,7 @@ export function OccurrenceTable() {
             Site
           </span>
         ),
-      }
-      ,
+      },
       {
         accessorKey: "supervisorName",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
@@ -262,10 +273,25 @@ export function OccurrenceTable() {
         title="Detalhes da Ocorrência"
         icon={AlertTriangle}
         type="occurrence"
-        occurrenceData={selectedNotification}
+        occurrenceData={selectedNotification || undefined}
         getPriorityLabel={getPriorityLabel}
         priorityColor={selectedNotification ? getPriorityClass(selectedNotification.priority) : undefined}
-        footerContent={null}
+        footerContent={
+          selectedNotification && (
+            <PDFDownloadLink
+              document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
+              fileName={`ocorrencia-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
+              style={{ textDecoration: "none" }}
+            >
+              {({ loading: pdfLoading }) => (
+                <Button variant="outline" disabled={pdfLoading}>
+                  {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                  Baixar PDF
+                </Button>
+              )}
+            </PDFDownloadLink>
+          )
+        }
       />
     </div>
   )

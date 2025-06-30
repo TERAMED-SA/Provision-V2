@@ -183,24 +183,40 @@ export function NewSupervionTable() {
           const rowValue = (row.getValue(id) as string).trim().toLowerCase();
           return rowValue.includes(filter);
         },
+        size: 90,
       },
       {
         accessorKey: "createdAtTime",
         header: ({ column }: { column: any }) => (
           <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Hora</span>
         ),
+        size: 60,
       },
       {
         accessorKey: "siteName",
         header: ({ column }: { column: any }) => (
           <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Site</span>
         ),
+        filterFn: (row: Row<Notification>, id: string, value: string) => {
+          if (!value) return true;
+          const filter = value.trim().toLowerCase();
+          const rowValue = (row.getValue(id) as string).trim().toLowerCase();
+          return rowValue.includes(filter);
+        },
+        size: 160,
       },
       {
         accessorKey: "supervisorName",
         header: ({ column }: { column: any }) => (
           <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Supervisor</span>
         ),
+        filterFn: (row: Row<Notification>, id: string, value: string) => {
+          if (!value) return true;
+          const filter = value.trim().toLowerCase();
+          const rowValue = (row.getValue(id) as string).trim().toLowerCase();
+          return rowValue.includes(filter);
+        },
+        size: 160,
       },
       {
         accessorKey: "coordinates",
@@ -211,6 +227,7 @@ export function NewSupervionTable() {
           const value = row.getValue("coordinates") as string
           return value || "-"
         },
+        size: 160,
       },
       {
         accessorKey: "tlAbsent",
@@ -221,6 +238,7 @@ export function NewSupervionTable() {
           const value = row.getValue("tlAbsent") as string
           return value || "-"
         },
+        size: 60,
       },
       {
         accessorKey: "time",
@@ -231,6 +249,7 @@ export function NewSupervionTable() {
           const value = row.getValue("time") as string
           return value || "-"
         },
+        size: 80,
       },
     ],
     [handleViewDetails],
