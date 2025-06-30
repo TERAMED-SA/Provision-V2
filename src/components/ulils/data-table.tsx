@@ -250,7 +250,8 @@ export function DataTable<TData, TValue>({
                         {headerGroup.headers.map((header) => (
                           <TableHead
                             key={header.id}
-                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto"
+                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap"
+                            style={header.column.columnDef.size ? { minWidth: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size, maxWidth: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size, width: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size } : {}}
                           >
                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                           </TableHead>
@@ -260,7 +261,8 @@ export function DataTable<TData, TValue>({
                         {headerGroup.headers.map((header) => (
                           <TableHead
                             key={header.id + '-filter'}
-                            className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 w-auto"
+                            className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
+                            style={header.column.columnDef.size ? { minWidth: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size, maxWidth: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size, width: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size } : {}}
                           >
                             {header.column.getCanFilter() ? (
                               <div className="flex items-center gap-2">
@@ -287,7 +289,7 @@ export function DataTable<TData, TValue>({
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index} className="animate-pulse h-10">
                         {columns.map((_, colIndex) => (
-                          <TableCell key={colIndex} className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
+                          <TableCell key={colIndex} className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap" style={{ width: typeof columns[colIndex].size === 'number' ? `${columns[colIndex].size}px` : columns[colIndex].size }}>
                             <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
                           </TableCell>
                         ))}
@@ -305,8 +307,9 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto"
+                            className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap"
                             title={String(cell.getValue() ?? '')}
+                            style={{ width: typeof cell.column.columnDef.size === 'number' ? `${cell.column.columnDef.size}px` : cell.column.columnDef.size }}
                           >
                             <span className="block overflow-hidden text-ellipsis whitespace-nowrap" title={String(cell.getValue() ?? '')}>
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
