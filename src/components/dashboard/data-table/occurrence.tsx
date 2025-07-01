@@ -275,7 +275,6 @@ export function OccurrenceTable() {
         occurrenceData={selectedNotification || undefined}
         getPriorityLabel={getPriorityLabel}
         priorityColor={selectedNotification ? getPriorityClass(selectedNotification.priority) : undefined}
-<<<<<<< HEAD
         footerContent={selectedNotification && (
           <PDFDownloadLink
             document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
@@ -290,24 +289,6 @@ export function OccurrenceTable() {
             )}
           </PDFDownloadLink>
         )}
-=======
-        footerContent={
-          selectedNotification && (
-            <PDFDownloadLink
-              document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
-              fileName={`ocorrencia-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
-              style={{ textDecoration: "none" }}
-            >
-              {({ loading: pdfLoading }) => (
-                <Button variant="outline" disabled={pdfLoading}>
-                  {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                  Baixar PDF
-                </Button>
-              )}
-            </PDFDownloadLink>
-          )
-        }
->>>>>>> 324db81f8c0236f54ee377a998e9b1f1b3cc42be
       />
     </div>
   )
