@@ -74,6 +74,7 @@ export function ActivityTable() {
         const createdAtDate = row.original.createdAtDate
         return <span >{format(createdAtDate, "HH:mm")}</span>
       },
+      size: 60,
     },
     {
       id: "siteName",
@@ -152,7 +153,7 @@ export function ActivityTable() {
         data={notifications}
         loading={isLoading}
         filterOptions={{
-          enableSupervisorFilter: true,
+          enableDateFilter: true,
           enableColumnVisibility: true,
         }}
         date={date}

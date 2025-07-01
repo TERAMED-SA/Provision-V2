@@ -741,7 +741,7 @@ export default function CompanySites() {
         >
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 text-base">
                 <Eye className="h-5 w-5" />
                 {selectedSite
                   ? `Detalhes - ${selectedSite.name}`
