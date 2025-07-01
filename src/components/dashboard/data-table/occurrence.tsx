@@ -10,10 +10,10 @@ import type { Occurrence } from "@/features/application/domain/entities/Occurren
 import { GenericDetailModal } from "../generic-detail-modal"
 import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
-import { AlertTriangle, Download, Loader2 } from "lucide-react"
+import { AlertTriangle } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
-import { Button } from "@/components/ui/button"
 import { OccurrencePDF } from "../pdf/occurrence-pdf"
+import { Download, Loader2 } from "lucide-react"
 
 export type Notification = Occurrence
 
@@ -175,6 +175,10 @@ export function OccurrenceTable() {
             rowDate.getFullYear() === value.getFullYear()
           );
         },
+        size: 90,
+        minSize: 90,
+        maxSize: 90,
+        enableResizing: false,
       },
       {
         accessorKey: "createdAtTime",
@@ -190,6 +194,10 @@ export function OccurrenceTable() {
           const date = new Date(year, month - 1, day)
           return format(date, "yyyy-MM-dd") === value
         },
+        size: 70,
+        minSize: 70,
+        maxSize: 70,
+        enableResizing: false,
       },
       {
         accessorKey: "siteName",
@@ -198,8 +206,7 @@ export function OccurrenceTable() {
             Site
           </span>
         ),
-      }
-      ,
+      },
       {
         accessorKey: "supervisorName",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
@@ -265,29 +272,23 @@ export function OccurrenceTable() {
         title="Detalhes da Ocorrência"
         icon={AlertTriangle}
         type="occurrence"
-        occurrenceData={selectedNotification ?? undefined}
+        occurrenceData={selectedNotification}
         getPriorityLabel={getPriorityLabel}
         priorityColor={selectedNotification ? getPriorityClass(selectedNotification.priority) : undefined}
-        footerContent={
-          selectedNotification ? (
-            <PDFDownloadLink
-              document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
-              fileName={`ocorrencia-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
-              style={{ textDecoration: "none" }}
-            >
-              {({ loading: pdfLoading }) => (
-                <Button variant="outline" disabled={pdfLoading}>
-                  {pdfLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="mr-2 h-4 w-4" />
-                  )}
-                  Baixar PDF
-                </Button>
-              )}
-            </PDFDownloadLink>
-          ) : null
-        }
+        footerContent={selectedNotification && (
+          <PDFDownloadLink
+            document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
+            fileName={`ocorrencia-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
+            style={{ textDecoration: "none" }}
+          >
+            {({ loading: pdfLoading }) => (
+              <button type="button" className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                Baixar PDF
+              </button>
+            )}
+          </PDFDownloadLink>
+        )}
       />
     </div>
   )

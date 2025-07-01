@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Shield, AlertTriangle, Download, Loader2 } from 'lucide-react'
@@ -10,6 +10,7 @@ import { DataTable } from "@/components/ulils/data-table"
 import { GenericDetailModal } from "../generic-detail-modal"
 import { PDFDownloadLink } from "@react-pdf/renderer"
 import { OccurrencePDF } from "../pdf/occurrence-pdf"
+import { SupervisorPDF } from "../supervisor/supervisor-pdf"
 import { getPriorityLabel } from "./occurrence"
 
 
@@ -62,10 +63,9 @@ export function ActivityTable() {
 
   const columns: ColumnDef<Notification>[] = [
     {
-      id: "createdAt",
       accessorKey: "createdAt",
       header: "Data",
-      cell: ({ row }) => <span >{row.getValue("createdAt")}</span>,
+      cell: ({ row }) => <span className="text-sm">{row.getValue("createdAt")}</span>,
     },
     {
       id: "createdAtTime",
@@ -79,7 +79,7 @@ export function ActivityTable() {
       id: "siteName",
       accessorKey: "siteName",
       header: "Site",
-      cell: ({ row }) => <span>{row.getValue("siteName")}</span>,
+      cell: ({ row }) => <div className="text-sm">{row.getValue("siteName")}</div>,
     },
     {
       id: "type",
@@ -94,11 +94,12 @@ export function ActivityTable() {
             ? "Ocorrência"
             : type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
         return (
-          <span className="flex items-center gap-2 text-xs font-semibold ">
+          <span className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
             {activity}
           </span>
         )
       },
+      size: 100,
     },
     {
       id: "supervisorName",
@@ -117,20 +118,19 @@ export function ActivityTable() {
   const footerContent = modalData ? (
     <PDFDownloadLink
       document={
-        <OccurrencePDF
-          notification={{
-            ...(modalData.data as any),
-            _id: modalData.id,
-            priority: modalData.type === "supervision" ? "BAIXA" : (modalData.data as any)?.priority,
-          }}
-          getPriorityLabel={getPriorityLabel}
-        />
+        modalData.type === "supervision"
+          ? <SupervisorPDF supervisor={modalData.data} />
+          : <OccurrencePDF notification={{
+              ...(modalData.data as any),
+              _id: modalData.id,
+              priority: (modalData.data as any)?.priority,
+            }} getPriorityLabel={getPriorityLabel} />
       }
       fileName={`${modalData.type}-${modalData.siteName ?? "local"}-${modalData.id}.pdf`}
       style={{ textDecoration: "none" }}
     >
       {({ loading: pdfLoading }) => (
-        <Button variant="outline" disabled={pdfLoading}>
+        <Button variant="outline" disabled={pdfLoading} className="cursor-pointer">
           {pdfLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -152,6 +152,7 @@ export function ActivityTable() {
         data={notifications}
         loading={isLoading}
         filterOptions={{
+          enableSupervisorFilter: true,
           enableColumnVisibility: true,
         }}
         date={date}

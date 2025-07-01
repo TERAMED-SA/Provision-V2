@@ -134,6 +134,7 @@ export default function CompanySites() {
         const cellValue = row.getValue(id) as string;
         return cellValue.toLowerCase().includes(value.toLowerCase());
       },
+      size: 100,
     },
     {
       accessorKey: "name",
@@ -147,6 +148,7 @@ export default function CompanySites() {
         const cellValue = row.getValue(id) as string;
         return cellValue.toLowerCase().includes(value.toLowerCase());
       },
+      size: 80,
     },
     {
       accessorKey: "address",
@@ -156,6 +158,7 @@ export default function CompanySites() {
         const cellValue = row.getValue(id) as string | undefined;
         return (cellValue || "").toLowerCase().includes(value.toLowerCase());
       },
+      size: 100,
     },
     {
       accessorKey: "numberOfWorkers",
@@ -165,6 +168,7 @@ export default function CompanySites() {
         const cellValue = row.getValue(id) as number;
         return cellValue.toString().includes(value);
       },
+      size: 60,
     },
     {
       accessorKey: "supervisorCode",
@@ -174,6 +178,7 @@ export default function CompanySites() {
         const cellValue = row.getValue(id) as string;
         return cellValue.toLowerCase().includes(value.toLowerCase());
       },
+      size: 100,
     },
     {
       accessorKey: "zone",
@@ -183,6 +188,7 @@ export default function CompanySites() {
         const cellValue = row.getValue(id) as string;
         return cellValue.toLowerCase().includes(value.toLowerCase());
       },
+      size: 60,
     },
     {
       id: "actions",
@@ -212,6 +218,7 @@ export default function CompanySites() {
           </div>
         );
       },
+      size: 80,
     },
   ];
 
@@ -643,7 +650,7 @@ export default function CompanySites() {
         <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle>
+              <AlertDialogTitle className="text-base max-w-lg">
                 {selectedSite?.name
                   ? `Editar Site - ${selectedSite.name}`
                   : t("modals.editSite.title")}
@@ -734,7 +741,7 @@ export default function CompanySites() {
         >
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center text-sm gap-2">
+              <DialogTitle className="flex items-center gap-2">
                 <Eye className="h-5 w-5" />
                 {selectedSite
                   ? `Detalhes - ${selectedSite.name}`

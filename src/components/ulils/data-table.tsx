@@ -138,19 +138,20 @@ export function DataTable<TData, TValue>({
   // Função para determinar largura inicial da coluna
   const getInitialColumnWidth = (columnId: string) => {
     const lowerCaseColumnId = columnId.toLowerCase();
-    if (lowerCaseColumnId.includes('time')) {
-      return 50;
+    // Para colunas de data/hora, largura fixa de 200px
+    if (
+      lowerCaseColumnId.includes('date') ||
+      lowerCaseColumnId.includes('createdat') ||
+      lowerCaseColumnId.includes('updatedat') ||
+      lowerCaseColumnId.includes('hora') ||
+      lowerCaseColumnId.includes('time')
+    ) {
+      return 55;
     }
     if (lowerCaseColumnId.includes('clientcode')) {
       return 40;
     }
     if (lowerCaseColumnId.includes('actions')) {
-      return 65;
-    }
-    // Colunas de data/hora têm largura fixa de 200px
-    if (lowerCaseColumnId.includes('date') || 
-        lowerCaseColumnId.includes('created') ||
-        lowerCaseColumnId.includes('updated')) {
       return 65;
     }
     return 120; // largura padrão
@@ -299,7 +300,9 @@ export function DataTable<TData, TValue>({
           )}
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
         </div>
-        {table.getPageCount() > 1 && <div>{renderPagination()}</div>}
+        {table.getPageCount() > 1 && (
+          <div className="flex items-center">{renderPagination()}</div>
+        )}
       </div>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div className="relative overflow-x-auto">
@@ -310,57 +313,53 @@ export function DataTable<TData, TValue>({
                   {table.getHeaderGroups().map((headerGroup) => (
                     <>
                       <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                        {headerGroup.headers.map((header) => {
-                          const columnWidth = columnWidths[header.id] || getInitialColumnWidth(header.id);
-                          return (
-                            <TableHead
-                              key={header.id}
-                              className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap relative"
-                              style={{ width: `${columnWidth}px` }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="overflow-hidden text-ellipsis whitespace-nowrap flex-1 py-0">
-                                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                </div>
-                                <div
-                                  className="absolute right-0 top-0 h-full w-2 cursor-col-resize flex items-center justify-center hover:bg-blue-200 dark:hover:bg-blue-800 group"
-                                  onMouseDown={(e) => handleMouseDown(e, header.id)}
-                                >
-                                  <GripVertical 
-                                    className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" 
-                                  />
-                                </div>
-                              </div>
-                            </TableHead>
-                          );
-                        })}
+                        {headerGroup.headers.map((header, idx) => (
+                          <TableHead
+                            key={header.id}
+                            className="py-0 px-2 text-sm text-center text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto relative"
+                            style={{
+                              width: columnWidths[header.id] || getInitialColumnWidth(header.id),
+                              minWidth: 10,
+                              maxWidth: 300,
+                              transition: isResizing === header.id ? 'none' : 'width 0.2s',
+                              cursor: idx !== headerGroup.headers.length - 1 ? 'col-resize' : 'default',
+                            }}
+                          >
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                            {idx !== headerGroup.headers.length - 1 && (
+                              <span
+                                onMouseDown={e => handleMouseDown(e, header.id)}
+                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize z-10"
+                                style={{ userSelect: 'none' }}
+                              >
+                                <GripVertical className="mx-auto text-gray-300" size={14} />
+                              </span>
+                            )}
+                          </TableHead>
+                        ))}
                       </TableRow>
                       <TableRow key={headerGroup.id + '-filter'} className="hover:bg-transparent">
-                        {headerGroup.headers.map((header) => {
-                          const columnWidth = columnWidths[header.id] || getInitialColumnWidth(header.id);
-                          return (
-                            <TableHead
-                              key={header.id + '-filter'}
-                              className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
-                              style={{ width: `${columnWidth}px` }}
-                            >
-                              {header.column.getCanFilter() ? (
-                                <div className="flex items-center gap-2 h-full py-0">
-                                  <Filter size={16} className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                                  <input
-                                    type="text"
-                                    value={
-                                      String(header.column.getFilterValue() ?? '')
-                                    }
-                                    onChange={e => header.column.setFilterValue(e.target.value)}
-                                    className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 p-0 m-0"
-                                    style={{ boxShadow: 'none', borderRadius: 0 }}
-                                  />
-                                </div>
-                              ) : null}
-                            </TableHead>
-                          );
-                        })}
+                        {headerGroup.headers.map((header) => (
+                          <TableHead
+                            key={header.id + '-filter'}
+                            className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 w-auto"
+                          >
+                            {header.column.getCanFilter() ? (
+                              <div className="flex items-center gap-2">
+                                <Filter size="small" className="w-4 h-4 text-gray-400" />
+                                <input
+                                  type="text"
+                                  value={
+                                    String(header.column.getFilterValue() ?? '')
+                                  }
+                                  onChange={e => header.column.setFilterValue(e.target.value)}
+                                  className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 p-0 m-0"
+                                  style={{ boxShadow: 'none', borderRadius: 0 }}
+                                />
+                              </div>
+                            ) : null}
+                          </TableHead>
+                        ))}
                       </TableRow>
                     </>
                   ))}
@@ -369,19 +368,11 @@ export function DataTable<TData, TValue>({
                   {(loading || isFiltering) ? (
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index} className="animate-pulse h-10">
-                        {columns.map((_, colIndex) => {
-                          const header = table.getAllColumns()[colIndex];
-                          const columnWidth = columnWidths[header?.id] || getInitialColumnWidth(header?.id || '');
-                          return (
-                            <TableCell 
-                              key={colIndex} 
-                              className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap"
-                              style={{ width: `${columnWidth}px` }}
-                            >
-                              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-                            </TableCell>
-                          );
-                        })}
+                        {columns.map((_, colIndex) => (
+                          <TableCell key={colIndex} className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
+                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))
                   ) : table.getRowModel().rows?.length ? (
@@ -394,16 +385,17 @@ export function DataTable<TData, TValue>({
                         style={{ cursor: handleViewDetails ? 'pointer' : 'default' }}
                       >
                         {row.getVisibleCells().map((cell) => {
-                          const columnWidth = columnWidths[cell.column.id] || getInitialColumnWidth(cell.column.id);
-                          
+                          // Alinhar à direita se for coluna de data/hora, senão à esquerda
+                          const isRightAligned = ["createdAt", "createdAtTime"].includes(cell.column.id);
                           return (
                             <TableCell
                               key={cell.id}
-                              className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap overflow-hidden text-ellipsis"
-                              style={{ width: `${columnWidth}px` }}
+                              className={`py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto ${isRightAligned ? 'text-right' : 'text-left'}`}
                               title={String(cell.getValue() ?? '')}
                             >
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              <span className="block overflow-hidden text-ellipsis whitespace-nowrap" title={String(cell.getValue() ?? '')}>
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </span>
                             </TableCell>
                           );
                         })}
