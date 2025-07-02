@@ -9,11 +9,7 @@ import {
   MessageSquare,
   Building2,
   BarChart3,
-  FileText,
   Shield,
-  Search,
-  Trash2,
-  MessageCircle,
   Settings,
   ChevronDown,
   Globe,
@@ -84,10 +80,7 @@ export function Sidebar({
         { icon: Home, label: t("Dashboard"), href: "/dashboard" },
         { icon: Shield, label: t("Supervisao"), href: "/dashboard/supervisao", badge: counts.supervision },
         { icon: AlertTriangle, label: t("Ocorrencias"), href: "/dashboard/ocorrencias", badge: counts.occurrence },
-        { icon: FileText, label: t("Auditorias"), href: "/dashboard/auditorias" },
-        { icon: Search, label: t("Inspeccao"), href: "/dashboard/inspeccao" },
-        { icon: Trash2, label: t("Recolhas"), href: "/dashboard/recolhas" },
-        { icon: MessageCircle, label: t("Reclamacoes"), href: "/dashboard/reclamacoes" },
+     
       ],
     },
     {
