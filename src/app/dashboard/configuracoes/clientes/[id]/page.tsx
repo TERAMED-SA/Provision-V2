@@ -29,13 +29,7 @@ import { Input } from "@/components/ui/input";
 import instance from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ulils/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MultiStepForm from "@/components/dashboard/multiStepFormAddSite";
 
 interface Site {
   _id: string;
@@ -109,7 +103,7 @@ export default function CompanySites() {
   const [isCompanyInfoModalOpen, setIsCompanyInfoModalOpen] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [supervisionCount, setSupervisionCount] = useState<number>(0);
-  const [isSiteDetailModalOpen, setIsSiteDetailModalOpen] = useState(false);
+  const [isSiteDetailModalOpen, setIsSiteDetailModal] = useState(false);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [selectedSupervisor, setSelectedSupervisor] =
     useState<Supervisor | null>(null);
@@ -421,7 +415,7 @@ export default function CompanySites() {
     if (site.supervisorCode) {
       fetchSupervisionCount(site.supervisorCode);
     }
-    setIsSiteDetailModalOpen(true);
+    setIsSiteDetailModal(true);
   };
 
   // Gere as zonas únicas dos sites do cliente
@@ -465,167 +459,18 @@ export default function CompanySites() {
     <div className="container p-8">
       <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
-          <AlertDialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <AlertDialogTrigger asChild>
-              <Button
-                className="bg-black text-white cursor-pointer"
-                onClick={handleOpenAddModal}
-              >
-                <Plus className="h-4 w-4" />
-                {t("buttons.addSite")}{" "}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-4xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t("modals.addSite.title")}{" "}
-                  {companyName ? `- ${companyName}` : ""}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("modals.addSite.description")}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-96 overflow-y-auto">
-                         <div className="space-y-2">
-                  <label htmlFor="costCenter">{t("fields.costCenter")}:</label>
-                  <Input
-                    id="costCenter"
-                    name="costCenter"
-                    value={formData.costCenter}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.costCenter")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="name">{t("fields.name")}:</label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.name")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="address">{t("fields.address")}:</label>
-                  <Input
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.address")}
-                  />
-                </div>
-       
-                <div className="space-y-2">
-                  <label htmlFor="numberOfWorkers">Tl:</label>
-                  <Input
-                    id="numberOfWorkers"
-                    name="numberOfWorkers"
-                    type="text"
-                    value={formData.numberOfWorkers}
-                    onChange={handleInputChange}
-                    placeholder="Tl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="zone">{t("fields.zone")}:</label>
-                  <Select
-                    value={formData.zone}
-                    onValueChange={(value) =>
-                      setFormData((f) => ({ ...f, zone: value }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("placeholders.zone")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["1", "2", "3", "4", "5"].map((zona) => (
-                        <SelectItem key={zona} value={zona}>
-                          {zona}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Coordenador (apenas leitura, aparece se zona selecionada) */}
-                {formData.zone && currentCoordinator && (
-                  <div className="space-y-2 flex flex-col justify-end">
-                    <label className="font-semibold text-gray-700">
-                      Coordenador:
-                    </label>
-                    <span className="text-gray-900 font-medium">
-                      {currentCoordinator.name}
-                    </span>
-                  </div>
-                )}
-                {/* Select de Supervisor (aparece se coordenador e zona selecionados) */}
-                {formData.zone &&
-                  currentCoordinator &&
-                  supervisorsByCoordinator.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="font-semibold text-gray-700">
-                        Supervisor:
-                      </label>
-                      <Select
-                        value={formData.supervisorCode}
-                        onValueChange={(value) =>
-                          setFormData((f) => ({ ...f, supervisorCode: value }))
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o supervisor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supervisorsByCoordinator.map((sup) => (
-                            <SelectItem key={sup.code} value={sup.code}>
-                              {sup.code} - {sup.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                {/* Coordenadas do Site (aparece só se zona selecionada) */}
-                {formData.zone && (
-                  <div className="space-y-2">
-                    <label className="font-semibold text-gray-700 flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Coordenadas do Site
-                    </label>
-                    {siteCoordinates ? (
-                      <div className="space-y-1">
-                        <span className="block text-xs text-gray-700">
-                          Latitude:{" "}
-                          <span className="text-gray-900 font-medium">
-                            {siteCoordinates.latitude}
-                          </span>
-                        </span>
-                        <span className="block text-xs text-gray-700">
-                          Longitude:{" "}
-                          <span className="text-gray-900 font-medium">
-                            {siteCoordinates.longitude}
-                          </span>
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-500">
-                        Coordenadas não disponíveis
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t("buttons.cancel")}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleAddSite}>
-                  {t("buttons.add")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+            <Button
+              className="bg-black text-white cursor-pointer"
+              onClick={handleOpenAddModal}
+            >
+              <Plus className="h-4 w-4" />
+              {t("buttons.addSite")}
+            </Button>
+            <DialogContent   className="p-0 max-h-[95vh] flex flex-col w-full max-w-[95vw] lg:max-w-lg  " >
+              <MultiStepForm codigoSite={clientCode || ''} nomeSite={companyName || ''} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -647,18 +492,18 @@ export default function CompanySites() {
         />
 
         {/* Edit Modal */}
-        <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <AlertDialogContent className="max-w-md">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-base max-w-lg">
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base max-w-lg">
                 {selectedSite?.name
                   ? `Editar Site - ${selectedSite.name}`
                   : t("modals.editSite.title")}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
+              </DialogTitle>
+              <div className="text-sm text-gray-600 mb-2">
                 {t("modals.editSite.description")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
+              </div>
+            </DialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-96 overflow-y-auto">
                   <div className="space-y-2">
@@ -725,19 +570,19 @@ export default function CompanySites() {
               </div>
             </div>
 
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("buttons.cancel")}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleUpdateSite}>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>{t("buttons.cancel")}</Button>
+              <Button onClick={handleUpdateSite}>
                 {t("buttons.save")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Site Detail Modal */}
         <Dialog
           open={isSiteDetailModalOpen}
-          onOpenChange={setIsSiteDetailModalOpen}
+          onOpenChange={setIsSiteDetailModal}
         >
           <DialogContent className="max-w-4xl">
             <DialogHeader>

@@ -146,7 +146,7 @@ export default function CompanyTable() {
       })
 
       if (type === "site") {
-        router.push(`/dashboard/configuracoes/clientes/site/?${params.toString()}`)
+        router.push(`/dashboard/configuracoes/clientes/${selectedCompany.clientCode}?${params.toString()}`)
       } else if (type === "occurrence") {
         router.push(`/dashboard/configuracoes/clientes/ocorrencia?${params.toString()}`)
       } else if (type === "supervisao") {

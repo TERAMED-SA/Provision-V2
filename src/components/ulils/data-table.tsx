@@ -135,10 +135,8 @@ export function DataTable<TData, TValue>({
     }
   }, [date]);
 
-  // Função para determinar largura inicial da coluna
   const getInitialColumnWidth = (columnId: string) => {
     const lowerCaseColumnId = columnId.toLowerCase();
-    // Para colunas de data/hora, largura fixa de 200px
     if (
       lowerCaseColumnId.includes('date') ||
       lowerCaseColumnId.includes('createdat') ||
@@ -154,10 +152,9 @@ export function DataTable<TData, TValue>({
     if (lowerCaseColumnId.includes('actions')) {
       return 65;
     }
-    return 120; // largura padrão
+    return 120; 
   };
 
-  // Função para inicializar larguras das colunas
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
     table.getAllColumns().forEach(column => {
@@ -316,11 +313,11 @@ export function DataTable<TData, TValue>({
                         {headerGroup.headers.map((header, idx) => (
                           <TableHead
                             key={header.id}
-                            className="py-0 px-2 text-sm text-center text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto relative"
+                            className="py-0 px-2 text-sm text-center text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50   relative"
                             style={{
                               width: columnWidths[header.id] || getInitialColumnWidth(header.id),
                               minWidth: 10,
-                              maxWidth: 300,
+                              maxWidth: 200,
                               transition: isResizing === header.id ? 'none' : 'width 0.2s',
                               cursor: idx !== headerGroup.headers.length - 1 ? 'col-resize' : 'default',
                             }}
