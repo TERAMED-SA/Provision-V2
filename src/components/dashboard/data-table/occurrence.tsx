@@ -105,8 +105,6 @@ export function OccurrenceTable() {
           return
         }
 
-        const currentSupervisors = supervisorMap || supervisors
-
         const formattedNotifications = response.data.data.data
           .map((notification: any) => {
             const createdAtDate = new Date(notification.createdAt)
@@ -161,7 +159,7 @@ export function OccurrenceTable() {
       {
         accessorKey: "createdAt",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
             Data
           </span>
         ),
@@ -175,15 +173,12 @@ export function OccurrenceTable() {
             rowDate.getFullYear() === value.getFullYear()
           );
         },
-        size: 90,
-        minSize: 90,
-        maxSize: 90,
-        enableResizing: false,
+      
       },
       {
         accessorKey: "createdAtTime",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <span  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
             Hora
           </span>
         ),
@@ -194,48 +189,26 @@ export function OccurrenceTable() {
           const date = new Date(year, month - 1, day)
           return format(date, "yyyy-MM-dd") === value
         },
-        size: 70,
-        minSize: 70,
-        maxSize: 70,
-        enableResizing: false,
+  
       },
       {
         accessorKey: "siteName",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
             Site
           </span>
         ),
       },
       {
-        accessorKey: "supervisorName",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Supervisor
-          </span>
-        ),
-      },
-      {
-        accessorKey: "coordenadas",
-        header: "Coordenadas",
+        accessorKey: "details",
+        header: "Detalhes",
         cell: ({ row }: { row: Row<Notification> }) => {
-          const lat = row.original.latitude
-          const lng = row.original.longitude
-          return lat && lng ? `${lat}, ${lng}` : "-"
-        },
-      },
-      {
-        accessorKey: "aria",
-        header: "Área",
-        cell: ({ row }: { row: Row<Notification> }) => {
-          return row.original.aria || "-"
-        },
-      },
-      {
-        accessorKey: "ocorrencia",
-        header: "Ocorrência",
-        cell: ({ row }: { row: Row<Notification> }) => {
-          return row.original.ocorrencia || "-"
+          const details = row.getValue("details") as string;
+          return (
+            <div className="max-w-[200px] truncate" title={details}>
+              {details}
+            </div>
+          );
         },
       },
     ],
@@ -260,7 +233,7 @@ export function OccurrenceTable() {
           date={date}
           setDate={setDate}
           initialColumnVisibility={{
-            details: false,
+            details: true,
           }}
           handleViewDetails={handleViewDetails}
         />

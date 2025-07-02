@@ -2,10 +2,12 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Edit, Trash, Plus, Eye, MapPin, Info } from "lucide-react";
+import { Edit, Trash, Plus, Eye, Loader2, ChevronDown, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   AlertDialog,
@@ -23,607 +25,523 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import instance from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ulils/data-table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import toast from "react-hot-toast";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+
 
 interface Site {
-  _id: string;
-  name: string;
-  address?: string;
-  ctClient?: string;
-  clientCode: string;
-  costCenter: string;
-  numberOfWorkers: number;
-  supervisorCode: string;
-  zone: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
+  _id: string
+  name: string
+  address?: string
+  ctClient?: string
+  clientCode: string
+  costCenter: string
+  numberOfWorkers: number
+  supervisorCode: string
+  zone: string
 }
 
 interface CompanyInfo {
-  name: string;
-  address: string;
-  contactInfo: string;
-  zone: string;
+  name: string
+  address: string
+  contactInfo: string
 }
 
-interface Supervisor {
-  _id: string;
-  name: string;
-  code: string;
-  email?: string;
-  phone?: string;
-}
-
-interface FormData {
-  name: string;
-  address: string;
-  costCenter: string;
-  numberOfWorkers: string;
-  supervisorCode: string;
-  zone: string;
-}
-
-interface Coordinator {
-  id: string;
-  name: string;
-}
-interface SimpleSupervisor {
-  code: string;
-  name: string;
-}
-
-const initialFormData: FormData = {
-  name: "",
-  address: "",
-  costCenter: "",
-  numberOfWorkers: "",
-  supervisorCode: "",
-  zone: "",
-};
+const siteSchema = z.object({
+  name: z.string().min(1, "Nome obrigatório").max(50, "Máximo 50 caracteres"),
+  address: z.string().min(1, "Endereço obrigatório"),
+  ctClient: z.string().optional(),
+  costCenter: z.string().min(1, "Centro de custo obrigatório").max(13, "Máximo 13 caracteres"),
+  numberOfWorkers: z.coerce.number().min(1, "Obrigatório").max(9999, "Máximo 9999"),
+  supervisorCode: z.string().min(1, "Código obrigatório"),
+  zone: z.string().min(1, "Zona obrigatória"),
+});
+type FormData = z.infer<typeof siteSchema>;
 
 export default function CompanySites() {
-  const t = useTranslations("companySites");
-  const searchParams = useSearchParams();
-  const clientCode = searchParams.get("clientCode");
-  const companyName = searchParams.get("companyName");
+  const t = useTranslations('companySites')
+  const searchParams = useSearchParams()
+  const clientCode = searchParams.get('clientCode')
+  const companyName = searchParams.get('companyName')
+  const [data, setData] = useState<Site[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedSite, setSelectedSite] = useState<Site | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isCompanyInfoModalOpen, setIsCompanyInfoModalOpen] = useState(false)
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null)
+  const [supervisionCount, setSupervisionCount] = useState<number>(0)
+  const [isSiteDetailModalOpen, setIsSiteDetailModalOpen] = useState(false)
 
-  const [data, setData] = useState<Site[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedSite, setSelectedSite] = useState<Site | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isCompanyInfoModalOpen, setIsCompanyInfoModalOpen] = useState(false);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
-  const [supervisionCount, setSupervisionCount] = useState<number>(0);
-  const [isSiteDetailModalOpen, setIsSiteDetailModalOpen] = useState(false);
-  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
-  const [selectedSupervisor, setSelectedSupervisor] =
-    useState<Supervisor | null>(null);
-  const [siteCoordinates, setSiteCoordinates] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [supervisorsByCoordinator, setSupervisorsByCoordinator] = useState<
-    SimpleSupervisor[]
-  >([]);
-  const [currentCoordinator, setCurrentCoordinator] =
-    useState<Coordinator | null>(null);
+  // Estados de loading para adicionar e editar
+  const [isAdding, setIsAdding] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+    setValue,
+    watch,
+  } = useForm<FormData>({
+    resolver: zodResolver(siteSchema),
+    mode: "onChange",
+    defaultValues: {
+      name: "",
+      address: "",
+      ctClient: "",
+      costCenter: "",
+      numberOfWorkers: 1,
+      supervisorCode: "",
+      zone: "",
+    },
+  });
+
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [siteToDisable, setSiteToDisable] = useState<Site | null>(null);
+  const [supervisors, setSupervisors] = useState<{ code: string; name: string }[]>([]);
+  const [loadingSupervisors, setLoadingSupervisors] = useState(false);
+  // Estado para supervisor selecionado no modal de adicionar
+  const [selectedSupervisor, setSelectedSupervisor] = useState<{ code: string; name: string } | null>(null);
+
+  // Limpar formData ao abrir o modal de adicionar site
+  useEffect(() => {
+    if (isAddModalOpen) {
+      reset();
+      setSelectedSupervisor(null);
+    }
+  }, [isAddModalOpen, reset]);
 
   const columns: ColumnDef<Site>[] = [
     {
       accessorKey: "costCenter",
-      header: t("table.costCenter"),
-      cell: ({ row }) => <span>{row.original.costCenter}</span>,
-      filterFn: (row, id, value: string) => {
-        const cellValue = row.getValue(id) as string;
-        return cellValue.toLowerCase().includes(value.toLowerCase());
-      },
-      size: 100,
+      header: t('table.costCenter'),
+      cell: ({ row }) => (
+        <span
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={() => handleOpenSiteDetail(row.original)}
+        >
+          {row.original.costCenter}
+        </span>
+      ),
     },
     {
       accessorKey: "name",
-      header: t("table.name"),
+      header: t('table.name'),
       cell: ({ row }) => (
-        <span className="cursor-pointer hover:text-blue-600 transition-colors">
+        <span
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={() => handleOpenSiteDetail(row.original)}
+        >
           {row.original.name}
         </span>
       ),
-      filterFn: (row, id, value: string) => {
-        const cellValue = row.getValue(id) as string;
-        return cellValue.toLowerCase().includes(value.toLowerCase());
-      },
-      size: 80,
     },
     {
       accessorKey: "address",
-      header: t("table.address"),
-      cell: ({ row }) => <span>{row.original.address || "N/A"}</span>,
-      filterFn: (row, id, value: string) => {
-        const cellValue = row.getValue(id) as string | undefined;
-        return (cellValue || "").toLowerCase().includes(value.toLowerCase());
-      },
-      size: 100,
+      header: t('table.address'),
+      cell: ({ row }) => (
+        <span
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={() => handleOpenSiteDetail(row.original)}
+        >
+          {row.original.address || "N/A"}
+        </span>
+      ),
     },
+
     {
       accessorKey: "numberOfWorkers",
-      header: t("table.numberOfWorkers"),
-      cell: ({ row }) => <span>{row.original.numberOfWorkers}</span>,
-      filterFn: (row, id, value: string) => {
-        const cellValue = row.getValue(id) as number;
-        return cellValue.toString().includes(value);
-      },
-      size: 60,
+      header: t('table.numberOfWorkers'),
+      cell: ({ row }) => (
+        <span
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={() => handleOpenSiteDetail(row.original)}
+        >
+          {row.original.numberOfWorkers}
+        </span>
+      ),
     },
     {
       accessorKey: "supervisorCode",
-      header: t("table.supervisorCode"),
-      cell: ({ row }) => <span>{row.original.supervisorCode}</span>,
-      filterFn: (row, id, value: string) => {
-        const cellValue = row.getValue(id) as string;
-        return cellValue.toLowerCase().includes(value.toLowerCase());
-      },
-      size: 100,
+      header: t('table.supervisorCode'),
+      cell: ({ row }) => (
+        <span
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={() => handleOpenSiteDetail(row.original)}
+        >
+          {row.original.supervisorCode}
+        </span>
+      ),
     },
     {
       accessorKey: "zone",
-      header: t("table.zone"),
-      cell: ({ row }) => <span>{row.original.zone}</span>,
-      filterFn: (row, id, value: string) => {
-        const cellValue = row.getValue(id) as string;
-        return cellValue.toLowerCase().includes(value.toLowerCase());
-      },
-      size: 60,
+      header: t('table.zone'),
+      cell: ({ row }) => (
+        <span
+          className="cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={() => handleOpenSiteDetail(row.original)}
+        >
+          {row.original.zone}
+        </span>
+      ),
     },
     {
       id: "actions",
-      header: t("table.actions"),
+      header: t('table.actions'),
       cell: ({ row }) => {
-        const site = row.original;
+        const site = row.original
         return (
           <div className="flex gap-2">
             <span
               className="cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditClick(site);
-              }}
+              onClick={() => handleViewSupervisions(site)}
+            >
+            </span>
+            <span
+              className="cursor-pointer"
+              onClick={() => handleEditClick(site)}
             >
               <Edit className="h-4 w-4" />
             </span>
             <span
               className="cursor-pointer text-red-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteSite(site._id);
+              onClick={() => {
+                setSiteToDisable(site);
+                setIsConfirmDialogOpen(true);
               }}
             >
               <Trash className="h-4 w-4" />
             </span>
           </div>
-        );
+        )
       },
-      size: 80,
     },
-  ];
+  ]
 
   useEffect(() => {
     const fetchSites = async () => {
       if (!clientCode) {
-        toast.error(t("errors.clientCodeNotFound"));
-        setIsLoading(false);
-        return;
+        toast.error(t('errors.clientCodeNotFound'))
+        setIsLoading(false)
+        return
       }
 
       try {
-        setIsLoading(true);
-        const response = await instance.get(`/companySite?size=500`);
-        const fetchedSites = response.data.data.data.filter(
-          (site: Site) => site.clientCode === clientCode
-        );
-        setData(fetchedSites);
+        setIsLoading(true)
+        const response = await instance.get(`/companySite?size=500`)
+        const fetchedSites = response.data.data.data.filter((site: Site) => site.clientCode === clientCode)
+        setData(fetchedSites)
       } catch (error) {
-        toast.error(t("errors.failedToLoadSites"));
+        console.error("Error fetching sites:", error)
+        toast.error(t('errors.failedToLoadSites'))
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    fetchSites();
-  }, [clientCode, t]);
-
-  // Buscar supervisores
-  const fetchSupervisors = async () => {
-    try {
-      const response = await instance.get(`/supervisors?size=500`);
-      setSupervisors(response.data.data.data || []);
-    } catch (error) {
-      toast.error("Erro ao carregar supervisores");
     }
-  };
-
-  // Buscar coordenadas do site
-  const fetchSiteCoordinates = async (siteId: string) => {
-    try {
-      const response = await instance.get(`/companySite/${siteId}/coordinates`);
-      setSiteCoordinates(response.data.data.coordinates || null);
-    } catch (error) {
-      setSiteCoordinates(null);
-    }
-  };
+    fetchSites()
+  }, [clientCode, t])
 
   const fetchCompanyInfo = async (costCenter: string) => {
     try {
-      const response = await instance.get(
-        `/companySite/getCompanyInfo/${costCenter}`
-      );
-      setCompanyInfo(response.data.data);
+      const response = await instance.get(`/companySite/getCompanyInfo/${costCenter}`)
+      setCompanyInfo(response.data.data)
     } catch (error) {
-      toast.error(t("errors.failedToLoadCompanyInfo"));
+      console.error("Error fetching company info:", error)
+      toast.error(t('errors.failedToLoadCompanyInfo'))
     }
-  };
+  }
 
   const fetchSupervisionCount = async (supervisorCode: string) => {
     try {
-      const response = await instance.get(
-        `/companySite/getSuperivsorSites/${supervisorCode}?size=500`
-      );
-      setSupervisionCount(response.data.data.data.length || 0);
+      const response = await instance.get(`/companySite/getSuperivsorSites/${supervisorCode}?size=500`)
+      setSupervisionCount(response.data.data.data.length || 0)
     } catch (error) {
-      toast.error(t("errors.failedToLoadSupervisions"));
+      console.error("Error fetching supervision count:", error)
+      toast.error(t('errors.failedToLoadSupervisions'))
     }
-  };
+  }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
 
-  const handleSupervisorChange = (supervisorCode: string) => {
-    const supervisor = supervisors.find((s) => s.code === supervisorCode);
-    setSelectedSupervisor(supervisor || null);
-    setFormData((prev) => ({
-      ...prev,
-      supervisorCode: supervisorCode,
-    }));
-  };
+  // Remove handleInputChange, handled by react-hook-form
 
-  const handleAddSite = async () => {
+  const onSubmitAdd = async (data: FormData) => {
     if (!clientCode) {
-      toast.error(t("errors.clientCodeNotFound"));
+      toast.error(t('errors.clientCodeNotFound'));
       return;
     }
-
+    setIsAdding(true);
     try {
-      const response = await instance.post(
-        `/companySite/create/${clientCode}/1162`,
-        {
-          name: formData.name,
-          address: formData.address,
-          location: siteCoordinates || {},
-          costCenter: formData.costCenter,
-          numberOfWorkers: parseInt(formData.numberOfWorkers),
-          supervisorCode: formData.supervisorCode,
-          zone: formData.zone,
-        }
-      );
-
-      if (response.status === 201) {
-        toast.success(t("success.siteAdded"));
-        setIsAddModalOpen(false);
-        // Reset form
-        setFormData(initialFormData);
-        setSelectedSupervisor(null);
-        setSiteCoordinates(null);
-        // Refresh data
-        const refreshResponse = await instance.get(`/companySite?size=500`);
-        const refreshedSites = refreshResponse.data.data.data.filter(
-          (site: Site) => site.clientCode === clientCode
-        );
-        setData(refreshedSites);
-      }
+      const response = await instance.post(`/companySite/create/${clientCode}/1162`, {
+        ...data,
+        location: {},
+      });
+      setData((prevList) => [...prevList, response.data.data]);
+      toast.success(t('success.siteAdded'));
+      setIsAddModalOpen(false);
     } catch (error) {
-      toast.error(t("errors.failedToAddSite"));
+      console.error("Error adding site:", error);
+      toast.error(t('errors.failedToAddSite'));
+    } finally {
+      setIsAdding(false);
     }
   };
 
   const handleEditClick = (site: Site) => {
     setSelectedSite(site);
-    setFormData({
+    reset({
       name: site.name,
       address: site.address || "",
-      costCenter: site.costCenter,
-      numberOfWorkers: site.numberOfWorkers.toString(),
-      supervisorCode: site.supervisorCode,
-      zone: site.zone,
+      ctClient: site.ctClient || "",
+      costCenter: site.costCenter || "",
+      numberOfWorkers: site.numberOfWorkers || 1,
+      supervisorCode: site.supervisorCode || "",
+      zone: site.zone || "",
     });
-
-    // Buscar o supervisor selecionado
-    const supervisor = supervisors.find((s) => s.code === site.supervisorCode);
-    setSelectedSupervisor(supervisor || null);
-
-    // Buscar coordenadas do site
-    if (site._id) {
-      fetchSiteCoordinates(site._id);
-    }
-
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateSite = async () => {
-    if (!selectedSite) return;
-
+  const onSubmitEdit = async (data: FormData) => {
+    if (!selectedSite || !clientCode) return;
+    setIsUpdating(true);
     try {
-      const response = await instance.put(
-        `/companySite/update/${selectedSite._id}`,
-        {
-          name: formData.name,
-          address: formData.address,
-          costCenter: formData.costCenter,
-          numberOfWorkers: parseInt(formData.numberOfWorkers),
-          supervisorCode: formData.supervisorCode,
-          zone: formData.zone,
-        }
+      await instance.put(`/companySite/update/${selectedSite._id}/${clientCode}`, {
+        ...data,
+      });
+      setData((prevList) =>
+        prevList.map((site) =>
+          site._id === selectedSite._id
+            ? { ...site, ...data }
+            : site,
+        ),
       );
-
-      if (response.status === 200) {
-        toast.success(t("success.siteUpdated"));
-        setIsEditModalOpen(false);
-        // Refresh data
-        const refreshResponse = await instance.get(`/companySite?size=500`);
-        const refreshedSites = refreshResponse.data.data.data.filter(
-          (site: Site) => site.clientCode === clientCode
-        );
-        setData(refreshedSites);
-      }
+      toast.success(t('success.siteUpdated'));
+      setIsEditModalOpen(false);
     } catch (error) {
-      toast.error(t("errors.failedToUpdateSite"));
+      console.error("Error updating site:", error);
+      toast.error(t('errors.failedToUpdateSite'));
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const handleDeleteSite = async (siteId: string) => {
-    // Implement delete logic here, probably with a confirmation dialog
-    toast.info("Delete functionality not implemented yet.");
+  const handleDisableSite = async (siteId: string) => {
+    // Aqui você pode chamar a API para desabilitar ou deletar o site
+    // Exemplo:
+    // await instance.delete(`/companySite/disable/${siteId}`);
+    // Atualize o estado dos sites conforme necessário
   };
 
-  const handleOpenAddModal = () => {
-    // Reset form data to initial state
-    setFormData(initialFormData);
-    setSelectedSupervisor(null);
-    setSiteCoordinates(null);
-    // Fetch supervisors
-    fetchSupervisors();
-    setIsAddModalOpen(true);
-  };
+  const handleViewSupervisions = async (site: Site) => {
+    await fetchCompanyInfo(site.costCenter)
+    await fetchSupervisionCount(site.supervisorCode)
+    setSelectedSite(site)
+    setIsCompanyInfoModalOpen(true)
+  }
 
   const handleOpenSiteDetail = (site: Site) => {
-    setSelectedSite(site);
+    setSelectedSite(site)
     if (site.costCenter) {
-      fetchCompanyInfo(site.costCenter);
+      fetchCompanyInfo(site.costCenter)
     }
     if (site.supervisorCode) {
-      fetchSupervisionCount(site.supervisorCode);
+      fetchSupervisionCount(site.supervisorCode)
     }
-    setIsSiteDetailModalOpen(true);
-  };
+    setIsSiteDetailModalOpen(true)
+  }
 
-  // Gere as zonas únicas dos sites do cliente
-  const zonasUnicas = Array.from(
-    new Set(data.map((site) => site.zone).filter(Boolean))
-  );
-
-  // Quando selecionar zona, buscar o coordenador daquela zona e os supervisores desse coordenador
   useEffect(() => {
-    const fetchCoordinatorAndSupervisors = async () => {
-      if (formData.zone) {
-        try {
-          // Buscar coordenador da zona
-          const coordRes = await instance.get(
-            `/coordinator?zone=${formData.zone}`
-          );
-          const coordinator = coordRes.data.data;
-          setCurrentCoordinator(coordinator);
-          // Buscar supervisores do coordenador e zona
-          if (coordinator && coordinator.id) {
-            const supRes = await instance.get(
-              `/supervisors?coordinatorId=${coordinator.id}&zone=${formData.zone}`
-            );
-            setSupervisorsByCoordinator(supRes.data.data || []);
-          } else {
-            setSupervisorsByCoordinator([]);
-          }
-        } catch (e) {
-          setCurrentCoordinator(null);
-          setSupervisorsByCoordinator([]);
-        }
-      } else {
-        setCurrentCoordinator(null);
-        setSupervisorsByCoordinator([]);
+    async function fetchSupervisors() {
+      setLoadingSupervisors(true);
+      try {
+        const users = await userAdapter.getUsers();
+        setSupervisors(
+          users.map((user: any) => ({
+            code: user.employeeId || user._id,
+            name: user.name,
+          }))
+        );
+      } catch (e) {
+        setSupervisors([]);
+      } finally {
+        setLoadingSupervisors(false);
       }
-    };
-    fetchCoordinatorAndSupervisors();
-  }, [formData.zone]);
+    }
+    fetchSupervisors();
+  }, []);
+
+  // Sincroniza supervisor selecionado ao editar
+  useEffect(() => {
+    if (isEditModalOpen && selectedSite && supervisors.length > 0) {
+      const found = supervisors.find(sup => sup.code === selectedSite.supervisorCode);
+      setSelectedSupervisor(found || null);
+    }
+  }, [isEditModalOpen, selectedSite, supervisors]);
 
   return (
     <div className="container p-8">
       <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+
         <div>
           <AlertDialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <AlertDialogTrigger asChild>
-              <Button
-                className="bg-black text-white cursor-pointer"
-                onClick={handleOpenAddModal}
-              >
+              <Button className="bg-black text-white cursor-pointer">
                 <Plus className="h-4 w-4" />
-                {t("buttons.addSite")}{" "}
+                {t('buttons.addSite')}
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-4xl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t("modals.addSite.title")}{" "}
-                  {companyName ? `- ${companyName}` : ""}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("modals.addSite.description")}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-96 overflow-y-auto">
-                         <div className="space-y-2">
-                  <label htmlFor="costCenter">{t("fields.costCenter")}:</label>
-                  <Input
-                    id="costCenter"
-                    name="costCenter"
-                    value={formData.costCenter}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.costCenter")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="name">{t("fields.name")}:</label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.name")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="address">{t("fields.address")}:</label>
-                  <Input
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder={t("placeholders.address")}
-                  />
-                </div>
-       
-                <div className="space-y-2">
-                  <label htmlFor="numberOfWorkers">Tl:</label>
-                  <Input
-                    id="numberOfWorkers"
-                    name="numberOfWorkers"
-                    type="text"
-                    value={formData.numberOfWorkers}
-                    onChange={handleInputChange}
-                    placeholder="Tl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="zone">{t("fields.zone")}:</label>
-                  <Select
-                    value={formData.zone}
-                    onValueChange={(value) =>
-                      setFormData((f) => ({ ...f, zone: value }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t("placeholders.zone")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["1", "2", "3", "4", "5"].map((zona) => (
-                        <SelectItem key={zona} value={zona}>
-                          {zona}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Coordenador (apenas leitura, aparece se zona selecionada) */}
-                {formData.zone && currentCoordinator && (
-                  <div className="space-y-2 flex flex-col justify-end">
-                    <label className="font-semibold text-gray-700">
-                      Coordenador:
-                    </label>
-                    <span className="text-gray-900 font-medium">
-                      {currentCoordinator.name}
-                    </span>
+            <AlertDialogContent className="max-w-7xl">
+              <form onSubmit={handleSubmit(onSubmitAdd)}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-base max-w-lg">
+                    {t("modals.addSite.title") + " "}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {clientCode ? ` ${clientCode}` : ""}
+                    {companyName ? `- ${companyName}` : ""}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="grid grid-cols-1 gap-4 py-4 min-h-96">
+                  <div className="space-y-2 w-36">
+                    <label htmlFor="costCenter">{t('fields.costCenter')}:</label>
+                    <Input id="costCenter" maxLength={13} {...register("costCenter")} />
+                    {errors.costCenter && <span className="text-xs text-red-500">{errors.costCenter.message as string}</span>}
                   </div>
-                )}
-                {/* Select de Supervisor (aparece se coordenador e zona selecionados) */}
-                {formData.zone &&
-                  currentCoordinator &&
-                  supervisorsByCoordinator.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="font-semibold text-gray-700">
-                        Supervisor:
-                      </label>
-                      <Select
-                        value={formData.supervisorCode}
-                        onValueChange={(value) =>
-                          setFormData((f) => ({ ...f, supervisorCode: value }))
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o supervisor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supervisorsByCoordinator.map((sup) => (
-                            <SelectItem key={sup.code} value={sup.code}>
-                              {sup.code} - {sup.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                {/* Coordenadas do Site (aparece só se zona selecionada) */}
-                {formData.zone && (
                   <div className="space-y-2">
-                    <label className="font-semibold text-gray-700 flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Coordenadas do Site
-                    </label>
-                    {siteCoordinates ? (
-                      <div className="space-y-1">
-                        <span className="block text-xs text-gray-700">
-                          Latitude:{" "}
-                          <span className="text-gray-900 font-medium">
-                            {siteCoordinates.latitude}
-                          </span>
-                        </span>
-                        <span className="block text-xs text-gray-700">
-                          Longitude:{" "}
-                          <span className="text-gray-900 font-medium">
-                            {siteCoordinates.longitude}
-                          </span>
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-500">
-                        Coordenadas não disponíveis
-                      </span>
-                    )}
+                    <label htmlFor="name">{t('fields.name')}:</label>
+                    <Input id="name" {...register("name")} />
+                    {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
                   </div>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <label htmlFor="address">{t('fields.address')}:</label>
+                    <Input id="address" {...register("address")} />
+                    {errors.address && <span className="text-xs text-red-500">{errors.address.message as string}</span>}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-[120px_150px_1fr] gap-4 items-start">
+                    <div className="space-y-2">
+                      <label htmlFor="numberOfWorkers" className="block text-sm font-medium">
+                        {t('fields.numberOfWorkers')}:
+                      </label>
+                      <Input
+                        id="numberOfWorkers"
+                        type="number"
+                        min={1}
+                        max={9999}
+                        className="w-full max-w-[100px]"
+                        {...register("numberOfWorkers", { valueAsNumber: true })}
+                      />
+                      {errors.numberOfWorkers && (
+                        <span className="text-xs text-red-500">
+                          {errors.numberOfWorkers.message as string}
+                        </span>
+                      )}
+                    </div>
 
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t("buttons.cancel")}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleAddSite}>
-                  {t("buttons.add")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
+                    <div className="space-y-2">
+                      <label htmlFor="zone" className="block text-sm font-medium">
+                        {t('fields.zone')}:
+                      </label>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-between"
+                            disabled={isAdding}
+                          >
+                            {watch("zone") || t('fields.zone')}
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-full">
+                          {["1", "2", "3", "4", "5", "6"].map(z => (
+                            <DropdownMenuItem
+                              key={z}
+                              onClick={() => setValue("zone", z, { shouldValidate: true })}
+                            >
+                              {z}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {errors.zone && (
+                        <span className="text-xs text-red-500">
+                          {errors.zone.message as string}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="supervisorCode" className="block text-sm font-medium">
+                        {t('fields.supervisorCode')}:
+                      </label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                            disabled={isAdding || loadingSupervisors}
+                          >
+                            {supervisors.find(sup => sup.code === watch("supervisorCode"))?.name || t('fields.supervisorCode')}
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0">
+                          <Command>
+                            <CommandInput placeholder="pesquisar por supervisor" />
+                            <CommandEmpty>{t('noResults')}</CommandEmpty>
+                            <CommandGroup className="max-h-64 overflow-y-auto">
+                              {supervisors.map(sup => (
+                                <CommandItem
+                                  key={sup.code}
+                                  value={sup.name}
+                                  onSelect={() => {
+                                    setValue("supervisorCode", sup.code, { shouldValidate: true });
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      watch("supervisorCode") === sup.code ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {sup.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {errors.supervisorCode && (
+                        <span className="text-xs text-red-500">
+                          {errors.supervisorCode.message as string}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel type="button">{t('buttons.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <button type="submit" disabled={isAdding || !isValid} className="flex items-center">
+                      {isAdding && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                      {t('buttons.add')}
+                    </button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </form>
             </AlertDialogContent>
           </AlertDialog>
         </div>
@@ -635,106 +553,101 @@ export default function CompanySites() {
           data={data}
           loading={isLoading}
           filterOptions={{
-            enableNameFilter: true,
+            enableSiteFilter: true,
             enableColumnVisibility: true,
-            enableColumnFilters: true,
-            enableExportButton: true,
-            exportButtonLabel: "Exportar Sites",
-            exportFileName: `sites-${companyName}.xlsx`,
           }}
-          onAddClick={handleOpenAddModal}
-          handleViewDetails={handleOpenSiteDetail}
+          initialColumnVisibility={{
+            details: false,
+          }}
         />
 
         {/* Edit Modal */}
         <AlertDialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <AlertDialogContent className="max-w-md">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-base max-w-lg">
+            <form onSubmit={handleSubmit(onSubmitEdit)}>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-base max-w-lg">
+                  Editar Site
+                </AlertDialogTitle>
+                <AlertDialogDescription>
                 {selectedSite?.name
-                  ? `Editar Site - ${selectedSite.name}`
-                  : t("modals.editSite.title")}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("modals.editSite.description")}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-96 overflow-y-auto">
-                  <div className="space-y-2">
-                <label htmlFor="edit-costCenter">
-                  {t("fields.costCenter")}:
-                </label>
-                <Input
-                  id="edit-costCenter"
-                  name="costCenter"
-                  value={formData.costCenter}
-                  onChange={handleInputChange}
-                />
+                    ? ` ${selectedSite.name}`
+                    : t("modals.editSite.title")}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="grid grid-cols-1 gap-4 py-4 max-h-96 overflow-y-auto">
+                <div className="space-y-2">
+                  <label htmlFor="edit-name">{t('fields.name')}:</label>
+                  <Input id="edit-name" {...register("name")} />
+                  {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-address">{t('fields.address')}:</label>
+                  <Input id="edit-address" {...register("address")} />
+                  {errors.address && <span className="text-xs text-red-500">{errors.address.message as string}</span>}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-costCenter">{t('fields.costCenter')}:</label>
+                  <Input id="edit-costCenter" maxLength={13} {...register("costCenter")} />
+                  {errors.costCenter && <span className="text-xs text-red-500">{errors.costCenter.message as string}</span>}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-numberOfWorkers">{t('fields.numberOfWorkers')}:</label>
+                  <Input id="edit-numberOfWorkers" type="number" min={1} max={9999} style={{ width: 80 }} {...register("numberOfWorkers", { valueAsNumber: true })} />
+                  {errors.numberOfWorkers && <span className="text-xs text-red-500">{errors.numberOfWorkers.message as string}</span>}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-supervisorCode">{t('fields.supervisorCode')}:</label>
+                  <Select
+                    value={watch("supervisorCode")}
+                    onValueChange={v => setValue("supervisorCode", v, { shouldValidate: true })}
+                    disabled={isUpdating || loadingSupervisors}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t('fields.supervisorCode')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {supervisors.map(sup => (
+                        <SelectItem key={sup.code} value={sup.code}>{sup.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.supervisorCode && <span className="text-xs text-red-500">{errors.supervisorCode.message as string}</span>}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-zone">{t('fields.zone')}:</label>
+                  <Select
+                    value={watch("zone")}
+                    onValueChange={v => setValue("zone", v, { shouldValidate: true })}
+                    disabled={isUpdating}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t('fields.zone')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["1", "2", "3", "4", "5", "6"].map(z => (
+                        <SelectItem key={z} value={z}>{z}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.zone && <span className="text-xs text-red-500">{errors.zone.message as string}</span>}
+                </div>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-name">{t("fields.name")}:</label>
-                <Input
-                  id="edit-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-address">{t("fields.address")}:</label>
-                <Input
-                  id="edit-address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                />
-              </div>
-          
-              <div className="space-y-2">
-                <label htmlFor="edit-numberOfWorkers">
-                  {t("fields.numberOfWorkers")}:
-                </label>
-                <Input
-                  id="edit-numberOfWorkers"
-                  name="numberOfWorkers"
-                  type="text"
-                  value={formData.numberOfWorkers}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-supervisorCode">
-                  {t("fields.supervisorCode")}:
-                </label>
-                <Input
-                  id="edit-supervisorCode"
-                  name="supervisorCode"
-                  value={formData.supervisorCode}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-zone">{t("fields.zone")}:</label>
-                <Input
-                  id="edit-zone"
-                  name="zone"
-                  value={formData.zone}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("buttons.cancel")}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleUpdateSite}>
-                {t("buttons.save")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
+              <AlertDialogFooter>
+                <AlertDialogCancel type="button">{t('buttons.cancel')}</AlertDialogCancel>
+                <AlertDialogAction asChild>
+                  <button type="submit" disabled={isUpdating || !isValid} className="flex items-center">
+                    {isUpdating && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+                    {t('buttons.save')}
+                  </button>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </form>
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Site Detail Modal */}
+
+        {/* Modal de Detalhes do Site */}
         <Dialog
           open={isSiteDetailModalOpen}
           onOpenChange={setIsSiteDetailModalOpen}
@@ -742,14 +655,27 @@ export default function CompanySites() {
           <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-base">
-                <Eye className="h-5 w-5" />
-                {selectedSite
-                  ? `Detalhes - ${selectedSite.name}`
-                  : "Detalhes do Site"}
+                {selectedSite && (
+                  <>
+                    {selectedSite.clientCode || "N/A"} -
+
+                  </>
+                )}
+
+
+                {companyInfo && (
+                  <div className="flex flex-col">
+
+                    <span className="text-gray-900 font-medium">
+                      {companyInfo.name}
+                    </span>
+                  </div>
+                )}
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-2">
+
               {selectedSite && (
                 <>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -794,18 +720,7 @@ export default function CompanySites() {
                           {selectedSite.clientCode || "N/A"}
                         </span>
                       </div>
-                      <div className="flex flex-col sm:col-span-2">
-                        {companyInfo && (
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-700">
-                              {t("fields.name")}:
-                            </span>
-                            <span className="text-gray-900 font-medium">
-                              {companyInfo.name}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+
                     </div>
                   </div>
 
@@ -825,6 +740,33 @@ export default function CompanySites() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Modal de confirmação para desabilitar site */}
+      <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desabilitar Site</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desabilitar o site <b>{siteToDisable?.name}</b>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsConfirmDialogOpen(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (siteToDisable) {
+                  handleDisableSite(siteToDisable._id);
+                }
+                setIsConfirmDialogOpen(false);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
-  );
+  )
 }

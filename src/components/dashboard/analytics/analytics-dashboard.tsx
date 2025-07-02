@@ -8,11 +8,6 @@ import {
   LineChart,
   Line,
   ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  LabelList,
   Area,
   AreaChart,
 } from "recharts";
@@ -23,12 +18,8 @@ import {
   Users,
   UserCheck,
   Activity,
-  BarChart3,
   FileText,
   FileSpreadsheet,
-  Search,
-  Filter,
-  TrendingUp,
 } from "lucide-react";
 import { calculateEfficiency, exportToExcel, exportToPDF } from "./exportUtils";
 import instance from "@/lib/api";
@@ -311,7 +302,6 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  const sitesChartData = generateSitesBarChartData();
   const supervisionChartData = generateSupervisionChartData();
 
   return (
@@ -477,123 +467,11 @@ export default function AnalyticsDashboard() {
           </div>
         </MetricsCard>
 
-        <MetricsCard
-          title="Status do Sistema"
-          value="Online"
-          description="todos os sistemas operacionais"
-          icon={<Activity className="h-4 w-4" />}
-          delay={700}
-          color="green"
-        >
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-xs text-green-600 font-medium">
-              Sistema Operacional
-            </span>
-          </div>
-          <div className="mt-2 grid grid-cols-3 gap-1">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-1 bg-green-500 rounded animate-pulse"
-                style={{ animationDelay: `${i * 100}ms` }}
-              />
-            ))}
-          </div>
-        </MetricsCard>
       </div>
 
-      {/* Filtros para Sites */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex gap-2 items-center">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Buscar por site ou supervisor..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[250px]"
-            />
-          </div>
-          <div className="relative">
-            <select
-              value={filterBy}
-              onChange={(e) => setFilterBy(e.target.value as "equipments" | "supervisions" | "all")}
-              className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent w-[200px]"
-            >
-              <option value="all">Todos os Sites</option>
-              <option value="equipments">Mais Equipamentos</option>
-              <option value="supervisions">Mais Supervisões</option>
-            </select>
-            <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
-          </div>
-        </div>
-      </div>
+   
 
-      {/* Gráfico de Sites Melhorado */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <BarChart3 className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Distribuição por Sites</h2>
-          </div>
-          <p className="text-sm text-gray-600">
-            {filterBy === "equipments" && "Sites ordenados por quantidade de equipamentos"}
-            {filterBy === "supervisions" && "Sites ordenados por quantidade de supervisões"}
-            {filterBy === "all" && `${sitesChartData.length} sites encontrados`}
-            {searchTerm && ` - Filtrado por: "${searchTerm}"`}
-          </p>
-        </div>
-        
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart
-            data={sitesChartData}
-            layout="horizontal"
-            margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" />
-            <YAxis 
-              dataKey="name" 
-              type="category" 
-              width={120}
-              tick={{ fontSize: 12 }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-              }}
-            />
-            <Bar 
-              dataKey="equipments" 
-              fill="#3b82f6" 
-              radius={[0, 4, 4, 0]}
-              name="Equipamentos"
-            >
-              <LabelList
-                dataKey="equipments"
-                position="right"
-                offset={8}
-                className="fill-gray-700"
-                fontSize={12}
-              />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-        
-        <div className="mt-4 flex flex-col gap-2 text-sm">
-          <div className="flex gap-2 font-medium items-center">
-            Total de {sitesChartData.reduce((sum, site) => sum + site.equipments, 0)} equipamentos
-            <TrendingUp className="h-4 w-4" />
-          </div>
-          <div className="text-gray-600">
-            Distribuição de equipamentos por site monitorado
-          </div>
-        </div>
-      </div>
+    
     </div>
   );
 }

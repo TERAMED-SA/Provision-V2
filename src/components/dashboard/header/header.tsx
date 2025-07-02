@@ -50,7 +50,7 @@ function Header({
         <LocaleSwitcher showLabel />
         <Mode />
         <Bells />
-        <NavUser />
+    
       </div>
     </div>
   );

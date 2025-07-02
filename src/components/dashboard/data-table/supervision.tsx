@@ -219,28 +219,6 @@ export function NewSupervionTable() {
         size: 160,
       },
       {
-        accessorKey: "coordinates",
-        header: ({ column }: { column: any }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Coordenadas</span>
-        ),
-        cell: ({ row }: { row: Row<Notification> }) => {
-          const value = row.getValue("coordinates") as string
-          return value || "-"
-        },
-        size: 160,
-      },
-      {
-        accessorKey: "tlAbsent",
-        header: ({ column }: { column: any }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>TL </span>
-        ),
-        cell: ({ row }: { row: Row<Notification> }) => {
-          const value = row.getValue("tlAbsent") as string
-          return value || "-"
-        },
-        size: 60,
-      },
-      {
         accessorKey: "time",
         header: ({ column }: { column: any }) => (
           <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Duração</span>

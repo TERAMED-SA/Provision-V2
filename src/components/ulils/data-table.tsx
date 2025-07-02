@@ -15,6 +15,7 @@ import { ChevronLeft, ChevronRight, Filter, FileQuestion, GripVertical } from 'l
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useRouter } from "next/navigation"
+import { DataTableFilters } from "./data-table-filters"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -65,15 +66,6 @@ export function DataTable<TData, TValue>({
   date,
   setDate,
   initialColumnVisibility = {},
-  cardConfig = {
-    titleField: "name",
-    subtitleField: "email",
-    descriptionField: "description",
-    statusField: "status",
-    priorityField: "priority",
-    dateField: "createdAt",
-    avatarField: "name",
-  },
   handleViewDetails,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
@@ -291,15 +283,31 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4 pb-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-6">
           {title && (
-            <button onClick={handleBack} className="mr-2 cursor-pointer">
+           <div className="flex items-center gap-2">
+             <button onClick={handleBack} className=" cursor-pointer">
               <ChevronLeft className="w-5 h-5" />
             </button>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
+           </div>
           )}
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
+          {filterOptions.enableExportButton && (
+          <div className="flex items-center">
+            <DataTableFilters
+              table={table}
+              filterOptions={filterOptions}
+              onAddClick={onAddClick}
+              date={date}
+              setDate={setDate}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+            />
+          </div>
+        )}
         </div>
+
         {table.getPageCount() > 1 && (
           <div className="flex items-center">{renderPagination()}</div>
         )}

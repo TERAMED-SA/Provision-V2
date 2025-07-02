@@ -21,7 +21,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={``}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <QueryProvider>
             <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
           </QueryProvider>

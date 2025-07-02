@@ -271,12 +271,12 @@
       "actions": "Ação"
     },
     "fields": {
-      "name": "Nome",
+      "name": "Descrição do site",
       "address": "Endereço",
       "ctClient": "CT Cliente",
-      "costCenter": "Centro de Custo",
-      "numberOfWorkers": "Número de Trabalhadores",
-      "supervisorCode": "Código do Supervisor",
+      "costCenter": "Código",
+      "numberOfWorkers": "TL",
+      "supervisorCode": "Supervisor",
       "zone": "Zona"
     },
     "modals": {
