@@ -1,6 +1,6 @@
 "use client"
 import type { Table } from "@tanstack/react-table"
-import {Download } from 'lucide-react'
+import { FileSpreadsheet } from 'lucide-react'
 import * as XLSX from "xlsx"
 
 interface DataTableFiltersProps<TData> {
@@ -105,8 +105,13 @@ export function DataTableFilters<TData>({
   if (!enableExportButton) return null;
 
   return (
-    <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-      <Download className="h-4 w-4" />
+    <button
+      onClick={handleExport}
+      className="flex items-center gap-2 px-3 py-1 border border-gray-300 rounded-md text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      type="button"
+      title="Exportar para Excel"
+    >
+      <FileSpreadsheet className="h-4 w-4 text-green-700" />
       {exportButtonLabel}
     </button>
   )

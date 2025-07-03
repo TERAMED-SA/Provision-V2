@@ -229,6 +229,9 @@ export function OccurrenceTable() {
             enableDateFilter: true,
             enableColumnVisibility: true,
             enableColumnFilters: true,
+            enableExportButton: true,
+            exportButtonLabel: "Exportar Excel",
+            exportFileName: "ocorrencias.xlsx",
           }}
           date={date}
           setDate={setDate}

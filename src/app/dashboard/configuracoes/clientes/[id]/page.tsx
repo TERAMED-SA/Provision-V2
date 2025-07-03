@@ -34,9 +34,6 @@ import toast from "react-hot-toast";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 
 
 interface Site {
@@ -103,7 +100,7 @@ export default function CompanySites() {
       address: "",
       ctClient: "",
       costCenter: "",
-      numberOfWorkers: 1,
+      numberOfWorkers: 0,
       supervisorCode: "",
       zone: "",
     },
@@ -113,13 +110,18 @@ export default function CompanySites() {
   const [siteToDisable, setSiteToDisable] = useState<Site | null>(null);
   const [supervisors, setSupervisors] = useState<{ code: string; name: string }[]>([]);
   const [loadingSupervisors, setLoadingSupervisors] = useState(false);
-  // Estado para supervisor selecionado no modal de adicionar
   const [selectedSupervisor, setSelectedSupervisor] = useState<{ code: string; name: string } | null>(null);
-
-  // Limpar formData ao abrir o modal de adicionar site
   useEffect(() => {
     if (isAddModalOpen) {
-      reset();
+      reset({
+        name: "",
+        address: "",
+        ctClient: "",
+        costCenter: "",
+        numberOfWorkers: 0,
+        supervisorCode: "",
+        zone: "",
+      });
       setSelectedSupervisor(null);
     }
   }, [isAddModalOpen, reset]);
@@ -416,20 +418,43 @@ export default function CompanySites() {
                 <div className="grid grid-cols-1 gap-4 py-4 min-h-96">
                   <div className="space-y-2 w-36">
                     <label htmlFor="costCenter">{t('fields.costCenter')}:</label>
-                    <Input id="costCenter" maxLength={13} {...register("costCenter")} />
+                    <Input id="costCenter" maxLength={13} placeholder="Centro de custo" {...register("costCenter", {
+                      required: 'Campo obrigatório',
+                      minLength: { value: 1, message: 'Campo obrigatório' },
+                      maxLength: { value: 13, message: 'Máximo 13 caracteres' },
+                      pattern: { value: /^[A-Za-z0-9]+$/, message: 'Apenas letras e números' },
+                    })} />
                     {errors.costCenter && <span className="text-xs text-red-500">{errors.costCenter.message as string}</span>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="name">{t('fields.name')}:</label>
-                    <Input id="name" {...register("name")} />
+                    <Input
+                      id="name"
+                      placeholder="Nome"
+                      maxLength={50}
+                      onKeyDown={e => {
+                        const input = e.target as HTMLInputElement;
+                        if (input.value.length >= 50 && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      {...register("name", {
+                        required: 'Campo obrigatório',
+                        minLength: { value: 1, message: 'Campo obrigatório' },
+                        maxLength: { value: 50, message: 'Máximo 50 caracteres' },
+                      })}
+                    />
                     {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="address">{t('fields.address')}:</label>
-                    <Input id="address" {...register("address")} />
+                    <Input id="address" placeholder="Endereço" {...register("address", {
+                      required: 'Campo obrigatório',
+                      minLength: { value: 1, message: 'Campo obrigatório' },
+                    })} />
                     {errors.address && <span className="text-xs text-red-500">{errors.address.message as string}</span>}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-[120px_150px_1fr] gap-4 items-start">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                     <div className="space-y-2">
                       <label htmlFor="numberOfWorkers" className="block text-sm font-medium">
                         {t('fields.numberOfWorkers')}:
@@ -437,10 +462,16 @@ export default function CompanySites() {
                       <Input
                         id="numberOfWorkers"
                         type="number"
-                        min={1}
+                        min={0}
                         max={9999}
-                        className="w-full max-w-[100px]"
-                        {...register("numberOfWorkers", { valueAsNumber: true })}
+                        className="w-24"
+                        placeholder="Nº de trabalhadores"
+                        {...register("numberOfWorkers", {
+                          valueAsNumber: true,
+                          required: 'Campo obrigatório',
+                          min: { value: 0, message: 'O valor mínimo é 0' },
+                          max: { value: 9999, message: 'O valor máximo é 9999' },
+                        })}
                       />
                       {errors.numberOfWorkers && (
                         <span className="text-xs text-red-500">
@@ -451,24 +482,25 @@ export default function CompanySites() {
 
                     <div className="space-y-2">
                       <label htmlFor="zone" className="block text-sm font-medium">
-                        {t('fields.zone')}:
+                        {t('fields.zone')}
                       </label>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
-                            className="w-full justify-between"
+                            className="w-24 justify-between font-normal"
                             disabled={isAdding}
                           >
-                            {watch("zone") || t('fields.zone')}
+                            {watch("zone") ? watch("zone") : <span className="text-gray-400 ">{t('fields.zone')}</span>}
                             <ChevronDown className="h-4 w-4 opacity-50" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-full">
+                        <DropdownMenuContent className="w-24">
                           {["1", "2", "3", "4", "5", "6"].map(z => (
                             <DropdownMenuItem
                               key={z}
                               onClick={() => setValue("zone", z, { shouldValidate: true })}
+                              className="font-normal"
                             >
                               {z}
                             </DropdownMenuItem>
@@ -486,44 +518,79 @@ export default function CompanySites() {
                       <label htmlFor="supervisorCode" className="block text-sm font-medium">
                         {t('fields.supervisorCode')}:
                       </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full justify-between"
-                            disabled={isAdding || loadingSupervisors}
-                          >
-                            {supervisors.find(sup => sup.code === watch("supervisorCode"))?.name || t('fields.supervisorCode')}
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0">
-                          <Command>
-                            <CommandInput placeholder="pesquisar por supervisor" />
-                            <CommandEmpty>{t('noResults')}</CommandEmpty>
-                            <CommandGroup className="max-h-64 overflow-y-auto">
-                              {supervisors.map(sup => (
-                                <CommandItem
-                                  key={sup.code}
-                                  value={sup.name}
-                                  onSelect={() => {
-                                    setValue("supervisorCode", sup.code, { shouldValidate: true });
-                                  }}
+                      {(() => {
+                        const [supervisorSearch, setSupervisorSearch] = useState("");
+                        const [showAllSupervisors, setShowAllSupervisors] = useState(false);
+                        const [dropdownOpen, setDropdownOpen] = useState(false);
+                        const filteredSupervisors = supervisorSearch
+                          ? supervisors.filter((sup) =>
+                            sup.name && sup.name.toLowerCase().includes(supervisorSearch.toLowerCase())
+                          )
+                          : supervisors;
+                        const visibleSupervisors = showAllSupervisors ? filteredSupervisors : filteredSupervisors.slice(0, 4);
+                        return (
+                          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+                            <DropdownMenuTrigger asChild>
+                              <div className="w-full">
+                                <Button
+                                  variant="outline"
+                                  className="w-full flex justify-between items-center font-normal"
+                                  style={{ minWidth: 0 }}
+                                  disabled={isAdding || loadingSupervisors}
                                 >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      watch("supervisorCode") === sup.code ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {sup.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                                  <span className="truncate text-left w-full">
+                                    {supervisors.find(sup => sup.code === watch("supervisorCode"))?.name || <span className="text-gray-400">{t('fields.supervisorCode')}</span>}
+                                  </span>
+                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-full min-w-[220px] max-w-[350px] p-0">
+                              <div className="p-2">
+                                <Input
+                                  placeholder="Pesquisar supervisor..."
+                                  value={supervisorSearch}
+                                  onChange={e => {
+                                    setSupervisorSearch(e.target.value);
+                                    setShowAllSupervisors(false);
+                                  }}
+                                  className="mb-2 h-7 text-sm ring-0 focus:ring-0 focus:outline-none focus:border-0"
+                                />
+                              </div>
+                              {visibleSupervisors.length > 0 ? (
+                                visibleSupervisors.map(sup => (
+                                  <DropdownMenuItem
+                                    key={sup.code}
+                                    onClick={() => {
+                                      setValue("supervisorCode", sup.code, { shouldValidate: true });
+                                      setSupervisorSearch("");
+                                      setShowAllSupervisors(false);
+                                      setDropdownOpen(false);
+                                    }}
+                                    className="font-normal"
+                                  >
+                                    {sup.name}
+                                  </DropdownMenuItem>
+                                ))
+                              ) : (
+                                <div className="text-center text-gray-400 py-2 text-sm select-none">Não encontrado</div>
+                              )}
+                              {!showAllSupervisors && filteredSupervisors.length > 4 && (
+                                <DropdownMenuItem
+                                  onClick={e => {
+                                    e.preventDefault();
+                                    setShowAllSupervisors(true);
+                                    setTimeout(() => setDropdownOpen(true), 0);
+                                  }}
+                                  className="text-blue-600 font-semibold bg-gray-50 text-sm justify-center"
+                                >
+                                  Ver mais
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        );
+                      })()}
                       {errors.supervisorCode && (
                         <span className="text-xs text-red-500">
                           {errors.supervisorCode.message as string}
@@ -570,67 +637,120 @@ export default function CompanySites() {
                   Editar Site
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                {selectedSite?.name
+                  {selectedSite?.name
                     ? ` ${selectedSite.name}`
                     : t("modals.editSite.title")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="grid grid-cols-1 gap-4 py-4 max-h-96 overflow-y-auto">
-                <div className="space-y-2">
-                  <label htmlFor="edit-name">{t('fields.name')}:</label>
-                  <Input id="edit-name" {...register("name")} />
-                  {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
+                <div className="grid grid-cols-1  gap-4 items-start">
+                  <div className="space-y-2 w-36">
+                    <label htmlFor="edit-costCenter">{t('fields.costCenter')}:</label>
+                    <Input
+                      id="edit-costCenter"
+                      maxLength={13}
+                      placeholder="Centro de custo"
+                      className={errors.costCenter ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}
+                      {...register("costCenter", {
+                        required: 'Campo obrigatório',
+                        minLength: { value: 1, message: 'Campo obrigatório' },
+                        maxLength: { value: 13, message: 'Máximo 13 caracteres' },
+                        pattern: { value: /^[A-Za-z0-9]+$/, message: 'Apenas letras e números' },
+                      })}
+                    />
+                    {errors.costCenter && <span className="text-xs text-red-500">{errors.costCenter.message as string}</span>}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="edit-name">{t('fields.name')}:</label>
+                    <Input
+                      id="edit-name"
+                      maxLength={50}
+                      placeholder="Nome"
+                      className={errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}
+                      onKeyDown={e => {
+                        const input = e.target as HTMLInputElement;
+                        if (input.value.length >= 50 && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      {...register("name", {
+                        required: 'Campo obrigatório',
+                        minLength: { value: 1, message: 'Campo obrigatório' },
+                        maxLength: { value: 50, message: 'Máximo 50 caracteres' },
+                      })}
+                    />
+                    {errors.name && <span className="text-xs text-red-500">{errors.name.message as string}</span>}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="edit-address">{t('fields.address')}:</label>
+                    <Input
+                      id="edit-address"
+                      placeholder="Endereço"
+                      className={errors.address ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}
+                      {...register("address", {
+                        required: 'Campo obrigatório',
+                        minLength: { value: 1, message: 'Campo obrigatório' },
+                      })}
+                    />
+                    {errors.address && <span className="text-xs text-red-500">{errors.address.message as string}</span>}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-address">{t('fields.address')}:</label>
-                  <Input id="edit-address" {...register("address")} />
-                  {errors.address && <span className="text-xs text-red-500">{errors.address.message as string}</span>}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-costCenter">{t('fields.costCenter')}:</label>
-                  <Input id="edit-costCenter" maxLength={13} {...register("costCenter")} />
-                  {errors.costCenter && <span className="text-xs text-red-500">{errors.costCenter.message as string}</span>}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-numberOfWorkers">{t('fields.numberOfWorkers')}:</label>
-                  <Input id="edit-numberOfWorkers" type="number" min={1} max={9999} style={{ width: 80 }} {...register("numberOfWorkers", { valueAsNumber: true })} />
-                  {errors.numberOfWorkers && <span className="text-xs text-red-500">{errors.numberOfWorkers.message as string}</span>}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-supervisorCode">{t('fields.supervisorCode')}:</label>
-                  <Select
-                    value={watch("supervisorCode")}
-                    onValueChange={v => setValue("supervisorCode", v, { shouldValidate: true })}
-                    disabled={isUpdating || loadingSupervisors}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t('fields.supervisorCode')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supervisors.map(sup => (
-                        <SelectItem key={sup.code} value={sup.code}>{sup.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.supervisorCode && <span className="text-xs text-red-500">{errors.supervisorCode.message as string}</span>}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="edit-zone">{t('fields.zone')}:</label>
-                  <Select
-                    value={watch("zone")}
-                    onValueChange={v => setValue("zone", v, { shouldValidate: true })}
-                    disabled={isUpdating}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t('fields.zone')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["1", "2", "3", "4", "5", "6"].map(z => (
-                        <SelectItem key={z} value={z}>{z}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.zone && <span className="text-xs text-red-500">{errors.zone.message as string}</span>}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-2">
+                  <div className="space-y-2">
+                    <label htmlFor="edit-numberOfWorkers" className="block text-sm font-medium">{t('fields.numberOfWorkers')}:</label>
+                    <Input
+                      id="edit-numberOfWorkers"
+                      type="number"
+                      min={1}
+                      max={9999}
+                      style={{ width: 80 }}
+                      className={errors.numberOfWorkers ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}
+                      placeholder="Nº de trabalhadores"
+                      {...register("numberOfWorkers", {
+                        valueAsNumber: true,
+                        required: 'Campo obrigatório',
+                        min: { value: 1, message: 'O valor mínimo é 1' },
+                        max: { value: 9999, message: 'O valor máximo é 9999' },
+                      })}
+                    />
+                    {errors.numberOfWorkers && <span className="text-xs text-red-500">{errors.numberOfWorkers.message as string}</span>}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="edit-zone" className="block text-sm font-medium">{t('fields.zone')}</label>
+                    <Select
+                      value={watch("zone")}
+                      onValueChange={v => setValue("zone", v, { shouldValidate: true })}
+                      disabled={isUpdating}
+                    >
+                      <SelectTrigger className={`w-24 justify-between font-normal ${errors.zone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                        <SelectValue placeholder={t('fields.zone')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["1", "2", "3", "4", "5", "6"].map(z => (
+                          <SelectItem key={z} value={z}>{z}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.zone && <span className="text-xs text-red-500">{errors.zone.message as string}</span>}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="edit-supervisorCode" className="block text-sm font-medium">{t('fields.supervisorCode')}:</label>
+                    <Select
+                      value={watch("supervisorCode")}
+                      onValueChange={v => setValue("supervisorCode", v, { shouldValidate: true })}
+                      disabled={isUpdating || loadingSupervisors}
+                    >
+                      <SelectTrigger className={`w-full ${errors.supervisorCode ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                        <SelectValue placeholder={t('fields.supervisorCode')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supervisors.map(sup => (
+                          <SelectItem key={sup.code} value={sup.code}>{sup.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.supervisorCode && <span className="text-xs text-red-500">{errors.supervisorCode.message as string}</span>}
+                  </div>
                 </div>
               </div>
               <AlertDialogFooter>

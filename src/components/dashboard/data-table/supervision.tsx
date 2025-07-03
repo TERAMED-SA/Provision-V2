@@ -247,6 +247,9 @@ export function NewSupervionTable() {
             enableDateFilter: true,
             enableColumnVisibility: true,
             enableColumnFilters: true,
+            enableExportButton: true,
+            exportButtonLabel: "Exportar Excel",
+            exportFileName: "supervisao.xlsx",
           }}
           date={date}
           setDate={setDate}

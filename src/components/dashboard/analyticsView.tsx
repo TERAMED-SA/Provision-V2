@@ -3,7 +3,7 @@
 import { useCallback,  useState, useMemo } from "react"
 import { format, startOfDay, endOfDay, subDays, startOfWeek, startOfMonth } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import {  Activity, Shield, AlertTriangle, BarChart3 } from "lucide-react"
+import {  Activity, Shield, AlertTriangle,  FileSpreadsheet } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart"
 import { Card, CardContent,  CardHeader } from "../ui/card"
@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { useTranslations } from "next-intl"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { useSupervisionStore } from "@/hooks/useDataStore"
+import * as XLSX from "xlsx"
 
 interface ChartData {
   hour: string;
@@ -26,12 +27,17 @@ interface BaseItem {
   name?: string;
 }
 
-function LoadingSpinner() {
+function LoadingSkeleton() {
   return (
-    <div className="flex h-[340px] w-full items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 h-10 w-10" />
-        <span className="text-sm text-blue-700 font-medium">A carregar dados...</span>
+    <div className="h-[140px] w-full flex items-center justify-center">
+      <div className="w-full">
+        <div className="flex flex-col h-full justify-between">
+          <div className="flex items-center justify-between mb-6">
+            <div className="h-4 w-32 bg-gray-200 rounded-lg animate-pulse" />
+          </div>
+          <div className="h-4 w-1/2 bg-gray-200 rounded-lg animate-pulse mb-4" />
+          <div className="h-12 w-full bg-gray-200 rounded-xl animate-pulse" />
+        </div>
       </div>
     </div>
   )
@@ -64,7 +70,7 @@ function ModernChart({ data, loading, timeFilter }: {
   const lightColor = '#dbeafe'
 
   if (loading) {
-    return <LoadingSpinner />
+    return <LoadingSkeleton />
   }
 
   const maxValue = Math.max(...data.map(d => (d.supervisions ?? d.occurrences ?? 0)), 8)
@@ -341,11 +347,14 @@ export default function AnalyticsView() {
 
         <Card className="bg-white shadow rounded-lg">
           <CardHeader className="pb-2">
-            <div className="flex flex-row items-center gap-2 mb-1">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <span className="text-base font-semibold text-blue-700">
-                {t('supervisions.title', { default: 'Supervisões' })}
-              </span>
+            <div className="flex flex-row items-center justify-between gap-2 mb-1">
+              <div className="flex flex-row items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-600" />
+                <span className="text-base font-semibold text-blue-700">
+                  {t('supervisions.title', { default: 'Supervisões' })}
+                </span>
+              </div>
+
             </div>
             <span className="text-sm text-gray-500 mb-2">{getPeriodTitle(supervisionsTimeFilter)}</span>
             <FilterTabs
@@ -364,14 +373,16 @@ export default function AnalyticsView() {
           </CardContent>
         </Card>
 
-
         <Card className="bg-white shadow rounded-lg">
           <CardHeader className="pb-2">
-            <div className="flex flex-row items-center gap-2 mb-1">
-              <AlertTriangle className="h-5 w-5 text-blue-600" />
-              <span className="text-base font-semibold text-blue-700">
-                {t('occurrences.title', { default: 'Ocorrências' })}
-              </span>
+            <div className="flex flex-row items-center justify-between gap-2 mb-1">
+              <div className="flex flex-row items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-blue-600" />
+                <span className="text-base font-semibold text-blue-700">
+                  {t('occurrences.title', { default: 'Ocorrências' })}
+                </span>
+              </div>
+
             </div>
             <span className="text-sm text-gray-500 mb-2">{getPeriodTitle(occurrencesTimeFilter)}</span>
             <FilterTabs
@@ -393,7 +404,6 @@ export default function AnalyticsView() {
     </div>
   )
 }
-
 
 function FilterTabs({ value, onChange, data }: {
   value: string,
@@ -450,7 +460,7 @@ function FilterTabs({ value, onChange, data }: {
               value={filter.key}
               className={`
                 transition-all duration-200
-                data-[state=active]:bg-blue-700
+                data-[state=active]:bg-blue-500
                 data-[state=active]:text-white
                 text-xs rounded-lg px-2 py-1
                 border-0 hover:bg-blue-50
