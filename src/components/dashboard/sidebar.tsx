@@ -4,7 +4,6 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import {
   Home,
-  Users,
   MapPin,
   MessageSquare,
   Building2,
@@ -12,7 +11,6 @@ import {
   Shield,
   Settings,
   ChevronDown,
-  Globe,
   User,
   AlertTriangle,
 } from "lucide-react"
@@ -102,8 +100,6 @@ export function Sidebar({
           label: t("Configuracoes"),
           items: [
             { title: t("Clientes"), href: "/dashboard/configuracoes/clientes", icon: Building2 },
-            { title: t("Utilizadores"), href: "/dashboard/configuracoes/utilizadores", icon: Users },
-            { title: t("Zona"), href: "/dashboard/configuracoes/zona", icon: Globe },
             { title: t("Perfil"), href: "/dashboard/configuracoes/perfil", icon: User },
           ],
         },

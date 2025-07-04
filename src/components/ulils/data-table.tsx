@@ -87,7 +87,7 @@ export function DataTable<TData, TValue>({
 
   const [pageWindow, setPageWindow] = useState(0)
   const pageWindowSize = 3
-
+const MIN_COLUMN_WIDTH = 80;
   const table = useReactTable({
     data,
     columns,
@@ -127,52 +127,81 @@ export function DataTable<TData, TValue>({
     }
   }, [date]);
 
-  // Função para determinar largura inicial da coluna
-  const getInitialColumnWidth = (columnId: string) => {
+  // Definir larguras fixas para colunas específicas
+  const getFixedColumnWidth = (columnId: string): number => {
     const lowerCaseColumnId = columnId.toLowerCase();
-    // Para colunas de data/hora, largura fixa de 200px
-    if (
-      lowerCaseColumnId.includes('date') ||
-      lowerCaseColumnId.includes('createdat') ||
-      lowerCaseColumnId.includes('updatedat') ||
-      lowerCaseColumnId.includes('hora') ||
-      lowerCaseColumnId.includes('time')
-    ) {
-      return 55;
+    
+    // Larguras fixas para colunas específicas
+    const fixedWidths: Record<string, number> = {
+      // Colunas de data/hora - largura fixa de 200px
+      'date': 30,
+      'createdat': 30,
+      'updatedat': 30,
+      'createdat_time': 23,
+      'updatedat_time': 23,
+      'createdattime': 30,
+      'updatedattime': 30,
+      'data':30,
+      'hora': 20,
+      'time': 20,
+      'timestamp': 20,
+      'actions': 30,
+      'action': 30,
+      'clientcode': 30,
+      'codigo': 30,
+      'id': 80,
+      'status': 120,
+      'priority': 100,
+      'prioridade': 100,
+    };
+
+    // Verificar se a coluna tem largura fixa definida
+    for (const [key, width] of Object.entries(fixedWidths)) {
+      if (lowerCaseColumnId.includes(key)) {
+        return width;
+      }
     }
-    if (lowerCaseColumnId.includes('clientcode')) {
-      return 40;
-    }
-    if (lowerCaseColumnId.includes('actions')) {
-      return 65;
-    }
-    return 120; // largura padrão
+    
+    // Largura padrão para outras colunas
+    return 150;
+  };
+
+  // Função para determinar se uma coluna deve ter largura fixa
+  const isFixedWidthColumn = (columnId: string): boolean => {
+    const lowerCaseColumnId = columnId.toLowerCase();
+    const fixedColumnPatterns = [
+      'date', 'createdat', 'updatedat', 'createdattime', 'updatedattime',
+      'data', 'hora', 'time', 'timestamp', 'actions', 'action', 'acoes', 'acao'
+    ];
+    
+    return fixedColumnPatterns.some(pattern => lowerCaseColumnId.includes(pattern));
   };
 
   // Função para inicializar larguras das colunas
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
     table.getAllColumns().forEach(column => {
-      if (!columnWidths[column.id]) {
-        initialWidths[column.id] = getInitialColumnWidth(column.id);
-      }
+      initialWidths[column.id] = getFixedColumnWidth(column.id);
     });
-    if (Object.keys(initialWidths).length > 0) {
-      setColumnWidths(prev => ({ ...prev, ...initialWidths }));
-    }
+    setColumnWidths(initialWidths);
   }, [table.getAllColumns().length]);
 
-  // Função para iniciar redimensionamento
+  // Função para iniciar redimensionamento (apenas para colunas não fixas)
   const handleMouseDown = (e: React.MouseEvent, columnId: string) => {
+    // Não permitir redimensionamento de colunas fixas
+    if (isFixedWidthColumn(columnId)) {
+      return;
+    }
+    
     e.preventDefault();
     setIsResizing(columnId);
     
     const startX = e.clientX;
-    const startWidth = columnWidths[columnId] || getInitialColumnWidth(columnId);
+    const startWidth = columnWidths[columnId] || getFixedColumnWidth(columnId);
 
     const handleMouseMove = (e: MouseEvent) => {
       const diff = e.clientX - startX;
-      const newWidth = Math.max(20, startWidth + diff); // largura mínima de 50px
+      const newWidth = Math.max(50, startWidth + diff); // largura mínima de 50px
       setColumnWidths(prev => ({ ...prev, [columnId]: newWidth }));
     };
 
@@ -314,61 +343,72 @@ export function DataTable<TData, TValue>({
       </div>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div className="relative overflow-x-auto">
-          <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden min-w-full">
+          <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden">
             <div className="w-full" ref={tableRef}>
-              <Table className="bg-white dark:bg-gray-900" style={{ tableLayout: 'fixed' }}>
+              <Table className="bg-white dark:bg-gray-900" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <TableHeader className="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <>
                       <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                        {headerGroup.headers.map((header, idx) => (
-                          <TableHead
-                            key={header.id}
-                            className="py-0 px-2 text-sm text-center text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto relative"
-                            style={{
-                              width: columnWidths[header.id] || getInitialColumnWidth(header.id),
-                              minWidth: 10,
-                              maxWidth: 300,
-                              transition: isResizing === header.id ? 'none' : 'width 0.2s',
-                              cursor: idx !== headerGroup.headers.length - 1 ? 'col-resize' : 'default',
-                            }}
-                          >
-                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                            {idx !== headerGroup.headers.length - 1 && (
-                              <span
-                                onMouseDown={e => handleMouseDown(e, header.id)}
-                                className="absolute top-0 right-0 h-full w-2 cursor-col-resize z-10"
-                                style={{ userSelect: 'none' }}
-                              >
-                                <GripVertical className="mx-auto text-gray-300" size={14} />
-                              </span>
-                            )}
-                          </TableHead>
-                        ))}
+                        {headerGroup.headers.map((header, idx) => {
+                          const columnWidth = columnWidths[header.id] || getFixedColumnWidth(header.id);
+                          const isFixed = isFixedWidthColumn(header.id);
+                          
+                          return (
+                            <TableHead
+                              key={header.id}
+                              className="py-0 px-2 text-sm text-center text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap relative"
+                              style={{
+                                width: `${columnWidth}px`,
+                                minWidth: `${Math.max(MIN_COLUMN_WIDTH, columnWidth)}px`,
+                                maxWidth: `${columnWidth}px`,
+                                cursor: isFixed ? 'default' : 'col-resize',
+                              }}
+                            >
+                              {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                              {idx !== headerGroup.headers.length - 1 && !isFixed && (
+                                <span
+                                  onMouseDown={e => handleMouseDown(e, header.id)}
+                                  className="absolute top-0 right-0 h-full w-2 cursor-col-resize z-10 hover:bg-blue-200 dark:hover:bg-blue-800"
+                                  style={{ userSelect: 'none' }}
+                                >
+                                  <GripVertical className="mx-auto text-gray-400 hover:text-blue-600" size={12} />
+                                </span>
+                              )}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                       <TableRow key={headerGroup.id + '-filter'} className="hover:bg-transparent">
-                        {headerGroup.headers.map((header) => (
-                          <TableHead
-                            key={header.id + '-filter'}
-                            className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
-                            style={header.column.columnDef.size ? { minWidth: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size, maxWidth: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size, width: typeof header.column.columnDef.size === 'number' ? `${header.column.columnDef.size}px` : header.column.columnDef.size } : {}}
-                          >
-                            {header.column.getCanFilter() ? (
-                              <div className="flex items-center gap-2">
-                                <Filter size="small" className="w-4 h-4 text-gray-400" />
-                                <input
-                                  type="text"
-                                  value={
-                                    String(header.column.getFilterValue() ?? '')
-                                  }
-                                  onChange={e => header.column.setFilterValue(e.target.value)}
-                                  className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-300 p-0 m-0"
-                                  style={{ boxShadow: 'none', borderRadius: 0 }}
-                                />
-                              </div>
-                            ) : null}
-                          </TableHead>
-                        ))}
+                        {headerGroup.headers.map((header) => {
+                          const columnWidth = columnWidths[header.id] || getFixedColumnWidth(header.id);
+                          
+                          return (
+                            <TableHead
+                              key={header.id + '-filter'}
+                              className="py-0 px-2 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50"
+                              style={{
+                                width: `${columnWidth}px`,
+                                minWidth: `${columnWidth}px`,
+                                maxWidth: `${columnWidth}px`,
+                              }}
+                            >
+                              {header.column.getCanFilter() ? (
+                                <div className="flex items-center gap-1">
+                                  <Filter size={12} className="text-gray-400 flex-shrink-0" />
+                                  <input
+                                    type="text"
+                                    value={String(header.column.getFilterValue() ?? '')}
+                                    onChange={e => header.column.setFilterValue(e.target.value)}
+                                    className="w-full bg-transparent border-none outline-none text-xs text-gray-700 dark:text-gray-300 p-0 m-0"
+                                    style={{ boxShadow: 'none', borderRadius: 0 }}
+                                    placeholder="Filtrar..."
+                                  />
+                                </div>
+                              ) : null}
+                            </TableHead>
+                          );
+                        })}
                       </TableRow>
                     </>
                   ))}
@@ -377,11 +417,22 @@ export function DataTable<TData, TValue>({
                   {(loading || isFiltering) ? (
                     Array.from({ length: 5 }).map((_, index) => (
                       <TableRow key={index} className="animate-pulse h-10">
-                        {columns.map((_, colIndex) => (
-                          <TableCell key={colIndex} className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap" style={{ width: typeof columns[colIndex].size === 'number' ? `${columns[colIndex].size}px` : columns[colIndex].size }}>
-                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-                          </TableCell>
-                        ))}
+                        {table.getAllColumns().map((column) => {
+                          const columnWidth = columnWidths[column.id] || getFixedColumnWidth(column.id);
+                          return (
+                            <TableCell 
+                              key={column.id} 
+                              className="py-2 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap" 
+                              style={{
+                                width: `${columnWidth}px`,
+                                minWidth: `${columnWidth}px`,
+                                maxWidth: `${columnWidth}px`,
+                              }}
+                            >
+                              <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     ))
                   ) : table.getRowModel().rows?.length ? (
@@ -394,17 +445,23 @@ export function DataTable<TData, TValue>({
                         style={{ cursor: handleViewDetails ? 'pointer' : 'default' }}
                       >
                         {row.getVisibleCells().map((cell) => {
-                          // Alinhar à direita se for coluna de data/hora, senão à esquerda
-                          const isRightAligned = ["createdAt", "createdAtTime"].includes(cell.column.id);
+                          const columnWidth = columnWidths[cell.column.id] || getFixedColumnWidth(cell.column.id);
+                          const isRightAligned = ["createdAt", "createdAtTime", "updatedAt", "updatedAtTime"].includes(cell.column.id);
+                          
                           return (
                             <TableCell
                               key={cell.id}
-                              className={`py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto ${isRightAligned ? 'text-right' : 'text-left'}`}
+                              className={`py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap ${isRightAligned ? 'text-right' : 'text-left'}`}
+                              style={{
+                                width: `${columnWidth}px`,
+                                minWidth: `${columnWidth}px`,
+                                maxWidth: `${columnWidth}px`,
+                              }}
                               title={String(cell.getValue() ?? '')}
                             >
-                              <span className="block overflow-hidden text-ellipsis whitespace-nowrap" title={String(cell.getValue() ?? '')}>
+                              <div className="overflow-hidden text-ellipsis whitespace-nowrap" title={String(cell.getValue() ?? '')}>
                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                              </span>
+                              </div>
                             </TableCell>
                           );
                         })}

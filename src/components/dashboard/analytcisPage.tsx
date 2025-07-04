@@ -31,7 +31,7 @@ const months = [
   { value: "11", label: "Dezembro" },
 ]
 
-const years = Array.from({ length: 5 }, (_, i) => {
+const years = Array.from({ length: 3 }, (_, i) => {
   const year = new Date().getFullYear() - i
   return { value: year.toString(), label: year.toString() }
 })
@@ -225,15 +225,14 @@ function useUsersQuery() {
   })
 }
 
-// Novo hook para controlar expansão incremental
-function useExpandIncremental(total: number, initial: number, step: number) {
+// Novo hook para controlar expansão incremental (máximo 10)
+function useExpandIncremental(total: number, initial: number, step: number, max: number) {
   const [count, setCount] = useState(initial)
-  const canExpand = count < total
-  const canCollapse = count > initial
-  const showCount = Math.min(count, total)
-  const expand = () => setCount((c) => Math.min(c + step, total))
-  const collapse = () => setCount(initial)
-  return { showCount, canExpand, canCollapse, expand, collapse }
+  const limit = Math.min(total, max)
+  const canExpand = count < limit
+  const showCount = Math.min(count, limit)
+  const expand = () => setCount((c) => Math.min(c + step, limit))
+  return { showCount, canExpand, expand }
 }
 
 export default function AnalyticsDashboard() {
@@ -445,9 +444,9 @@ export default function AnalyticsDashboard() {
     XLSX.writeFile(wb, fileName)
   }
 
-  // Controle de expansão incremental
-  const clientesExpand = useExpandIncremental(data?.clientes.length || 0, 6, 4)
-  const supervisaoExpand = useExpandIncremental(data?.supervisao.length || 0, 6, 4)
+  // Controle de expansão incremental (agora sem colapsar)
+  const clientesExpand = useExpandIncremental(data?.clientes.length || 0, 6, 4, 10)
+  const supervisaoExpand = useExpandIncremental(data?.supervisao.length || 0, 6, 4, 10)
 
   return (
     <div className="container mx-auto  space-y-6">
@@ -519,22 +518,18 @@ export default function AnalyticsDashboard() {
               <AnalyticsCard
                 title="Clientes com Mais Sites"
                 description={`Clientes com maior número de sites atrelados - ${periodLabel}`}
-                data={data.clientes.slice(0, clientesExpand.showCount).map(item => ({ ...item, fill: '#FF8800' }))}
+                data={data.clientes.slice(0, clientesExpand.showCount).map((item , idx , arr)=> ({ ...item, 
+                  fill: idx === 0 && arr.length > 0 && item.value === Math.max(...arr.map(i => i.value)) ? '#22c55e' : '#FF8800'}))}
                 type="clientes"
                 maxBars={clientesExpand.showCount}
                 renderBarLabel
                 customTooltip={ClientTooltipContent}
               >
-                {(data.clientes.length > 6) && (
+                {(data.clientes.length > clientesExpand.showCount) && (
                   <div className="flex justify-end gap-2 mt-2">
                     {clientesExpand.canExpand && (
                       <Button variant="ghost" size="sm" onClick={clientesExpand.expand}>
-                        Mostrar mais
-                      </Button>
-                    )}
-                    {clientesExpand.canCollapse && (
-                      <Button variant="ghost" size="sm" onClick={clientesExpand.collapse}>
-                        Colapsar
+                        Ver mais
                       </Button>
                     )}
                   </div>
@@ -547,7 +542,7 @@ export default function AnalyticsDashboard() {
                 description={`Quantidade de supervisões realizadas por site no período selecionado (${periodLabel})`}
                 data={data.supervisao.slice(0, supervisaoExpand.showCount).map((item, idx, arr) => ({
                   ...item,
-                  fill: idx === 0 && arr.length > 0 && item.value === Math.max(...arr.map(i => i.value)) ? '#22c55e' : '#FF8800',
+                  fill: idx === 0 && arr.length > 0 && item.value === Math.max(...arr.map(i => i.value)) ? '#22c55e' : '#FF8800'
                 }))}
                 type="supervisao"
                 formatValue={(value) => `${value}%`}
@@ -555,16 +550,11 @@ export default function AnalyticsDashboard() {
                 renderBarLabel
                 customTooltip={SupervisionTooltipContent}
               >
-                {(data.supervisao.length > 6) && (
+                {(data.supervisao.length > supervisaoExpand.showCount) && (
                   <div className="flex justify-end gap-2 mt-2">
                     {supervisaoExpand.canExpand && (
                       <Button variant="ghost" size="sm" onClick={supervisaoExpand.expand}>
-                        Mostrar mais
-                      </Button>
-                    )}
-                    {supervisaoExpand.canCollapse && (
-                      <Button variant="ghost" size="sm" onClick={supervisaoExpand.collapse}>
-                        Colapsar
+                        Ver mais
                       </Button>
                     )}
                   </div>

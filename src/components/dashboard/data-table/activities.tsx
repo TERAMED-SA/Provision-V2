@@ -64,8 +64,9 @@ export function ActivityTable() {
   const columns: ColumnDef<Notification>[] = [
     {
       accessorKey: "createdAt",
-      header: "Data",
-      cell: ({ row }) => <span className="text-sm">{row.getValue("createdAt")}</span>,
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Data</span>
+        ),
     },
     {
       id: "createdAtTime",
@@ -74,7 +75,7 @@ export function ActivityTable() {
         const createdAtDate = row.original.createdAtDate
         return <span >{format(createdAtDate, "HH:mm")}</span>
       },
-      size: 60,
+
     },
     {
       id: "siteName",

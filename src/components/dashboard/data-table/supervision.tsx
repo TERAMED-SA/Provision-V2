@@ -183,14 +183,14 @@ export function NewSupervionTable() {
           const rowValue = (row.getValue(id) as string).trim().toLowerCase();
           return rowValue.includes(filter);
         },
-        size: 90,
+    
       },
       {
         accessorKey: "createdAtTime",
         header: ({ column }: { column: any }) => (
           <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Hora</span>
         ),
-        size: 60,
+  
       },
       {
         accessorKey: "siteName",
@@ -203,7 +203,7 @@ export function NewSupervionTable() {
           const rowValue = (row.getValue(id) as string).trim().toLowerCase();
           return rowValue.includes(filter);
         },
-        size: 160,
+     
       },
       {
         accessorKey: "supervisorName",
@@ -216,7 +216,6 @@ export function NewSupervionTable() {
           const rowValue = (row.getValue(id) as string).trim().toLowerCase();
           return rowValue.includes(filter);
         },
-        size: 160,
       },
       {
         accessorKey: "time",
@@ -227,7 +226,6 @@ export function NewSupervionTable() {
           const value = row.getValue("time") as string
           return value || "-"
         },
-        size: 80,
       },
     ],
     [handleViewDetails],
