@@ -72,15 +72,15 @@ function SimpleMetricsCard({
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-500 ease-out transform ${
+      className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-4 transition-all duration-500 ease-out transform ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
-      } hover:shadow-md hover:border-gray-200`}
+      } hover:shadow-md hover:border-gray-200 dark:hover:border-gray-500`}
     >
       <div className="flex flex-row items-center gap-4 mb-3">
         <div className={`p-2 rounded-lg ${colorClasses[color as keyof typeof colorClasses]}`}>{icon}</div>
         <div className="flex flex-col flex-1">
-          <h3 className="text-sm font-medium text-gray-600">Total de {title}</h3>
-          <p className="text-2xl font-bold text-gray-900">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Total de {title}</h3>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {typeof value === "number" ? value.toLocaleString("pt-BR") : value}
           </p>
         </div>
@@ -100,14 +100,13 @@ function LoadingSkeleton() {
   return (
     <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all duration-500 ease-out transform hover:shadow-md hover:border-gray-200">
+        <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-4 transition-all duration-500 ease-out transform hover:shadow-md hover:border-gray-200 dark:hover:border-gray-500">
           <div className="flex flex-row items-center gap-4 mb-3">
             <div className="p-2 rounded-lg bg-gray-200 h-10 w-10 animate-pulse"></div>
             <div className="flex flex-col flex-1">
               <div className="h-4 w-24 bg-gray-200 rounded mb-2 animate-pulse"></div>
               <div className="h-7 w-16 bg-gray-200 rounded animate-pulse"></div>
             </div>
-            <div className="h-4 w-10 bg-gray-200 rounded animate-pulse"></div>
           </div>
         </div>
       ))}
@@ -147,8 +146,8 @@ export default function SimpleMetricsCards() {
   if (error) {
     return (
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <div className="col-span-full flex flex-col items-center justify-center p-8 bg-white rounded-xl border border-gray-100">
-          <p className="text-red-500 mb-4">{error}</p>
+        <div className="col-span-full flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
           <button
             onClick={fetchMetrics}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
@@ -162,9 +161,9 @@ export default function SimpleMetricsCards() {
 
   if (!metrics) {
     return (
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <div className="col-span-full flex items-center justify-center p-8 bg-white rounded-xl border border-gray-100">
-          <p className="text-gray-600">Nenhum dado disponível</p>
+      <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+        <div className="col-span-full flex items-center justify-center p-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <p className="text-gray-600 dark:text-gray-300">Nenhum dado disponível</p>
         </div>
       </div>
     )

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Edit, MapPin, Trash2 } from "lucide-react";
+import { Edit, MapPin, Trash2, Loader2, Plus } from "lucide-react";
 import { DataTable } from "../../ulils/data-table";
 import { SupervisorAddForm } from "../supervisor/supervision-Add-Form";
 import { SupervisorEditForm } from "../supervisor/supervision-edit";
@@ -20,14 +20,21 @@ import {
 } from "../../ui/alert-dialog";
 import type { Supervisor } from "@/features/application/domain/entities/Supervisor";
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "../../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
+import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
 export function SupervisorTable() {
   const t = useTranslations("supervisors");
@@ -39,7 +46,6 @@ export function SupervisorTable() {
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [sites, setSites] = React.useState<any[]>([]);
   const [isSitesDialogOpen, setIsSitesDialogOpen] = React.useState(false);
-  const [companyInfo, setCompanyInfo] = React.useState<any | null>(null);
   const [sitesLoading, setSitesLoading] = React.useState(false);
   const [siteSearch, setSiteSearch] = React.useState("");
   const [selectedSupervisorName, setSelectedSupervisorName] =
@@ -48,6 +54,10 @@ export function SupervisorTable() {
     React.useState<Supervisor | null>(null);
   const [isSupervisorDialogOpen, setIsSupervisorDialogOpen] =
     React.useState(false);
+  const [selectedSite, setSelectedSite] = React.useState<any | null>(null);
+  const [selectedSupervisorToAssign, setSelectedSupervisorToAssign] =
+    React.useState<Supervisor | null>(null);
+  const [assigningSite, setAssigningSite] = React.useState(false);
 
   const handleAddClick = () => {
     setIsAddDialogOpen(true);
@@ -87,16 +97,15 @@ export function SupervisorTable() {
   const updateSupervisor = async (supervisor: Supervisor) => {
     setLoading(true);
     try {
-      const userPayload = {
+      const userPayload: any = {
         name: supervisor.name,
         email: supervisor.email,
         address: supervisor.address,
-        gender:
-          (supervisor as any).gender && (supervisor as any).gender.trim() !== ""
-            ? (supervisor as any).gender
-            : "M",
         phoneNumber: supervisor.phoneNumber,
       };
+      if ((supervisor as any).gender && (supervisor as any).gender.trim() !== "") {
+        userPayload.gender = (supervisor as any).gender;
+      }
       await userAdapter.updateUser(supervisor._id, userPayload);
       await fetchSupervisors();
       toast.success("Supervisor atualizado com sucesso");
@@ -263,34 +272,34 @@ export function SupervisorTable() {
           <div className="flex gap-2">
             <span
               title={t("edit")}
-              className="cursor-pointer"
               onClick={(e) => {
-                e.stopPropagation(); // Impede a propagação do evento
+                e.stopPropagation();
                 handleEditSupervisor(supervisor);
               }}
+             className=" hover:bg-blue-100 cursor-pointer rounded transition-colors"
             >
-              <Edit className="h-4 w-4" />
+           <Edit className="h-3.5 w-3.5 text-blue-600" />
             </span>
             <span
               title="Ver Sites"
               className="cursor-pointer"
               onClick={(e) => {
-                e.stopPropagation(); // Impede a propagação do evento
+                e.stopPropagation(); 
                 handleFetchSupervisorSites(supervisor.employeeId);
               }}
             >
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-3.5 w-3.5" />
             </span>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <span
                   title={t("delete")}
-                  className="cursor-pointer text-red-600"
                   onClick={(e) => {
-                    e.stopPropagation(); // Impede a propagação do evento
+                    e.stopPropagation(); 
                   }}
-                >
-                  <Trash2 className="h-4 w-4" />
+                  className="rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                 </span>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -316,7 +325,6 @@ export function SupervisorTable() {
           </div>
         );
       },
-      size: 80,
     },
   ];
 
@@ -329,8 +337,6 @@ export function SupervisorTable() {
           loading={loading}
           title={t("title")}
           filterOptions={{
-            enableNameFilter: true,
-            enableColumnVisibility: true,
             enableAddButton: true,
             addButtonLabel: t("add"),
           }}
@@ -357,6 +363,8 @@ export function SupervisorTable() {
           if (!open) {
             setSiteSearch("");
             setSelectedSupervisorName("");
+            setSelectedSite(null);
+            setSelectedSupervisorToAssign(null);
           }
         }}
       >
@@ -375,7 +383,7 @@ export function SupervisorTable() {
             <input
               type="text"
               className="w-full border rounded px-3 py-2 text-sm"
-              placeholder="Pesquisar por nome ou cost center..."
+              placeholder="Pesquisar por nome ou centro de custo..."
               value={siteSearch}
               onChange={(e) => {
                 setSiteSearch(e.target.value);
@@ -393,21 +401,25 @@ export function SupervisorTable() {
           ) : (
             <ul className="space-y-3 max-h-80 overflow-y-auto px-1">
               {filteredSites.map((site) => (
-                <li key={site._id} className="bg-white border rounded p-3">
+                <li
+                  key={site._id}
+                  className={`bg-white border rounded p-3 cursor-pointer ${selectedSite && selectedSite._id === site._id ? 'border-blue-500' : ''}`}
+                  onClick={() => setSelectedSite(site)}
+                >
                   <div className="font-bold text-primary text-base mb-1 flex items-center gap-2">
                     {site.name}
                   </div>
                   <div className="text-sm text-gray-700 space-y-1">
                     <div>
-                      <span className="font-semibold">Centro de Custo:</span>{" "}
+                      <span className="font-semibold">Centro de Custo:</span>{' '}
                       {site.costCenter || "N/A"}
                     </div>
                     <div>
-                      <span className="font-semibold">Nº Trabalhadores:</span>{" "}
+                      <span className="font-semibold">Nº Trabalhadores:</span>{' '}
                       {site.numberOfWorkers || "N/A"}
                     </div>
                     <div>
-                      <span className="font-semibold">Zona:</span>{" "}
+                      <span className="font-semibold">Zona:</span>{' '}
                       {site.zone || "N/A"}
                     </div>
                   </div>
@@ -415,10 +427,76 @@ export function SupervisorTable() {
               ))}
             </ul>
           )}
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium mb-1">Selecionar Supervisor para atribuir site</label>
+            <Select
+              value={selectedSupervisorToAssign?.employeeId || ''}
+              onValueChange={(value: string) => {
+                const sup = data.find(s => s.employeeId === value);
+                setSelectedSupervisorToAssign(sup || null);
+              }}
+            >
+              <SelectTrigger className="w-full border rounded px-3 py-2 text-sm">
+                <SelectValue placeholder="Selecione um supervisor" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                {data
+                  .filter(sup =>
+                    sup.name?.toLowerCase().includes(siteSearch.toLowerCase())
+                  )
+                  .map(sup => (
+                    <SelectItem key={sup.employeeId} value={sup.employeeId}>
+                      {sup.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            className="mt-4  bg-zinc-800 cursor-pointer text-white py-2 rounded disabled:opacity-50 flex items-center justify-center gap-2"
+            disabled={!selectedSite || !selectedSupervisorToAssign || assigningSite}
+            onClick={async () => {
+              if (!selectedSite || !selectedSupervisorToAssign) return;
+              setAssigningSite(true);
+              const selectedSiteDetails = sites.find(site => site._id === selectedSite._id);
+              const costCenter = selectedSiteDetails?.costCenter;
+              try {
+                const response = await userAdapter.assignSiteToSupervisor(selectedSupervisorToAssign.employeeId, costCenter);
+                if (response?.status === 200) {
+                  toast.success(response?.message || 'Supervisor atribuído com sucesso!');
+                  setSelectedSite(null);
+                  setSelectedSupervisorToAssign(null);
+                } else if (response?.status === 401 && response?.message) {
+                  toast.error(response.message);
+                } else {
+                  toast.error('Erro ao atribuir site ao supervisor');
+                }
+              } catch (error: any) {
+                const apiMsg = error?.response?.data?.message || error?.message || 'Erro ao atribuir site ao supervisor';
+                toast.error(apiMsg);
+              } finally {
+                setAssigningSite(false);
+              }
+            }}
+          >
+            {assigningSite ? (
+              <>
+                <Loader2 className="animate-spin h-4 w-4 mr-2 text-white" />
+                Atribuindo...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-1 text-white" />
+                Atribuir site ao supervisor
+              </>
+            )}
+          </Button>
         </DialogContent>
       </Dialog>
 
-      <Dialog
+          <Dialog
         open={isSupervisorDialogOpen}
         onOpenChange={setIsSupervisorDialogOpen}
       >

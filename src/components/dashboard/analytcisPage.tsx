@@ -109,10 +109,11 @@ function AnalyticsCard({
   const abbreviatedData = data.map(item => {
     let name = item.name
     if (type === 'clientes') {
-      name = item.name.split(" ")[0] // só o primeiro nome
+      const first = item.name.trim().split(/\s+/)[0]
+      name = first.length > 0 ? first : item.name
     } else {
-      const words = item.name.split(" ")
-      name = words.length <= 2 ? item.name : words.slice(0, 1).join("") + '...'
+      const words = item.name.trim().split(/\s+/)
+      name = words.length <= 1 ? item.name : words[0] + '...'
     }
     return {
       ...item,
@@ -145,7 +146,20 @@ function AnalyticsCard({
               height={Math.max(160, displayData.length * 32)}
               margin={{ left: 0, top: 10, bottom: 10 }}
             >
-              <YAxis dataKey="name" type="category" tickLine={false} tickMargin={10} axisLine={false} width={80} />
+              <YAxis
+                dataKey="name"
+                type="category"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                width={80}
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) =>
+                  typeof value === 'string' && value.length > 10
+                    ? value.slice(0, 7) + '...'
+                    : value
+                }
+              />
               <XAxis dataKey="value" type="number" hide />
               <ChartTooltip
                 cursor={false}
@@ -263,17 +277,14 @@ export default function AnalyticsDashboard() {
     })
   
 
-    // Clientes: agrupar por clientCode e somar sites ATIVOS no período
     const clientMap = new Map<string, { name: string, totalSites: number, topSupervisorName?: string, topZone?: string }>()
     companies.forEach(company => {
-      // Sites desse cliente no período
       const clientSites = sites.filter((site: any) => site.clientCode === company.clientCode && site.createdAt && (() => {
         const d = new Date(site.createdAt)
         return d.getMonth() === month && d.getFullYear() === year
       })())
-      if (clientSites.length === 0) return // Não mostra cliente sem site no período
+      if (clientSites.length === 0) return 
       const totalSites = clientSites.length
-      // Supervisor dominante
       const supervisorCount: Record<string, number> = {}
       clientSites.forEach((site: any) => {
         if (site.supervisorCode) {
@@ -288,13 +299,11 @@ export default function AnalyticsDashboard() {
           maxSup = count
         }
       }
-      // Mapear código para nome
       let topSupervisorName = ""
       if (topSupervisor) {
         const found = users.find((u: any) => u.employeeId === topSupervisor || u._id === topSupervisor)
         topSupervisorName = found ? found.name : topSupervisor
       }
-      // Zona dominante
       const zoneCount: Record<string, number> = {}
       clientSites.forEach((site: any) => {
         if (site.zone) {
@@ -354,7 +363,6 @@ export default function AnalyticsDashboard() {
       }
     })
     let supervisao = Array.from(supervisionMap.entries()).map(([name, obj]) => {
-      // Descobrir supervisor mais frequente
       let topSupervisor = ""
       let maxCount = 0
       for (const [supName, count] of Object.entries(obj.supervisorCount)) {
@@ -394,26 +402,18 @@ export default function AnalyticsDashboard() {
 
   const downloadExcel = () => {
     if (!data) return
-
-    // Criar workbook
     const wb = XLSX.utils.book_new()
-
-    // Helper para criar sheet com título estilizado e colunas organizadas
     function createSheetWithTitle(
       title: string,
       headers: string[],
       rows: (string | number)[][],
       colWidths: number[]
     ) {
-      // Título na primeira linha
       const sheetData = [[title], [], headers, ...rows]
       const ws = XLSX.utils.aoa_to_sheet(sheetData)
-      // Mesclar o título
       ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }]
-      // Ajustar largura das colunas
       ws['!cols'] = colWidths.map((w: number) => ({ wch: w }))
-      // Estilizar cabeçalho e título (apenas visual em apps que suportam)
-      ws['A1'].s = { font: { bold: true, sz: 24 } } // Título maior e negrito
+      ws['A1'].s = { font: { bold: true, sz: 24 } } 
       headers.forEach((_: string, i: number) => {
         const col = String.fromCharCode(65 + i)
         const cell = ws[col + '3']
@@ -444,7 +444,6 @@ export default function AnalyticsDashboard() {
     XLSX.writeFile(wb, fileName)
   }
 
-  // Controle de expansão incremental (agora sem colapsar)
   const clientesExpand = useExpandIncremental(data?.clientes.length || 0, 6, 4, 10)
   const supervisaoExpand = useExpandIncremental(data?.supervisao.length || 0, 6, 4, 10)
 
@@ -453,7 +452,7 @@ export default function AnalyticsDashboard() {
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Analytics</h1>
+          <h1 className="text-3xl font-bold">Análise</h1>
           <div onClick={downloadExcel}
           className="flex items-center gap-2 px-3 py-1 border border-gray-300 rounded-md text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
     >

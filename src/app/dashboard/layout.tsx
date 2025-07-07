@@ -1,9 +1,6 @@
 "use client";
 import Header from "@/components/dashboard/header/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import LoadingScreen from "@/components/ui/loadingScreen";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function useIsMobile() {
@@ -20,27 +17,11 @@ function useIsMobile() {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const router = useRouter();
   const isMobile = useIsMobile();
-  const { user, loading, isAuthenticated } = useAuth();
-
   const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated, router]);
-
-  if (loading) {
-    return <LoadingScreen message="Validando sessão do utilizador..." />;
-  }
-
-
 
   return (
     <div className="flex h-screen">
-    
       <Sidebar 
         collapsed={sidebarCollapsed} 
         isMobile={isMobile}
@@ -58,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             onOpenSheet={() => setIsSheetOpen(true)}
           />
         </div>
-        <main className="flex-1 overflow-y-auto  p-3 md:px-6 ">
+        <main className="flex-1 overflow-y-auto h-screen p-3 md:px-6 ">
           {children}
         </main>
       </div>

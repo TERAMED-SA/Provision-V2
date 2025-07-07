@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState} from "react"
 import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Shield, AlertTriangle, Download, Loader2 } from 'lucide-react'
@@ -9,9 +9,8 @@ import { useSupervisionData } from "@/hooks/useDataQueries"
 import { DataTable } from "@/components/ulils/data-table"
 import { GenericDetailModal } from "../generic-detail-modal"
 import { PDFDownloadLink } from "@react-pdf/renderer"
-import { OccurrencePDF } from "../pdf/occurrence-pdf"
-import { SupervisorPDF } from "../supervisor/supervisor-pdf"
-import { getPriorityLabel } from "./occurrence"
+import { extractColumnsForPDF, extractSectionsFromData, extractSectionsWithTranslations } from "@/lib/pdfUtils"
+import { GenericPDF } from "../pdf/genericPDF"
 
 
 export type Notification = {
@@ -28,6 +27,28 @@ export type Notification = {
   equipment: any[]
   workerInformation: any[]
   data: any
+}
+
+const sectionTranslations = {
+  equipment: {
+    title: "Equipamentos",
+    fields: {
+      name: "Nome",
+      serialNumber: "Número de Série",
+      state: "Estado",
+      costCenter: "Centro de Custo",
+      obs: "Observação"
+    }
+  },
+  workerInformation: {
+    title: "Trabalhadores",
+    fields: {
+      name: "Nome",
+      employeeNumber: "Matrícula",
+      state: "Estado",
+      obs: "Observação"
+    }
+  }
 }
 
 export function ActivityTable() {
@@ -64,9 +85,9 @@ export function ActivityTable() {
   const columns: ColumnDef<Notification>[] = [
     {
       accessorKey: "createdAt",
-        header: ({ column }: { column: any }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Data</span>
-        ),
+      header: ({ column }: { column: any }) => (
+        <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Data</span>
+      ),
     },
     {
       id: "createdAtTime",
@@ -75,13 +96,25 @@ export function ActivityTable() {
         const createdAtDate = row.original.createdAtDate
         return <span >{format(createdAtDate, "HH:mm")}</span>
       },
-
     },
     {
       id: "siteName",
       accessorKey: "siteName",
       header: "Site",
       cell: ({ row }) => <div className="text-sm">{row.getValue("siteName")}</div>,
+    },
+    {
+      id: "reportType",
+      header: "Relatório",
+      cell: ({ row }) => {
+        const type = row.original.type
+        return (
+          <span className="text-sm font-semibold">
+            {type === "supervision" ? "Supervisão" : type === "occurrence" ? "Ocorrência" : type}
+          </span>
+        )
+      },
+      size: 120,
     },
     {
       id: "type",
@@ -111,38 +144,54 @@ export function ActivityTable() {
     },
   ]
 
-  // Função para abrir modal ao clicar na linha
   const handleViewDetails = (row: any) => {
     setModalData(row)
     setIsModalOpen(true)
   }
-
-  const footerContent = modalData ? (
-    <PDFDownloadLink
-      document={
-        modalData.type === "supervision"
-          ? <SupervisorPDF supervisor={modalData.data} />
-          : <OccurrencePDF notification={{
-              ...(modalData.data as any),
-              _id: modalData.id,
+  let footerContent = null
+  if (modalData) {
+    footerContent = (
+      <PDFDownloadLink
+        document={
+          <GenericPDF
+            title={modalData.type === "occurrence" ? "Relatório de Ocorrência" : "Relatório de Supervisão"}
+            columns={extractColumnsForPDF(columns)}
+            data={{
+              ...modalData.data,
+              siteName: modalData.siteName,
+              supervisorName: modalData.supervisorName,
+              createdAt: modalData.createdAt,
+              createdAtTime: format(modalData.createdAtDate, "HH:mm"),
               priority: (modalData.data as any)?.priority,
-            }} getPriorityLabel={getPriorityLabel} />
-      }
-      fileName={`${modalData.type}-${modalData.siteName ?? "local"}-${modalData.id}.pdf`}
-      style={{ textDecoration: "none" }}
-    >
-      {({ loading: pdfLoading }) => (
-        <Button variant="outline" disabled={pdfLoading} className="cursor-pointer">
-          {pdfLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Download className="mr-2 h-4 w-4" />
-          )}
-          Baixar PDF
-        </Button>
-      )}
-    </PDFDownloadLink>
-  ) : null
+            }}
+            detailsField={modalData.type === "occurrence" ? "description" : undefined}
+            sections={extractSectionsWithTranslations({
+              ...modalData.data,
+              siteName: modalData.siteName,
+              supervisorName: modalData.supervisorName,
+              createdAt: modalData.createdAt,
+              createdAtTime: format(modalData.createdAtDate, "HH:mm"),
+              priority: (modalData.data as any)?.priority,
+            }, sectionTranslations)}
+          />
+        }
+        fileName={`${modalData.type}-${modalData.siteName ?? "local"}-${modalData.id}.pdf`}
+        style={{ textDecoration: "none" }}
+      >
+        {({ loading: pdfLoading }) => (
+          <Button variant="outline" disabled={pdfLoading} className="cursor-pointer">
+            {pdfLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            {modalData.type === "occurrence" ? "Baixar Relatório de Ocorrência" : "Baixar Relatório de Supervisão"}
+          </Button>
+        )}
+      </PDFDownloadLink>
+    )
+  }
+
 
   return (
     <div className="space-y-4">

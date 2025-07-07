@@ -1,6 +1,4 @@
-import React, { useEffect } from "react";
 import SearchDasboardh from "../searchCommand";
-import { NavUser } from "./nav-user";
 import { Bells } from "./bells";
 import { Mode } from "./mode";
 import { SidebarToggleButton } from "../SidebarToggleButton";
@@ -17,7 +15,6 @@ interface HeaderProps {
 
 function Header({
   collapsed,
-  isDarkMode,
   toggleSidebar,
   isMobile,
   onOpenSheet
@@ -32,12 +29,11 @@ function Header({
   };
 
   return (
-    <div className="flex w-full flex-wrap px-5.5 my-6 items-center justify-between gap-4">
+    <div className="flex w-full flex-wrap px-6 py-3 mb-6 items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="flex items-center gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-full  size-12">
+        <div className="bg-white dark:bg-gray-800 dark:text-white rounded-full  size-12">
           <SidebarToggleButton
             collapsed={collapsed}
-            isDarkMode={isDarkMode}
             isMobile={isMobile}
             onToggleSidebar={handleToggle}
             onOpenSheet={onOpenSheet}
@@ -50,7 +46,6 @@ function Header({
         <LocaleSwitcher showLabel />
         <Mode />
         <Bells />
-    
       </div>
     </div>
   );

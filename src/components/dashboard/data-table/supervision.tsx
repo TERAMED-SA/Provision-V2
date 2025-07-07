@@ -5,14 +5,14 @@ import { format } from "date-fns"
 import {  Download,  Shield, Loader2 } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
 import { toast } from "sonner"
-import { OccurrencePDF } from "../pdf/occurrence-pdf"
+import { GenericPDF } from "../pdf/genericPDF"
 import { Button } from "../../ui/button"
 import { DataTable } from "../../ulils/data-table"
 import instance from "@/lib/api"
 import { GenericDetailModal } from "../generic-detail-modal"
 import { ptBR } from "date-fns/locale"
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
-import { getPriorityLabel } from "./occurrence"
+import { extractColumnsForPDF, extractSectionsFromData } from "@/lib/pdfUtils"
 
 export type WorkerInfo = {
   name: string
@@ -232,8 +232,7 @@ export function NewSupervionTable() {
   )
 
   return (
-    <div className="grid grid-cols-1">
-   
+    <div>
       <div className="col-span-1 md:col-span-2">
         <DataTable
           columns={columns}
@@ -241,10 +240,6 @@ export function NewSupervionTable() {
           loading={isLoading}
           title="Supervisão"
           filterOptions={{
-            enableSiteFilter: true,
-            enableDateFilter: true,
-            enableColumnVisibility: true,
-            enableColumnFilters: true,
             enableExportButton: true,
             exportButtonLabel: "Exportar Excel",
             exportFileName: "supervisao.xlsx",
@@ -267,7 +262,15 @@ export function NewSupervionTable() {
             supervisionData={selectedNotification}
             footerContent={
               <PDFDownloadLink
-                document={<OccurrencePDF notification={{ ...selectedNotification, priority: 'BAIXA' }} getPriorityLabel={getPriorityLabel} />}
+                document={
+                  <GenericPDF
+                    title="Relatório de Supervisão"
+                    columns={extractColumnsForPDF(columns)}
+                    data={selectedNotification}
+                    detailsField="details"
+                    sections={extractSectionsFromData(selectedNotification)}
+                  />
+                }
                 fileName={`supervisao-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
                 style={{ textDecoration: "none" }}
               >

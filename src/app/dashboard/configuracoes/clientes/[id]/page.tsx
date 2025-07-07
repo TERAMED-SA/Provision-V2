@@ -781,8 +781,6 @@ export default function CompanySites() {
 
                   </>
                 )}
-
-
                 {companyInfo && (
                   <div className="flex flex-col">
 
@@ -806,6 +804,14 @@ export default function CompanySites() {
                         </span>
                         <span className="text-gray-900">
                           {selectedSite.costCenter || "N/A"}
+                        </span>
+                      </div>
+                      <div className="col-span-full flex flex-row items-center gap-2 w-full">
+                        <span className="font-semibold text-gray-700 mr-2 whitespace-nowrap">
+                          Nome do Site:
+                        </span>
+                        <span className="text-gray-900 truncate w-full">
+                          {selectedSite.name || "N/A"}
                         </span>
                       </div>
                       <div className="flex flex-col">

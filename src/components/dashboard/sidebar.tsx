@@ -19,7 +19,14 @@ import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent } from "../ui/sheet"
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "../ui/navigation-menu"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "../ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { Badge } from "../ui/badge"
 import { useSupervisionStore } from "@/hooks/useDataStore"
@@ -53,10 +60,14 @@ export function Sidebar({
   setIsSheetOpen,
 }: SidebarProps) {
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
+  const [isHovered, setIsHovered] = useState(false)
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null)
   const pathname = usePathname()
   const { theme } = useTheme()
   const isDarkMode = theme === "dark"
   const t = useTranslations("Sidebar")
+
+  const isVisuallyExpanded = !collapsed || (collapsed && isHovered)
 
   const toggleItem = (label: string) => {
     setOpenItems((prev) => ({
@@ -64,12 +75,38 @@ export function Sidebar({
       [label]: !prev[label],
     }))
   }
+
+  const handleMouseEnter = () => {
+    if (collapsed) {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout)
+        setHoverTimeout(null)
+      }
+      const timeout = setTimeout(() => {
+        setIsHovered(true)
+      }, 150)
+      setHoverTimeout(timeout)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout)
+      setHoverTimeout(null)
+    }
+
+    if (collapsed && isHovered) {
+      const timeout = setTimeout(() => {
+        setIsHovered(false)
+        setOpenItems({})
+      }, 300)
+      setHoverTimeout(timeout)
+    }
+  }
+
   const { getSelectedDateCounts } = useSupervisionStore()
-
   useSupervisionData()
-
   const counts = getSelectedDateCounts()
-
 
   const menuSections = [
     {
@@ -78,7 +115,6 @@ export function Sidebar({
         { icon: Home, label: t("Dashboard"), href: "/dashboard" },
         { icon: Shield, label: t("Supervisao"), href: "/dashboard/supervisao", badge: counts.supervision },
         { icon: AlertTriangle, label: t("Ocorrencias"), href: "/dashboard/ocorrencias", badge: counts.occurrence },
-     
       ],
     },
     {
@@ -113,56 +149,56 @@ export function Sidebar({
 
     if (hasSubItems) {
       return (
-        <NavigationMenu key={index} >
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger
-                className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200 bg-transparent border-0 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 data-[state=open]:bg-gray-100/50 dark:data-[state=open]:bg-gray-800/50 p-0",
-                  isDarkMode
-                    ? "text-gray-300 hover:text-white"
-                    : "text-gray-600 hover:text-gray-900"
-                )}
-              >
-                <item.icon size={20} />
-              </NavigationMenuTrigger>
-              <NavigationMenuContent
-                className={cn(
-                  "min-w-[200px] p-2 ml-2 rounded-lg shadow-lg",
-                  isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
-                )}
-              >
-                <div className="space-y-1">
-                  {item.items?.map((subItem, subIndex) => (
-                    <NavigationMenuLink key={subIndex} asChild>
-                      <Link
-                        href={subItem.href}
-                        className={cn(
-                          "flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200",
-                          pathname === subItem.href
-                            ? isDarkMode
-                              ? "bg-blue-600/20 text-blue-300 border-l-2 border-blue-500"
-                              : "bg-blue-50 text-blue-700 border-l-2 border-blue-500"
-                            : isDarkMode
-                              ? "text-gray-300 hover:bg-gray-700/50 hover:text-white"
-                              : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900"
-                        )}
-                        onClick={() => {
-                          if (isMobile && setIsSheetOpen) {
-                            setIsSheetOpen(false)
-                          }
-                        }}
-                      >
-                        {subItem.icon && <subItem.icon size={16} className="mr-2" />}
-                        <span>{subItem.title}</span>
-                      </Link>
-                    </NavigationMenuLink>
-                  ))}
-                </div>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+        <div key={index}>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger
+                  className={cn(
+                    "flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200 bg-transparent border-0 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 data-[state=open]:bg-gray-100/50 dark:data-[state=open]:bg-gray-800/50 p-0",
+                    isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-900",
+                  )}
+                >
+                  <item.icon size={20} />
+                </NavigationMenuTrigger>
+                <NavigationMenuContent
+                  className={cn(
+                    "min-w-[200px] p-2 ml-2 rounded-lg shadow-lg",
+                    isDarkMode ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200",
+                  )}
+                >
+                  <div className="space-y-1">
+                    {item.items?.map((subItem, subIndex) => (
+                      <NavigationMenuLink key={subIndex} asChild>
+                        <Link
+                          href={subItem.href}
+                          className={cn(
+                            "flex items-center px-3 py-2 text-sm rounded-md transition-all duration-200",
+                            pathname === subItem.href
+                              ? isDarkMode
+                                ? "bg-blue-600/20 text-blue-300 border-l-2 border-blue-500"
+                                : "bg-blue-50 text-blue-700 border-l-2 border-blue-500"
+                              : isDarkMode
+                                ? "text-gray-300 hover:bg-gray-700/50 hover:text-white"
+                                : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900",
+                          )}
+                          onClick={() => {
+                            if (isMobile && setIsSheetOpen) {
+                              setIsSheetOpen(false)
+                            }
+                          }}
+                        >
+                          {subItem.icon && <subItem.icon size={16} className="mr-2" />}
+                          <span>{subItem.title}</span>
+                        </Link>
+                      </NavigationMenuLink>
+                    ))}
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
       )
     }
 
@@ -178,7 +214,7 @@ export function Sidebar({
                 : "bg-blue-50 text-blue-700"
               : isDarkMode
                 ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
+                : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900",
           )}
           onClick={() => {
             if (isMobile && setIsSheetOpen) {
@@ -190,6 +226,28 @@ export function Sidebar({
             <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1.5 h-8 bg-blue-500 rounded-r-full" />
           )}
           <item.icon size={20} />
+          {(item.label === t("Supervisao") && !!item.badge && Number(item.badge) > 0) && (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "absolute -top-1 -right-1 text-xs px-1.5 py-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full",
+                isDarkMode ? "bg-blue-600 text-white" : "bg-blue-500 text-white"
+              )}
+            >
+              {item.badge}
+            </Badge>
+          )}
+          {(item.label === t("Ocorrencias") && !!item.badge && Number(item.badge) > 0) && (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "absolute -top-1 -right-1 text-xs px-1.5 py-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full",
+                "bg-red-600 text-white"
+              )}
+            >
+              {item.badge}
+            </Badge>
+          )}
         </Link>
       </div>
     )
@@ -199,10 +257,7 @@ export function Sidebar({
     const isActive = pathname === item.href
     const hasSubItems = item.items && item.items.length > 0
     const isOpen = openItems[item.label]
-    const showBadge = item.label === t("Supervisao") ||
-      item.label === t("Ocorrencias")
-
-    if (collapsed && !alwaysShowLabel) {
+    if (collapsed && !isVisuallyExpanded && !alwaysShowLabel) {
       return renderCollapsedMenuItem(item, index)
     }
 
@@ -215,14 +270,11 @@ export function Sidebar({
               "flex items-center w-full px-4 py-3 text-sm rounded-lg transition-all duration-200 justify-between relative",
               isDarkMode
                 ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900"
+                : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900",
             )}
           >
             <div className="flex items-center">
-              <item.icon
-                size={18}
-                className={cn("mr-3", isDarkMode ? "text-gray-400" : "text-gray-500")}
-              />
+              <item.icon size={18} className={cn("mr-3", isDarkMode ? "text-gray-400" : "text-gray-500")} />
               <span className="font-medium">{item.label}</span>
             </div>
             <ChevronDown
@@ -230,11 +282,10 @@ export function Sidebar({
               className={cn(
                 "transition-transform duration-200",
                 isOpen ? "rotate-180" : "",
-                isDarkMode ? "text-gray-400" : "text-gray-500"
+                isDarkMode ? "text-gray-400" : "text-gray-500",
               )}
             />
           </button>
-
           {isOpen && (
             <div className="ml-6 mt-1 space-y-1">
               {item.items?.map((subItem, subIndex) => (
@@ -249,7 +300,7 @@ export function Sidebar({
                         : "bg-blue-50 text-blue-700"
                       : isDarkMode
                         ? "text-gray-400 hover:bg-gray-800/50 hover:text-gray-300"
-                        : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-800"
+                        : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-800",
                   )}
                   onClick={() => {
                     if (isMobile && setIsSheetOpen) {
@@ -282,7 +333,7 @@ export function Sidebar({
                 : "bg-blue-50 text-blue-700"
               : isDarkMode
                 ? "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900"
+                : "text-gray-700 hover:bg-gray-100/50 hover:text-gray-900",
           )}
           onClick={() => {
             if (isMobile && setIsSheetOpen) {
@@ -303,11 +354,11 @@ export function Sidebar({
                   : "text-blue-700"
                 : isDarkMode
                   ? "text-gray-400"
-                  : "text-gray-500"
+                  : "text-gray-500",
             )}
           />
           <span className="font-medium">{item.label}</span>
-          {showBadge && (
+          {(item.label === t("Supervisao") && !!item.badge && Number(item.badge) > 0) && (
             <Badge
               variant="secondary"
               className={cn(
@@ -315,7 +366,18 @@ export function Sidebar({
                 isDarkMode ? "bg-blue-600/30 text-blue-300" : "bg-blue-100 text-blue-700"
               )}
             >
-              {item.badge || 0}
+              {item.badge}
+            </Badge>
+          )}
+          {(item.label === t("Ocorrencias") && !!item.badge && Number(item.badge) > 0) && (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "ml-auto text-xs px-2 py-0.5",
+                "bg-red-600 text-white"
+              )}
+            >
+              {item.badge}
             </Badge>
           )}
         </Link>
@@ -328,15 +390,14 @@ export function Sidebar({
       <div className="flex items-center mb-4 px-4">
         <Image src="/logo.png" alt="Logo" width={60} height={60} className="mr-3" />
       </div>
-
       <nav className="flex-1 px-2 overflow-y-auto custom-scrollbar">
         {menuSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-4">
             <div className="mb-2 px-2">
               <span
                 className={cn(
-                  "text-sm font-semibold uppercase tracking-wider",
-                  isDarkMode ? "text-gray-400" : "text-gray-500"
+                  "text-xs font-semibold ",
+                  isDarkMode ? "text-gray-400" : "text-gray-500",
                 )}
               >
                 {section.title}
@@ -357,7 +418,7 @@ export function Sidebar({
             side="left"
             className={cn(
               "flex flex-col h-full w-72",
-              isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"
+              isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200",
             )}
           >
             <MobileSheetContent />
@@ -366,14 +427,21 @@ export function Sidebar({
       ) : (
         <div
           className={cn(
-            "min-h-screen h-full flex flex-col transition-all duration-300 border-r overflow-hidden",
-            collapsed ? "w-20 py-6" : "w-64",
+            "min-h-screen h-full flex flex-col transition-all duration-300 border-r overflow-hidden relative",
+            isVisuallyExpanded ? "w-64" : "w-20",
+            collapsed ? "py-6" : "",
             isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200",
-            className
+            className,
           )}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
+          {collapsed && isHovered && (
+            <div className="absolute inset-0 bg-blue-500/5 pointer-events-none transition-opacity duration-200" />
+          )}
+
           <Link href="/" className="flex items-center justify-center px-4 py-5">
-            {collapsed ? (
+            {!isVisuallyExpanded ? (
               <Image src="/logo.png" alt="Logo" width={60} height={60} />
             ) : (
               <div className="flex items-center pt-4">
@@ -386,12 +454,13 @@ export function Sidebar({
             <nav className="space-y-4">
               {menuSections.map((section, sectionIndex) => (
                 <div key={sectionIndex}>
-                  {!collapsed && (
+                  {isVisuallyExpanded && (
                     <div className="mb-2">
                       <span
                         className={cn(
-                          "text-sm font-semibold uppercase tracking-wider px-2",
-                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                          "text-sm font-semibold uppercase tracking-wider px-2 transition-opacity duration-200",
+                          isDarkMode ? "text-gray-400" : "text-gray-500",
+                          collapsed && isHovered ? "opacity-100" : "",
                         )}
                       >
                         {section.title}
@@ -406,16 +475,15 @@ export function Sidebar({
 
           <div className="pt-4 pb-2 border-t border-gray-200 flex items-center justify-center dark:border-gray-700">
             <Image
-              src={collapsed ? "/prometeus.jpeg" : "/prometeus-w-80.jpeg"}
+              src={isVisuallyExpanded ? "/prometeus-w-80.jpeg" : "/prometeus.jpeg"}
               alt="Prometeus"
-              width={collapsed ? 32 : 120}
-              height={collapsed ? 32 : 64}
-              className="object-contain"
+              width={isVisuallyExpanded ? 120 : 32}
+              height={isVisuallyExpanded ? 64 : 32}
+              className="object-contain transition-all duration-300"
             />
           </div>
         </div>
       )}
-
       <div id="navigation-menu-portal" className="fixed z-50" />
     </>
   )

@@ -53,8 +53,8 @@ function EmptyState({ icon: Icon, title, subtitle }: { icon: any, title: string,
           </div>
         </div>
         <div className="space-y-2">
-          <p className="text-lg font-semibold text-gray-700">{title}</p>
-          <p className="text-sm text-gray-500">{subtitle}</p>
+          <p className="text-lg font-semibold text-gray-700 dark:text-gray-100">{title}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
         </div>
       </div>
     </div>
@@ -345,18 +345,18 @@ export default function AnalyticsView() {
     <div className="flex flex-col gap-8 p-1">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-        <Card className="bg-white shadow rounded-lg">
+        <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex flex-row items-center justify-between gap-2 mb-1">
               <div className="flex flex-row items-center gap-2">
                 <Shield className="h-5 w-5 text-blue-600" />
-                <span className="text-base font-semibold text-blue-700">
+                <span className="text-base font-semibold text-blue-700 dark:text-blue-300">
                   {t('supervisions.title', { default: 'Supervisões' })}
                 </span>
               </div>
 
             </div>
-            <span className="text-sm text-gray-500 mb-2">{getPeriodTitle(supervisionsTimeFilter)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 mb-2">{getPeriodTitle(supervisionsTimeFilter)}</span>
             <FilterTabs
               value={supervisionsTimeFilter}
               onChange={setSupervisionsTimeFilter}
@@ -373,18 +373,18 @@ export default function AnalyticsView() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white shadow rounded-lg">
+        <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex flex-row items-center justify-between gap-2 mb-1">
               <div className="flex flex-row items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-blue-600" />
-                <span className="text-base font-semibold text-blue-700">
+                <span className="text-base font-semibold text-blue-700 dark:text-white">
                   {t('occurrences.title', { default: 'Ocorrências' })}
                 </span>
               </div>
 
             </div>
-            <span className="text-sm text-gray-500 mb-2">{getPeriodTitle(occurrencesTimeFilter)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-00 mb-2">{getPeriodTitle(occurrencesTimeFilter)}</span>
             <FilterTabs
               value={occurrencesTimeFilter}
               onChange={setOccurrencesTimeFilter}

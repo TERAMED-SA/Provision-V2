@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { OccurrencePDF } from '@/components/dashboard/pdf/occurrence-pdf';
+import { OccurrencePDF } from '@/components/dashboard/pdf/genericPDF';
 import { Occurrence } from '@/features/application/domain/entities/Occurrence';
 
 describe('OccurrencePDF Component', () => {

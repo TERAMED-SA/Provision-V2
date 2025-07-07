@@ -69,11 +69,9 @@ interface GenericDetailModalProps {
   footerContent?: React.ReactNode;
   icon?: React.ElementType;
   className?: string;
-  // Props específicas para ocorrência
   occurrenceData?: OccurrenceData;
   getPriorityLabel?: (priority: string) => string;
   priorityColor?: string;
-  // Props específicas para supervisão
   supervisionData?: SupervisionData;
 }
 
@@ -86,11 +84,9 @@ export function GenericDetailModal({
   footerContent,
   icon: Icon,
   className,
-  // Props específicas para ocorrência
   occurrenceData,
   getPriorityLabel,
   priorityColor,
-  // Props específicas para supervisão
   supervisionData,
 }: GenericDetailModalProps) {
   const isOccurrence = type === "occurrence";

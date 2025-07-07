@@ -1,6 +1,7 @@
 export interface Supervisor {
   deletedAt: string | null;
   _id: string;
+  type?:string | undefined;
   name: string;
   createdAt: string;
   updatedAt: string;
@@ -23,6 +24,7 @@ export interface Supervisor {
   idNotification: string;
   report: string;
   workersFound: number;
+  gender?: string;
 }
 
 export interface SupervisorLocation {

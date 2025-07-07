@@ -145,8 +145,8 @@ const MIN_COLUMN_WIDTH = 80;
       'hora': 20,
       'time': 20,
       'timestamp': 20,
-      'actions': 30,
-      'action': 30,
+      'actions': 40,
+      'action': 40,
       'clientcode': 30,
       'codigo': 30,
       'id': 80,
@@ -155,18 +155,14 @@ const MIN_COLUMN_WIDTH = 80;
       'prioridade': 100,
     };
 
-    // Verificar se a coluna tem largura fixa definida
     for (const [key, width] of Object.entries(fixedWidths)) {
       if (lowerCaseColumnId.includes(key)) {
         return width;
       }
     }
-    
-    // Largura padrão para outras colunas
     return 150;
   };
 
-  // Função para determinar se uma coluna deve ter largura fixa
   const isFixedWidthColumn = (columnId: string): boolean => {
     const lowerCaseColumnId = columnId.toLowerCase();
     const fixedColumnPatterns = [
@@ -177,7 +173,6 @@ const MIN_COLUMN_WIDTH = 80;
     return fixedColumnPatterns.some(pattern => lowerCaseColumnId.includes(pattern));
   };
 
-  // Função para inicializar larguras das colunas
   useEffect(() => {
     const initialWidths: Record<string, number> = {};
     table.getAllColumns().forEach(column => {
@@ -186,9 +181,7 @@ const MIN_COLUMN_WIDTH = 80;
     setColumnWidths(initialWidths);
   }, [table.getAllColumns().length]);
 
-  // Função para iniciar redimensionamento (apenas para colunas não fixas)
   const handleMouseDown = (e: React.MouseEvent, columnId: string) => {
-    // Não permitir redimensionamento de colunas fixas
     if (isFixedWidthColumn(columnId)) {
       return;
     }
@@ -312,6 +305,7 @@ const MIN_COLUMN_WIDTH = 80;
 
   return (
     <div className="space-y-4 pb-6">
+      
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-6">
           {title && (
@@ -337,10 +331,29 @@ const MIN_COLUMN_WIDTH = 80;
         )}
         </div>
 
+        {filterOptions.enableAddButton && onAddClick && (
+          <Button
+            onClick={onAddClick}
+            className="bg-black text-white px-4 py-2 rounded-md shadow text-sm cursor-pointer"
+            type="button"
+          >
+            {filterOptions.addButtonLabel || 'Adicionar'}
+          </Button>
+        )}
+
         {table.getPageCount() > 1 && (
           <div className="flex items-center">{renderPagination()}</div>
         )}
       </div>
+      {data.length >= 2 && (
+        <div className="mb-2 text-sm text-gray-700 dark:text-gray-200 font-medium">
+          {table.getFilteredRowModel().rows.length === table.getPreFilteredRowModel().rows.length ? (
+            <>Total de {table.getPreFilteredRowModel().rows.length} {title ? title : ''}</>
+          ) : (
+            <>Exibindo {table.getFilteredRowModel().rows.length} de {table.getPreFilteredRowModel().rows.length} {title ? title : ''}</>
+          )}
+        </div>
+      )}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div className="relative overflow-x-auto">
           <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden">

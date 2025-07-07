@@ -260,7 +260,6 @@ export default function CompanyTable() {
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Card Sites */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("site")}
@@ -273,7 +272,6 @@ export default function CompanyTable() {
               </CardContent>
             </Card>
 
-            {/* Card Ocorrências */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("occurrence")}
@@ -322,7 +320,6 @@ export default function CompanyTable() {
               </CardContent>
             </Card>
 
-            {/* Card Reclamacoes */}
             <Card
               className="cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={() => handleNavigateToDetail("reclamacoes")}
@@ -388,7 +385,6 @@ export default function CompanyTable() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Company Modal */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -396,19 +392,18 @@ export default function CompanyTable() {
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
               <Label htmlFor="editClientCode">Código do Cliente:</Label>
-            <Input id="editClientCode" value={editCompanyData.clientCode || ""} onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })} />
+            <Input id="editClientCode" className="w-32" value={editCompanyData.clientCode || ""} onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })} />
          
             <Label htmlFor="editName">Nome:</Label>
             <Input id="editName" value={editCompanyData.name || ""} onChange={e => setEditCompanyData({ ...editCompanyData, name: e.target.value })} />
            </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleEditCompany} disabled={isSubmitting}>{isSubmitting ? "Salvando..." : "Salvar"}</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="cursor-pointer">Cancelar</Button>
+            <Button onClick={handleEditCompany} disabled={isSubmitting} className="cursor-pointer">{isSubmitting ? "Salvando..." : "Salvar"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Disable Company Alert */}
       <AlertDialog open={isDisableAlertOpen} onOpenChange={setIsDisableAlertOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

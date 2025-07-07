@@ -12,8 +12,10 @@ import instance from "@/lib/api"
 import { ptBR } from "date-fns/locale"
 import { AlertTriangle } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
-import { OccurrencePDF } from "../pdf/occurrence-pdf"
 import { Download, Loader2 } from "lucide-react"
+import { GenericPDF } from "../pdf/genericPDF"
+import { extractColumnsForPDF, extractSectionsFromData, extractSectionsWithTranslations } from "@/lib/pdfUtils"
+import { Button } from "@/components/ui/button"
 
 export type Notification = Occurrence
 
@@ -84,6 +86,28 @@ export const getPriorityClass = (priority: string): string => {
   }
 }
 
+const sectionTranslations = {
+  equipment: {
+    title: "Equipamentos",
+    fields: {
+      name: "Nome",
+      serialNumber: "Número de Série",
+      state: "Estado",
+      costCenter: "Centro de Custo",
+      obs: "Observação"
+    }
+  },
+  workerInformation: {
+    title: "Trabalhadores",
+    fields: {
+      name: "Nome",
+      employeeNumber: "Matrícula",
+      state: "Estado",
+      obs: "Observação"
+    }
+  }
+}
+
 export function OccurrenceTable() {
   const [date, setDate] = React.useState<Date | undefined>(undefined)
   const [data, setData] = React.useState<Notification[]>([])
@@ -94,7 +118,7 @@ export function OccurrenceTable() {
   const [supervisors, setSupervisors] = React.useState<Map<string, string>>(new Map())
   const pageSize = 10000
   const fetchOccurrences = React.useCallback(
-       async (page = 1000, supervisorMap?: Map<string, string>) => {
+    async (page = 1000, supervisorMap?: Map<string, string>) => {
       try {
         setIsLoading(true)
         const response = await instance.get(`/occurrence?page=${page}&size=${pageSize}`)
@@ -110,7 +134,7 @@ export function OccurrenceTable() {
             const createdAtDate = new Date(notification.createdAt)
             const formattedDate = format(createdAtDate, "dd/MM/yyyy", { locale: ptBR })
             const formattedTime = format(createdAtDate, "HH:mm", { locale: ptBR })
-               return {
+            return {
               ...notification,
               createdAt: formattedDate,
               createdAtTime: formattedTime,
@@ -143,7 +167,7 @@ export function OccurrenceTable() {
     loadInitialData()
   }, [])
 
- 
+
   const handleViewDetails = React.useCallback((notification: Notification) => {
     if (!notification || !notification._id) {
       toast.error("Dados da ocorrência inválidos")
@@ -158,27 +182,21 @@ export function OccurrenceTable() {
     () => [
       {
         accessorKey: "createdAt",
-        header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
-            Data
-          </span>
+        header: ({ column }: { column: any }) => (
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Data</span>
         ),
-        filterFn: (row: Row<Notification>, id: string, value: Date) => {
+        filterFn: (row: Row<Notification>, id: string, value: string) => {
           if (!value) return true;
-          const [day, month, year] = (row.getValue(id) as string).split("/");
-          const rowDate = new Date(Number(year), Number(month) - 1, Number(day));
-          return (
-            rowDate.getDate() === value.getDate() &&
-            rowDate.getMonth() === value.getMonth() &&
-            rowDate.getFullYear() === value.getFullYear()
-          );
+          const filter = value.trim().toLowerCase();
+          const rowValue = (row.getValue(id) as string).trim().toLowerCase();
+          return rowValue.includes(filter);
         },
-      
+
       },
       {
         accessorKey: "createdAtTime",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Hora
           </span>
         ),
@@ -189,12 +207,12 @@ export function OccurrenceTable() {
           const date = new Date(year, month - 1, day)
           return format(date, "yyyy-MM-dd") === value
         },
-  
+
       },
       {
         accessorKey: "siteName",
         header: ({ column }: { column: Column<Notification, unknown> }) => (
-          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}> 
+          <span onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             Site
           </span>
         ),
@@ -205,7 +223,7 @@ export function OccurrenceTable() {
         cell: ({ row }: { row: Row<Notification> }) => {
           const details = row.getValue("details") as string;
           return (
-            <div className="max-w-[200px] truncate" title={details}>
+            <div className="max-w-[320px] truncate" title={details}>
               {details}
             </div>
           );
@@ -216,8 +234,7 @@ export function OccurrenceTable() {
   )
 
   return (
-    <div className="grid grid-cols-1 gap-6">
-
+    <div>
       <div className="col-span-1 md:col-span-2">
         <DataTable
           columns={columns}
@@ -225,10 +242,6 @@ export function OccurrenceTable() {
           loading={isLoading}
           title="Ocorrências"
           filterOptions={{
-            enableSiteFilter: true,
-            enableDateFilter: true,
-            enableColumnVisibility: true,
-            enableColumnFilters: true,
             enableExportButton: true,
             exportButtonLabel: "Exportar Excel",
             exportFileName: "ocorrencias.xlsx",
@@ -253,16 +266,24 @@ export function OccurrenceTable() {
         priorityColor={selectedNotification ? getPriorityClass(selectedNotification.priority) : undefined}
         footerContent={selectedNotification && (
           <PDFDownloadLink
-            document={<OccurrencePDF notification={selectedNotification} getPriorityLabel={getPriorityLabel} />}
+            document={
+              <GenericPDF
+                title="Relatório de Ocorrência"
+                columns={extractColumnsForPDF(columns)}
+                data={selectedNotification}
+                detailsField="details"
+                sections={extractSectionsWithTranslations(selectedNotification, sectionTranslations)}
+              />
+            }
             fileName={`ocorrencia-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}
             style={{ textDecoration: "none" }}
           >
-            {({ loading: pdfLoading }) => (
-              <button type="button" className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                Baixar PDF
-              </button>
-            )}
+                  {({ loading: pdfLoading }) => (
+                  <Button variant="outline" disabled={pdfLoading}>
+                    {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                    Baixar PDF
+                  </Button>
+                )}
           </PDFDownloadLink>
         )}
       />

@@ -8,15 +8,14 @@ import { cn, locales } from "@/lib/utils"
 import { setUserLocale } from "@/lib/service"
 
 const localeNames = {
-  en: "en",
-  pt: "pt", 
-  fr: "fr",
+  en: "English",
+  pt: "Português",
+  fr: "Français",
 }
 
 export default function LocaleSwitcher({
   selectClassName,
   className,
-  showLabel = false,
 }: {
   selectClassName?: string
   className?: string

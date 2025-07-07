@@ -28,7 +28,7 @@ export function SupervisorAddForm({
     name: "",
     email: "",
     phoneNumber: "",
-    gender: "Male",
+    gender: "",
     employeeId: "",
     address: ""
   })
@@ -40,7 +40,7 @@ export function SupervisorAddForm({
         name: "",
         email: "",
         phoneNumber: "",
-        gender: "Male",
+        gender: "",
         employeeId: "",
         address: ""
       })

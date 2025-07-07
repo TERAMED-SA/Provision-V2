@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { Loader2 } from 'lucide-react'
-import { toast } from "sonner"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog"
 import { Supervisor } from "@/features/application/domain/entities/Supervisor"
+import toast from "react-hot-toast"
 
 interface SupervisorEditFormProps {
   supervisor: Supervisor | null
@@ -26,35 +26,43 @@ export function SupervisorEditForm({
 
   React.useEffect(() => {
     if (supervisor) {
-      setEditedSupervisor({ ...supervisor })
+      // Map gender short values to full values for the select
+      let gender = supervisor.gender;
+      if (gender === "M") gender = "Masculino";
+      else if (gender === "F") gender = "Feminino";
+      else if (gender && gender.length < 3) gender = "Outro";
+      setEditedSupervisor({ ...supervisor, gender });
     } else {
-      setEditedSupervisor(null)
+      setEditedSupervisor(null);
     }
-  }, [supervisor])
+  }, [supervisor]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (!editedSupervisor) return
-    
     const { name, value } = e.target
     setEditedSupervisor(prev => prev ? { ...prev, [name]: value } : null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!editedSupervisor) return
-    
-    setIsSubmitting(true)
+    e.preventDefault();
+    if (!editedSupervisor) return;
+    setIsSubmitting(true);
+    let gender = editedSupervisor.gender;
+    if (gender === "Masculino") gender = "Masculino";
+    else if (gender === "Feminino") gender = "Feminino";
+    else if (gender === "Outro") gender = "Outro";
+    else if (gender === "M") gender = "Masculino";
+    else if (gender === "F") gender = "Feminino";
     try {
-      await onSave(editedSupervisor)
-      toast.success("Supervisor atualizado com sucesso")
-      onOpenChange(false)
+      await onSave({ ...editedSupervisor, gender });
+      toast.success("Supervisor atualizado com sucesso");
+      onOpenChange(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Erro ao atualizar supervisor")
+      toast.error(error?.response?.data?.message || "Erro ao atualizar supervisor");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (!editedSupervisor) return null
 
@@ -108,7 +116,21 @@ export function SupervisorEditForm({
                 required
               />
             </div>
-          
+            <div className="grid gap-2">
+              <label htmlFor="gender">Gênero</label>
+              <select
+                id="gender"
+                name="gender"
+                className="border rounded px-2 py-1"
+                value={editedSupervisor.gender || "Masculino"}
+                onChange={handleChange}
+                required
+              >
+                <option value="Masculino">Masculino</option>
+                <option value="Feminino">Feminino</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
             <div className="flex justify-end gap-2 pt-4 col-span-2">
               <Button
                 type="button"

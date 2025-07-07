@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
-import { AlignLeft, Menu } from "lucide-react";
+import { AlignLeft, FoldHorizontal, Menu } from "lucide-react";
 
 export interface SidebarToggleButtonProps {
   collapsed: boolean;
-  isDarkMode: boolean;
   isMobile: boolean;
   onToggleSidebar: () => void;
   onOpenSheet?: () => void;
@@ -12,7 +11,6 @@ export interface SidebarToggleButtonProps {
 
 export function SidebarToggleButton({
   collapsed,
-  isDarkMode,
   isMobile,
   onToggleSidebar,
   onOpenSheet,
@@ -30,15 +28,14 @@ export function SidebarToggleButton({
     <button
       onClick={handleClick}
       className={cn(
-        "size-12 flex items-center justify-center cursor-pointer p-2",
-        isDarkMode ? "text-white" : "text-gray-700",
+        "size-12 flex items-center justify-center cursor-pointer p-2 rounded-full bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-600  transition-colors",
         className
       )}
     >
       {collapsed ? (
-        <AlignLeft size={26} className={isDarkMode ? "text-white" : "text-gray-700"} />
+        <FoldHorizontal  size={26} className="text-gray-700 dark:text-white" />
       ) : (
-        <Menu size={26} className={isDarkMode ? "text-white" : "text-gray-700"} />
+        <Menu size={26} className="text-gray-700 dark:text-white" />
       )}
     </button>
   );

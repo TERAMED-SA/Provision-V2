@@ -11,7 +11,6 @@ export function useAuth() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Aguarda um pequeno delay para garantir que o AuthAdapter tenha inicializado
         await new Promise(resolve => setTimeout(resolve, 100));
         const currentUser = authPort.getUser();
         setUser(currentUser);
@@ -45,6 +44,7 @@ export function useAuth() {
     try {
       authPort.clearAuth();
       setUser(null);
+      window.location.href = '/';
     } catch (err) {
       setError('Erro ao fazer logout');
     }
