@@ -13,8 +13,8 @@ export class CompanyAdapter implements ICompanyPort {
     return res.data.data;
   }
 
-  async updateCompany(companyId: string, userId: string, data: Partial<Company>): Promise<Company> {
-    const res = await instance.put(`/company/update/${companyId}/${userId}`, data);
+  async updateCompany(companyId: string,  data: Partial<Company>): Promise<Company> {
+    const res = await instance.put(`/company/update/${companyId}`, data);
     return res.data.data;
   }
 

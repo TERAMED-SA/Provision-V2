@@ -6,9 +6,6 @@ import * as XLSX from "xlsx"
 interface DataTableFiltersProps<TData> {
   table: Table<TData>
   filterOptions: {
-    enableNameFilter?: boolean
-    enableDateFilter?: boolean
-    enableSiteFilter?: boolean
     enableSupervisorFilter?: boolean
     enableColumnVisibility?: boolean
     enableViewModeToggle?: boolean
@@ -29,6 +26,7 @@ interface DataTableFiltersProps<TData> {
 export function DataTableFilters<TData>({
   table,
   filterOptions,
+  onAddClick,
 }: DataTableFiltersProps<TData>) {
   const {
     enableExportButton = false,
@@ -69,7 +67,6 @@ export function DataTableFilters<TData>({
     })
     worksheet["!cols"] = cols
 
-    // Adiciona bordas horizontais e verticais em todas as células
     const range = XLSX.utils.decode_range(worksheet['!ref'] || "")
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -102,17 +99,30 @@ export function DataTableFilters<TData>({
     return column.id.charAt(0).toUpperCase() + column.id.slice(1)
   }
 
-  if (!enableExportButton) return null;
+  if (!enableExportButton && !filterOptions.enableAddButton) return null;
 
   return (
-    <button
-      onClick={handleExport}
-      className="flex items-center gap-2 px-3 py-1 border border-gray-300 rounded-md text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-      type="button"
-      title="Exportar para Excel"
-    >
-      <FileSpreadsheet className="h-4 w-4 text-green-700" />
-      {exportButtonLabel}
-    </button>
+    <div className="flex items-center gap-2">
+      {filterOptions.enableAddButton && onAddClick && (
+        <button
+          onClick={onAddClick}
+          className="bg-black text-white px-4 py-2 rounded-md shadow text-xs cursor-pointer"
+          type="button"
+        >
+          {filterOptions.addButtonLabel || 'Adicionar'}
+        </button>
+      )}
+      {enableExportButton && (
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          type="button"
+          title="Exportar para Excel"
+        >
+          <FileSpreadsheet className="h-4 w-4 text-green-700" />
+          {exportButtonLabel}
+        </button>
+      )}
+    </div>
   )
 }

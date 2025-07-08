@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Building2, UserCheck, Trash2, MessageCircle, Edit, Shield, AlertTriangle } from "lucide-react"
-import { toast } from "sonner"
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTable } from "../../ulils/data-table"
 import { Button } from "../../ui/button"
@@ -15,6 +14,7 @@ import instance from "@/lib/api"
 import { companyAdapter } from "@/features/application/infrastructure/factories/CompanyFactory"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../../ui/alert-dialog"
 import { useAuth } from "@/hooks/useAuth"
+import toast from "react-hot-toast"
 
 interface Company {
   _id: string
@@ -24,6 +24,9 @@ interface Company {
   sites: number
   occurrences: number
   createdAt: string
+  costCenter?: string
+  zone?: string
+  numberOfWorkers?: string | number
 }
 
 interface ApiResponse<T> {
@@ -47,6 +50,9 @@ export default function CompanyTable() {
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState<boolean>(false)
   const [clientName, setClientName] = useState<string>("")
   const [clientCode, setClientCode] = useState<string>("")
+  const [costcenter, setCostCenter] = useState<string>("")
+  const [site, setSite] = useState<string>("")
+  const [tl, setTl] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDisableAlertOpen, setIsDisableAlertOpen] = useState(false)
@@ -58,7 +64,7 @@ export default function CompanyTable() {
         accessorKey: "clientCode",
         header: "Código",
         cell: ({ row }) => (
-          <span 
+          <span
             className="cursor-pointer"
             onClick={() => handleCompanyClick(row.original)}
           >
@@ -159,10 +165,10 @@ export default function CompanyTable() {
       }
     }
   }
-  
+
   const createCompany = async (): Promise<void> => {
-    if (!clientName || !clientCode) {
-      toast.error("Preencha todos os campos")
+    if (!clientName || !clientCode || !costcenter || !site || !tl) {
+      toast.error("Preencha todos os campos corretamente.")
       return
     }
 
@@ -171,13 +177,19 @@ export default function CompanyTable() {
       const response = await instance.post<ApiResponse<Company>>(`/company/create`, {
         name: clientName,
         clientCode: clientCode,
+        costCenter: costcenter,
+        zone: site,
+        numberOfWorkers: tl,
       })
 
       if (response.data.status === 200) {
-        toast.success("Cliente cadastrado com sucesso")
+        toast.success("Cliente cadastrado com sucesso!")
         setIsAddClientDialogOpen(false)
         setClientName("")
         setClientCode("")
+        setCostCenter("")
+        setSite("")
+        setTl("")
         fetchCompanies()
       }
     } catch (error: any) {
@@ -196,7 +208,7 @@ export default function CompanyTable() {
     setIsSubmitting(true)
     try {
       const { clientCode, ...dataToUpdate } = editCompanyData;
-      await companyAdapter.updateCompany(selectedCompany._id, user._id, dataToUpdate)
+      await companyAdapter.updateCompany(selectedCompany._id, dataToUpdate)
       toast.success("Empresa atualizada com sucesso")
       setIsEditDialogOpen(false)
       fetchCompanies()
@@ -227,14 +239,13 @@ export default function CompanyTable() {
   }
 
   return (
-   <div className="grid grid-cols-1 gap-6 pb-6">
+    <div className="grid grid-cols-1 gap-6 pb-6">
       <DataTable
         columns={columns}
         data={companies}
         loading={loading}
         title="Clientes"
         filterOptions={{
-          enableNameFilter: true,
           enableAddButton: true,
           addButtonLabel: "Adicionar Cliente",
           enableExportButton: true,
@@ -248,7 +259,7 @@ export default function CompanyTable() {
           actions: true
         }}
       />
-      
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-lg ">
           <DialogHeader>
@@ -342,7 +353,7 @@ export default function CompanyTable() {
             <DialogDescription>Preencha os campos abaixo para cadastrar um novo cliente</DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-4 py-4">
+          <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-4">
               <Label htmlFor="clientCode" className="text-right">
                 Código do Cliente:
@@ -353,9 +364,11 @@ export default function CompanyTable() {
                 onChange={(e) => setClientCode(e.target.value)}
                 placeholder="Código do Cliente"
                 className="col-span-3"
+                autoComplete="off"
+                maxLength={30}
               />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 col-span-2 md:col-span-2 lg:col-span-2">
               <Label htmlFor="name" className="text-right">
                 Nome:
               </Label>
@@ -364,7 +377,58 @@ export default function CompanyTable() {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Nome do Cliente"
+                className="w-full"
+                autoComplete="off"
+                maxLength={60}
+              />
+            </div>
+
+            <div className="space-y-4 col-span-2 md:col-span-2 lg:col-span-2">
+              <Label htmlFor="site" className="text-right">
+                Site:
+              </Label>
+              <Input
+                id="site"
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+                placeholder="Site"
+                type="text"
+                className="w-full"
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-4">
+              <Label htmlFor="tl" className="text-right">
+                Tl:
+              </Label>
+              <Input
+                id="tl"
+                value={tl}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setTl(val);
+                }}
+                placeholder="Tl"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="col-span-3"
+                autoComplete="off"
+                maxLength={10}
+              />
+            </div>
+            <div className="space-y-4">
+              <Label htmlFor="centerCost" className="text-right">
+                Centro de Custo:
+              </Label>
+              <Input
+                id="centerCost"
+                value={costcenter}
+                onChange={(e) => setCostCenter(e.target.value)}
+                placeholder="Centro de Custo"
+                className="col-span-3"
+                autoComplete="off"
+                maxLength={30}
               />
             </div>
           </div>
@@ -386,21 +450,109 @@ export default function CompanyTable() {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar Empresa</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Editar cliente</DialogTitle>
+            <DialogDescription className="text-gray-500">
+              Atualize as informações do cliente abaixo. Todos os campos são obrigatórios.
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-              <Label htmlFor="editClientCode">Código do Cliente:</Label>
-            <Input id="editClientCode" className="w-32" value={editCompanyData.clientCode || ""} onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })} />
-         
-            <Label htmlFor="editName">Nome:</Label>
-            <Input id="editName" value={editCompanyData.name || ""} onChange={e => setEditCompanyData({ ...editCompanyData, name: e.target.value })} />
-           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="cursor-pointer">Cancelar</Button>
-            <Button onClick={handleEditCompany} disabled={isSubmitting} className="cursor-pointer">{isSubmitting ? "Salvando..." : "Salvar"}</Button>
-          </DialogFooter>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              handleEditCompany();
+            }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="editClientCode">Código do Cliente</Label>
+                <Input
+                  id="editClientCode"
+                  placeholder="Ex: 12345"
+                  value={editCompanyData.clientCode || ""}
+                  onChange={e => setEditCompanyData({ ...editCompanyData, clientCode: e.target.value })}
+                  className="w-full"
+                  maxLength={30}
+                  autoComplete="off"
+                />
+              </div>
+
+
+              <div className="space-y-4 col-span-2 md:col-span-2 lg:col-span-2">
+                <Label htmlFor="editName">Nome</Label>
+                <Input
+                  id="editName"
+                  placeholder="Nome da empresa"
+                  value={editCompanyData.name || ""}
+                  onChange={e => setEditCompanyData({ ...editCompanyData, name: e.target.value })}
+                  className="w-full"
+                  maxLength={60}
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="space-y-4 col-span-2 md:col-span-2 lg:col-span-2">
+                <Label htmlFor="editSite">Site</Label>
+                <Input
+                  id="editSite"
+                  placeholder="Nome do site"
+                  value={editCompanyData.zone || ""}
+                  onChange={e => setEditCompanyData({ ...editCompanyData, zone: e.target.value })}
+                  className="w-full"
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="editTl">Tl</Label>
+                <Input
+                  id="editTl"
+                  placeholder="Somente números"
+                  value={editCompanyData.numberOfWorkers || ""}
+                  onChange={e => {
+                    const val = e.target.value.replace(/[^0-9]/g, "");
+                    setEditCompanyData({ ...editCompanyData, numberOfWorkers: val });
+                  }}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="w-full"
+                  maxLength={10}
+                  autoComplete="off"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="editCostCenter">Centro de Custo</Label>
+                <Input
+                  id="editCostCenter"
+                  placeholder="Centro de Custo"
+                  value={editCompanyData.costCenter || ""}
+                  onChange={e => setEditCompanyData({ ...editCompanyData, costCenter: e.target.value })}
+                  className="w-full"
+                  maxLength={30}
+                  autoComplete="off"
+                />
+              </div>
+
+            </div>
+            <DialogFooter className="flex flex-row justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="cursor-pointer"
+              >
+                {isSubmitting ? "Salvando..." : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

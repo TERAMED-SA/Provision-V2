@@ -458,7 +458,7 @@ export function Sidebar({
                     <div className="mb-2">
                       <span
                         className={cn(
-                          "text-sm font-semibold uppercase tracking-wider px-2 transition-opacity duration-200",
+                          "text-xs font-semibold uppercase tracking-wider px-2 transition-opacity duration-200",
                           isDarkMode ? "text-gray-400" : "text-gray-500",
                           collapsed && isHovered ? "opacity-100" : "",
                         )}

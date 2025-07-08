@@ -104,19 +104,6 @@ export function ActivityTable() {
       cell: ({ row }) => <div className="text-sm">{row.getValue("siteName")}</div>,
     },
     {
-      id: "reportType",
-      header: "Relatório",
-      cell: ({ row }) => {
-        const type = row.original.type
-        return (
-          <span className="text-sm font-semibold">
-            {type === "supervision" ? "Supervisão" : type === "occurrence" ? "Ocorrência" : type}
-          </span>
-        )
-      },
-      size: 120,
-    },
-    {
       id: "type",
       accessorKey: "type",
       header: "Atividade",
@@ -203,7 +190,6 @@ export function ActivityTable() {
         data={notifications}
         loading={isLoading}
         filterOptions={{
-          enableDateFilter: true,
           enableColumnVisibility: true,
         }}
         date={date}

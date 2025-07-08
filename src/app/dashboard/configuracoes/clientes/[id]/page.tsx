@@ -80,7 +80,6 @@ export default function CompanySites() {
   const [supervisionCount, setSupervisionCount] = useState<number>(0)
   const [isSiteDetailModalOpen, setIsSiteDetailModalOpen] = useState(false)
 
-  // Estados de loading para adicionar e editar
   const [isAdding, setIsAdding] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -277,8 +276,6 @@ export default function CompanySites() {
   }
 
 
-  // Remove handleInputChange, handled by react-hook-form
-
   const onSubmitAdd = async (data: FormData) => {
     if (!clientCode) {
       toast.error(t('errors.clientCodeNotFound'));
@@ -319,7 +316,7 @@ export default function CompanySites() {
     if (!selectedSite || !clientCode) return;
     setIsUpdating(true);
     try {
-      await instance.put(`/companySite/update/${selectedSite._id}/${clientCode}`, {
+      await instance.put(`/companySite/update/${clientCode}/${selectedSite._id}`, {
         ...data,
       });
       setData((prevList) =>
@@ -340,10 +337,7 @@ export default function CompanySites() {
   };
 
   const handleDisableSite = async (siteId: string) => {
-    // Aqui você pode chamar a API para desabilitar ou deletar o site
-    // Exemplo:
-    // await instance.delete(`/companySite/disable/${siteId}`);
-    // Atualize o estado dos sites conforme necessário
+
   };
 
   const handleViewSupervisions = async (site: Site) => {
@@ -767,7 +761,6 @@ export default function CompanySites() {
         </AlertDialog>
 
 
-        {/* Modal de Detalhes do Site */}
         <Dialog
           open={isSiteDetailModalOpen}
           onOpenChange={setIsSiteDetailModalOpen}

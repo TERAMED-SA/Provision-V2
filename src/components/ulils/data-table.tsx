@@ -23,8 +23,6 @@ interface DataTableProps<TData, TValue> {
   title?: string
   description?: string
   filterOptions?: {
-    enableNameFilter?: boolean
-    enableDateFilter?: boolean
     enableSiteFilter?: boolean
     enableSupervisorFilter?: boolean
     enableColumnVisibility?: boolean
@@ -127,13 +125,10 @@ const MIN_COLUMN_WIDTH = 80;
     }
   }, [date]);
 
-  // Definir larguras fixas para colunas específicas
   const getFixedColumnWidth = (columnId: string): number => {
     const lowerCaseColumnId = columnId.toLowerCase();
     
-    // Larguras fixas para colunas específicas
     const fixedWidths: Record<string, number> = {
-      // Colunas de data/hora - largura fixa de 200px
       'date': 30,
       'createdat': 30,
       'updatedat': 30,
@@ -331,16 +326,6 @@ const MIN_COLUMN_WIDTH = 80;
         )}
         </div>
 
-        {filterOptions.enableAddButton && onAddClick && (
-          <Button
-            onClick={onAddClick}
-            className="bg-black text-white px-4 py-2 rounded-md shadow text-sm cursor-pointer"
-            type="button"
-          >
-            {filterOptions.addButtonLabel || 'Adicionar'}
-          </Button>
-        )}
-
         {table.getPageCount() > 1 && (
           <div className="flex items-center">{renderPagination()}</div>
         )}
@@ -355,7 +340,7 @@ const MIN_COLUMN_WIDTH = 80;
         </div>
       )}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div className="relative overflow-x-auto">
+        <div className="relative">
           <div className="border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden">
             <div className="w-full" ref={tableRef}>
               <Table className="bg-white dark:bg-gray-900" style={{ tableLayout: 'fixed', width: '100%' }}>

@@ -339,6 +339,9 @@ export function SupervisorTable() {
           filterOptions={{
             enableAddButton: true,
             addButtonLabel: t("add"),
+            enableExportButton: true, 
+            exportButtonLabel: "Exportar Excel",
+            exportFileName: "supervisores.xlsx",
           }}
           onAddClick={handleAddClick}
           handleViewDetails={handleViewSupervisor}
@@ -531,6 +534,10 @@ export function SupervisorTable() {
                     <div>
                       <span className="font-medium">Telefone: </span>
                       {selectedSupervisor.phoneNumber || "N/A"}
+                    </div>
+                    <div>
+                      <span className="font-medium">Endereço: </span>
+                      {selectedSupervisor.address || "N/A"}
                     </div>
                   </div>
                 </div>
