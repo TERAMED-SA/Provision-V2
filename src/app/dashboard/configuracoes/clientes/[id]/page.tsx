@@ -27,26 +27,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import instance from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ulils/data-table";
 import toast from "react-hot-toast";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { companyAdapter } from "@/features/application/infrastructure/factories/CompanyFactory";
+import { siteAdapter } from "@/features/application/infrastructure/adapters/CompanyAdapter";
+import { Site } from "@/features/application/domain/entities/Site";
 
-
-interface Site {
-  _id: string
-  name: string
-  address?: string
-  ctClient?: string
-  clientCode: string
-  costCenter: string
-  numberOfWorkers: number
-  supervisorCode: string
-  zone: string
-}
 
 interface CompanyInfo {
   name: string
@@ -242,8 +232,8 @@ export default function CompanySites() {
 
       try {
         setIsLoading(true)
-        const response = await instance.get(`/companySite?size=500`)
-        const fetchedSites = response.data.data.data.filter((site: Site) => site.clientCode === clientCode)
+        const allSites = await siteAdapter.getSites();
+        const fetchedSites = allSites.filter((site: Site) => site.clientCode === clientCode)
         setData(fetchedSites)
       } catch (error) {
         console.error("Error fetching sites:", error)
@@ -257,8 +247,8 @@ export default function CompanySites() {
 
   const fetchCompanyInfo = async (costCenter: string) => {
     try {
-      const response = await instance.get(`/companySite/getCompanyInfo/${costCenter}`)
-      setCompanyInfo(response.data.data)
+      const info = await siteAdapter.getCompanyInfo(costCenter);
+      setCompanyInfo(info);
     } catch (error) {
       console.error("Error fetching company info:", error)
       toast.error(t('errors.failedToLoadCompanyInfo'))
@@ -267,8 +257,8 @@ export default function CompanySites() {
 
   const fetchSupervisionCount = async (supervisorCode: string) => {
     try {
-      const response = await instance.get(`/companySite/getSuperivsorSites/${supervisorCode}?size=500`)
-      setSupervisionCount(response.data.data.data.length || 0)
+      const count = await siteAdapter.getSupervisionCount(supervisorCode);
+      setSupervisionCount(count);
     } catch (error) {
       console.error("Error fetching supervision count:", error)
       toast.error(t('errors.failedToLoadSupervisions'))
@@ -277,17 +267,12 @@ export default function CompanySites() {
 
 
   const onSubmitAdd = async (data: FormData) => {
-    if (!clientCode) {
-      toast.error(t('errors.clientCodeNotFound'));
-      return;
-    }
     setIsAdding(true);
     try {
-      const response = await instance.post(`/companySite/create/${clientCode}/1162`, {
-        ...data,
-        location: {},
+      const response = await siteAdapter.createSite({
+        ...data
       });
-      setData((prevList) => [...prevList, response.data.data]);
+      setData((prevList) => [...prevList, response]);
       toast.success(t('success.siteAdded'));
       setIsAddModalOpen(false);
     } catch (error) {
@@ -313,12 +298,10 @@ export default function CompanySites() {
   };
 
   const onSubmitEdit = async (data: FormData) => {
-    if (!selectedSite || !clientCode) return;
+    if (!selectedSite ) return;
     setIsUpdating(true);
     try {
-      await instance.put(`/companySite/update/${clientCode}/${selectedSite._id}`, {
-        ...data,
-      });
+      await siteAdapter.updateSite(selectedSite._id, data);
       setData((prevList) =>
         prevList.map((site) =>
           site._id === selectedSite._id
@@ -334,10 +317,6 @@ export default function CompanySites() {
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const handleDisableSite = async (siteId: string) => {
-
   };
 
   const handleViewSupervisions = async (site: Site) => {
@@ -378,7 +357,6 @@ export default function CompanySites() {
     fetchSupervisors();
   }, []);
 
-  // Sincroniza supervisor selecionado ao editar
   useEffect(() => {
     if (isEditModalOpen && selectedSite && supervisors.length > 0) {
       const found = supervisors.find(sup => sup.code === selectedSite.supervisorCode);
@@ -777,7 +755,7 @@ export default function CompanySites() {
                 {companyInfo && (
                   <div className="flex flex-col">
 
-                    <span className="text-gray-900 font-medium">
+                    <span className="text-gray-900 text-sm font-medium">
                       {companyInfo.name}
                     </span>
                   </div>
@@ -874,12 +852,7 @@ export default function CompanySites() {
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (siteToDisable) {
-                  handleDisableSite(siteToDisable._id);
-                }
-                setIsConfirmDialogOpen(false);
-              }}
+          
             >
               Confirmar
             </AlertDialogAction>

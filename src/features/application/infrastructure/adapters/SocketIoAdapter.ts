@@ -1,7 +1,7 @@
 'use client'
 
-import { ChatRealTimePort } from '@/features/application/domain/realTime/ChatRealTimePort';
 import { socketManager } from '@/lib/socket';
+import { ChatRealTimePort } from '../../ports/ChatRealTimePort';
 
 export class SocketIoAdapter implements ChatRealTimePort {
   connect(userId: string): void {

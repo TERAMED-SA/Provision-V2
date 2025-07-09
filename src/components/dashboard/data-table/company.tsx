@@ -10,35 +10,11 @@ import { Input } from "../../ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../ui/dialog"
 import { Label } from "../../ui/label"
-import instance from "@/lib/api"
 import { companyAdapter } from "@/features/application/infrastructure/factories/CompanyFactory"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../../ui/alert-dialog"
 import { useAuth } from "@/hooks/useAuth"
 import toast from "react-hot-toast"
-
-interface Company {
-  _id: string
-  name: string
-  logo?: string
-  clientCode: string
-  sites: number
-  occurrences: number
-  createdAt: string
-  costCenter?: string
-  zone?: string
-  numberOfWorkers?: string | number
-}
-
-interface ApiResponse<T> {
-  data: {
-    data: T
-    total?: number
-    page?: number
-    size?: number
-  }
-  status: number
-  message: string
-}
+import { Company } from "@/features/application/domain/entities/Company"
 
 export default function CompanyTable() {
   const router = useRouter()
@@ -56,7 +32,7 @@ export default function CompanyTable() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDisableAlertOpen, setIsDisableAlertOpen] = useState(false)
-  const [editCompanyData, setEditCompanyData] = useState<Partial<Company>>({})
+  const [editCompanyData, setEditCompanyData] = useState<Partial<Company>>({ numberOfWorkers: "" });
 
   const columns: ColumnDef<Company>[] = React.useMemo(
     () => [
@@ -117,11 +93,8 @@ export default function CompanyTable() {
   const fetchCompanies = async (): Promise<void> => {
     setLoading(true)
     try {
-      const response = await instance.get<ApiResponse<Company>>(`/company?size=500`)
+      const dataArray = await companyAdapter.getCompanies();
       setTimeout(() => {
-        const dataArray = Array.isArray(response.data.data.data)
-          ? response.data.data.data
-          : [response.data.data.data]
         setCompanies(dataArray)
         setLoading(false)
       }, 1000)
@@ -174,24 +147,22 @@ export default function CompanyTable() {
 
     setIsSubmitting(true)
     try {
-      const response = await instance.post<ApiResponse<Company>>(`/company/create`, {
+      await companyAdapter.createCompany({
         name: clientName,
         clientCode: clientCode,
         costCenter: costcenter,
         zone: site,
-        numberOfWorkers: tl,
-      })
+        numberOfWorkers: String(tl)
+      }, clientCode)
 
-      if (response.data.status === 200) {
-        toast.success("Cliente cadastrado com sucesso!")
-        setIsAddClientDialogOpen(false)
-        setClientName("")
-        setClientCode("")
-        setCostCenter("")
-        setSite("")
-        setTl("")
-        fetchCompanies()
-      }
+      toast.success("Cliente cadastrado com sucesso!")
+      setIsAddClientDialogOpen(false)
+      setClientName("")
+      setClientCode("")
+      setCostCenter("")
+      setSite("")
+      setTl("")
+      fetchCompanies()
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Erro ao cadastrar cliente")
     } finally {
@@ -201,13 +172,9 @@ export default function CompanyTable() {
 
   const handleEditCompany = async () => {
     if (!selectedCompany) return
-    if (!user?._id) {
-      toast.error("Usuário não autenticado")
-      return
-    }
     setIsSubmitting(true)
     try {
-      const { clientCode, ...dataToUpdate } = editCompanyData;
+      const {...dataToUpdate } = editCompanyData;
       await companyAdapter.updateCompany(selectedCompany._id, dataToUpdate)
       toast.success("Empresa atualizada com sucesso")
       setIsEditDialogOpen(false)
