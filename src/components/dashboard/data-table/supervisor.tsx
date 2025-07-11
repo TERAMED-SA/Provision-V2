@@ -42,6 +42,9 @@ import toast from "react-hot-toast"
 export function SupervisorTable() {
   const t = useTranslations("supervisors")
   const [data, setData] = React.useState<Supervisor[]>([])
+  const sortedData = React.useMemo(() => {
+    return [...data].sort((a, b) => a.name.localeCompare(b.name));
+  }, [data]);
   const [loading, setLoading] = React.useState(true)
   const [editingSupervisor, setEditingSupervisor] = React.useState<Supervisor | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
@@ -53,16 +56,12 @@ export function SupervisorTable() {
   const [selectedSupervisorName, setSelectedSupervisorName] = React.useState<string>("")
   const [selectedSupervisor, setSelectedSupervisor] = React.useState<Supervisor | null>(null)
   const [isSupervisorDialogOpen, setIsSupervisorDialogOpen] = React.useState(false)
-
-  // Estados para atribuição de sites
   const [isAssignMode, setIsAssignMode] = React.useState(false)
   const [selectedSiteForAssign, setSelectedSiteForAssign] = React.useState<any | null>(null)
   const [supervisorForAssign, setSupervisorForAssign] = React.useState<Supervisor | null>(null)
   const [supervisorSites, setSupervisorSites] = React.useState<any[]>([])
   const [supervisorSitesLoading, setSupervisorSitesLoading] = React.useState(false)
   const [assigningSite, setAssigningSite] = React.useState(false)
-
-  // Estado para paginação da lista de supervisores na atribuição de sites
   const [showCount, setShowCount] = React.useState(5)
 
   const handleAddClick = () => {
@@ -240,20 +239,18 @@ export function SupervisorTable() {
 
   const handleConfirmAssign = async () => {
     if (!selectedSiteForAssign || !supervisorForAssign) return
-
     setAssigningSite(true)
     try {
       const response = await userAdapter.assignSiteToSupervisor(
         supervisorForAssign.employeeId,
         selectedSiteForAssign.costCenter,
       )
-
       if (response?.status === 200) {
         toast.success(response?.message || "Site atribuído com sucesso!")
         setIsAssignMode(false)
         setSelectedSiteForAssign(null)
         setSupervisorForAssign(null)
-        // Refresh sites
+        // Refresh site
         if (selectedSupervisor) {
           handleFetchSupervisorSites(selectedSupervisor.employeeId)
         }
@@ -368,7 +365,7 @@ export function SupervisorTable() {
       <div className="col-span-1 md:col-span-2">
         <DataTable
           columns={columns}
-          data={data}
+          data={sortedData}
           loading={loading}
           title={t("title")}
           filterOptions={{
@@ -421,7 +418,6 @@ export function SupervisorTable() {
                 </div>
               </div>
 
-              {/* Search */}
               <div className="p-4">
                 <Input
                   type="text"
@@ -432,7 +428,6 @@ export function SupervisorTable() {
                 />
               </div>
 
-              {/* Sites List */}
               <ScrollArea className="flex-1">
                 <div className="p-4">
                   {sitesLoading ? (
@@ -582,7 +577,6 @@ export function SupervisorTable() {
       </DialogContent>
     </Dialog>
 
-      {/* Supervisor Details Modal */}
       <Dialog open={isSupervisorDialogOpen} onOpenChange={setIsSupervisorDialogOpen}>
         <DialogContent className="p-0 max-h-[95vh] flex flex-col w-full max-w-[95vw] lg:max-w-lg">
           <DialogHeader>
