@@ -66,20 +66,20 @@ export default function CompanyTable() {
         cell: ({ row }) => {
           const company = row.original
           return (
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <span
                 title="Editar"
                 onClick={(e) => { e.stopPropagation(); setSelectedCompany(company); setEditCompanyData(company); setIsEditDialogOpen(true); }}
-                className="p-1 hover:bg-blue-100 cursor-pointer rounded transition-colors"
+                className="hover:bg-blue-100 cursor-pointer rounded transition-colors"
               >
-                <Edit className="h-3.5 w-3.5 text-blue-600" />
+                 <Edit className="h-4 w-4 text-blue-600" />
               </span>
               <span
                 title="Desativar"
                 onClick={(e) => { e.stopPropagation(); setSelectedCompany(company); setIsDisableAlertOpen(true); }}
-                className="p-1 rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
+                className=" rounded transition-colors text-red-600 hover:bg-red-100 cursor-pointer"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4 text-red-600" />
               </span>
             </div>
           )

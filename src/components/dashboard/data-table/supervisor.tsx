@@ -62,6 +62,9 @@ export function SupervisorTable() {
   const [supervisorSitesLoading, setSupervisorSitesLoading] = React.useState(false)
   const [assigningSite, setAssigningSite] = React.useState(false)
 
+  // Estado para paginação da lista de supervisores na atribuição de sites
+  const [showCount, setShowCount] = React.useState(5)
+
   const handleAddClick = () => {
     setIsAddDialogOpen(true)
   }
@@ -109,9 +112,9 @@ export function SupervisorTable() {
       if ((supervisor as any).gender && (supervisor as any).gender.trim() !== "") {
         userPayload.gender = (supervisor as any).gender
       }
-      await userAdapter.updateUser(supervisor._id, userPayload)
+      const result = await userAdapter.updateUser(supervisor._id, userPayload)
       await fetchSupervisors()
-      toast.success("Supervisor atualizado com sucesso")
+        toast.success("Supervisor atualizado com sucesso")
     } catch (error: any) {
       const apiMsg = error?.response?.data?.message || error?.message || "Erro ao atualizar supervisor"
       toast.error(apiMsg)
@@ -327,7 +330,7 @@ export function SupervisorTable() {
               }}
               className=" p-0 hover:bg-green-100"
             >
-              <MapPin className="h-4 w-4 text-green-600" />
+              <MapPin className="h-4 w-4 text-gray-600" />
             </span>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -389,24 +392,24 @@ export function SupervisorTable() {
 
       <SupervisorAddForm open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onSuccess={fetchSupervisors} />
 
-      {/* Sites Modal with Improved Layout */}
-      <Dialog
-        open={isSitesDialogOpen}
-        onOpenChange={(open) => {
-          setIsSitesDialogOpen(open)
-          if (!open) {
-            setSiteSearch("")
-            setSelectedSupervisorName("")
-            setIsAssignMode(false)
-            setSelectedSiteForAssign(null)
-            setSupervisorForAssign(null)
-          }
-        }}
-      >
-        <DialogContent className="max-w-7xl h-[75vh] p-2 overflow-y-auto relative">
-          <div className="flex h-full w-full relative">
-            {/* Left Panel - Sites List (ocupa toda largura do Dialog, exceto quando drawer aberto) */}
-            <div className={`flex flex-col border-r transition-all duration-300 ${isAssignMode ? 'w-[calc(100%-32rem)]' : 'w-full'}`}> {/* 32rem = 512px, igual ao drawer */}
+     <Dialog
+      open={isSitesDialogOpen}
+      onOpenChange={(open) => {
+        setIsSitesDialogOpen(open)
+        if (!open) {
+          setSiteSearch("")
+          setSelectedSupervisorName("")
+          setIsAssignMode(false)
+          setSelectedSiteForAssign(null)
+          setSupervisorForAssign(null)
+        }
+      }}
+    >
+      <DialogContent className="max-w-7xl overflow-y-auto h-[75vh] flex items-center justify-center">
+        <div className="flex h-full w-full">
+          {/* Sites List Page */}
+          {!isAssignMode && (
+            <div className="flex flex-col w-full">
               {/* Header */}
               <div className="flex items-center gap-4 p-2 border-b bg-white">
                 <Avatar className="h-12 w-12">
@@ -416,15 +419,10 @@ export function SupervisorTable() {
                   <h2 className="text-xl font-bold text-gray-900">{selectedSupervisor?.name}</h2>
                   <p className="text-sm text-gray-500">Sites atribuídos</p>
                 </div>
-                {isAssignMode && (
-                  <Button variant="ghost" size="sm" onClick={() => setIsAssignMode(false)} className="h-8 w-8 p-0">
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
 
               {/* Search */}
-              <div className="p-4 border-b">
+              <div className="p-4">
                 <Input
                   type="text"
                   placeholder="Pesquisar sites..."
@@ -435,7 +433,7 @@ export function SupervisorTable() {
               </div>
 
               {/* Sites List */}
-              <ScrollArea className="flex-1  ">
+              <ScrollArea className="flex-1">
                 <div className="p-4">
                   {sitesLoading ? (
                     <div className="flex items-center justify-center h-32">
@@ -444,7 +442,7 @@ export function SupervisorTable() {
                     </div>
                   ) : filteredSites.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-32 text-gray-400">
-                      <Building2 className="h-8 w-8 mb-2" />
+                      <Building2 className="h-12 w-12 mb-2" />
                       <p>Nenhum site encontrado</p>
                     </div>
                   ) : (
@@ -456,8 +454,8 @@ export function SupervisorTable() {
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900 mb-2 text-sm">{site.name}</h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                                  <div className="flex items-center gap-1 ">
-                                    <Building2 className="h-3 w-3" />
+                                  <div className="flex items-center gap-1">
+                                    <Building2 className="h-4 w-4 " />
                                     <span>{site.costCenter || "N/A"}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
@@ -470,7 +468,7 @@ export function SupervisorTable() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleAssignSite(site)}
-                                className="ml-4 text-sm"
+                                className=" text-sm"
                               >
                                 <ArrowRightLeft className="h-4 w-4 mr-1" />
                                 Atribuir Site
@@ -484,113 +482,111 @@ export function SupervisorTable() {
                 </div>
               </ScrollArea>
             </div>
+          )}
 
-            {/* Right Panel - Assign Site como drawer à direita DENTRO do Dialog */}
-            {isAssignMode && (
-              <div className="absolute top-0 right-0 h-full z-50 flex flex-col w-[32rem] max-w-full bg-white shadow-2xl animate-slideInRight border-l border-gray-200">
-                {/* Header */}
-                <div className="p-6 border-b bg-gray-50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ArrowLeft className="h-4 w-4 cursor-pointer" onClick={() => setIsAssignMode(false)} />
-                    <h3 className="font-semibold">Atribuir Site</h3>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => setIsAssignMode(false)} className="h-8 w-8 p-0">
-                    <X className="h-4 w-4" />
+          {isAssignMode && (
+            <div className="flex flex-col w-full h-full">
+              <div className=" border-b flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={() => setIsAssignMode(false)} className="h-8 w-8 p-0">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h3 className="font-semibold">Atribuir Site</h3>
+              </div>
+
+              <div className="p-4 border-b bg-gray-50">
+                <p className="text-sm text-gray-600">
+                  Site: <span className="font-medium">{selectedSiteForAssign?.name}</span>
+                </p>
+              </div>
+
+              <div className="p-4 border-b flex flex-col">
+                <h4 className="font-medium mb-3">Selecionar Supervisor</h4>
+                <Input
+                  type="text"
+                  placeholder="Pesquisar supervisor..."
+                  value={siteSearch}
+                  onChange={(e) => setSiteSearch(e.target.value)}
+                  className="mb-3 w-full"
+                />
+              </div>
+
+              <ScrollArea className="flex-1 p-2">
+                <div className="space-y-2">
+                  {data
+                    .filter(
+                      (sup) =>
+                        sup.name?.toLowerCase().includes(siteSearch.toLowerCase()) ||
+                        sup.employeeId?.toLowerCase().includes(siteSearch.toLowerCase()),
+                    )
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .slice(0, showCount)
+                    .map((supervisor) => (
+                      <div
+                        key={supervisor.employeeId}
+                        className={`flex items-center gap-3 p-1 rounded-lg cursor-pointer transition-all ${
+                          supervisorForAssign?.employeeId === supervisor.employeeId
+                            ? "bg-blue-100 border border-blue-500"
+                            : "hover:bg-gray-50 border border-transparent"
+                        }`}
+                        onClick={() => handleSelectSupervisorForAssign(supervisor)}
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{supervisor.name?.charAt(0)?.toUpperCase() || "S"}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{supervisor.name}</p>
+                          <p className="text-xs text-gray-500">{supervisor.employeeId}</p>
+                        </div>
+                        {supervisorForAssign?.employeeId === supervisor.employeeId && (
+                          <CheckCircle className="h-4 w-4 text-blue-600" />
+                        )}
+                      </div>
+                    ))}
+                  {data
+                    .filter(
+                      (sup) =>
+                        sup.name?.toLowerCase().includes(siteSearch.toLowerCase()) ||
+                        sup.employeeId?.toLowerCase().includes(siteSearch.toLowerCase()),
+                    ).length > showCount && (
+                    <div className="flex justify-center pt-2">
+                      <Button variant="outline" className="cursor-pointer" size="sm" onClick={() => setShowCount(showCount + 5)}>
+                        Ver mais
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              <div className="p-4 border-t bg-gray-50">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleConfirmAssign}
+                    disabled={!supervisorForAssign || assigningSite}
+                    className="flex-1 cursor-pointer"
+                  >
+                    {assigningSite ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    )}
+                    Confirmar
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsAssignMode(false)} className="flex-1 cursor-pointer">
+                    Cancelar
                   </Button>
                 </div>
-                <div className="p-4 border-b">
-                  <p className="text-sm text-gray-600">
-                    Site: <span className="font-medium">{selectedSiteForAssign?.name}</span>
-                  </p>
-                </div>
-
-                {/* Supervisors List */}
-                <div className="p-4 border-b">
-                  <h4 className="font-medium mb-3">Selecionar Supervisor</h4>
-                  <ScrollArea className="h-48">
-                    <div className="space-y-2">
-                      {data.map((supervisor) => (
-                        <div
-                          key={supervisor.employeeId}
-                          className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                            supervisorForAssign?.employeeId === supervisor.employeeId
-                              ? "bg-blue-100 border border-blue-500"
-                              : "hover:bg-gray-50 border border-transparent"
-                          }`}
-                          onClick={() => handleSelectSupervisorForAssign(supervisor)}
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{supervisor.name?.charAt(0)?.toUpperCase() || "S"}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{supervisor.name}</p>
-                            <p className="text-xs text-gray-500">{supervisor.employeeId}</p>
-                          </div>
-                          {supervisorForAssign?.employeeId === supervisor.employeeId && (
-                            <CheckCircle className="h-4 w-4 text-blue-600" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-
-                {/* Selected Supervisor Sites */}
-                {supervisorForAssign && (
-                  <div className="flex-1 p-4">
-                    <h4 className="font-medium mb-3">Sites atuais do supervisor</h4>
-                    <ScrollArea className="h-full">
-                      {supervisorSitesLoading ? (
-                        <div className="flex items-center justify-center h-20">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                      ) : supervisorSites.length === 0 ? (
-                        <p className="text-sm text-gray-500">Nenhum site atribuído</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {supervisorSites.map((site) => (
-                            <div key={site._id} className="p-2 bg-gray-50 rounded text-sm">
-                              <p className="font-medium">{site.name}</p>
-                              <p className="text-gray-600">{site.costCenter}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </ScrollArea>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="p-4 border-t bg-gray-50">
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleConfirmAssign}
-                      disabled={!supervisorForAssign || assigningSite}
-                      className="flex-1"
-                    >
-                      {assigningSite ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                      )}
-                      Confirmar
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsAssignMode(false)} className="flex-1">
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
 
       {/* Supervisor Details Modal */}
       <Dialog open={isSupervisorDialogOpen} onOpenChange={setIsSupervisorDialogOpen}>
         <DialogContent className="p-0 max-h-[95vh] flex flex-col w-full max-w-[95vw] lg:max-w-lg">
           <DialogHeader>
-            <div className="flex items-center gap-3 border-b pb-3">
+            <div className="flex items-center gap-3 border-b p-2">
               <Avatar className="h-10 w-10">
                 <AvatarFallback>{selectedSupervisor?.name?.charAt(0)?.toUpperCase() || "S"}</AvatarFallback>
               </Avatar>
@@ -598,15 +594,15 @@ export function SupervisorTable() {
                 <DialogTitle className="text-lg font-bold text-primary">
                   {selectedSupervisor?.name || "N/A"}
                 </DialogTitle>
-                <p className="text-sm text-gray-500">ID: {selectedSupervisor?.employeeId || "N/A"}</p>
+                <p className="text-sm text-gray-500">ID do Funcionário: {selectedSupervisor?.employeeId || "N/A"}</p>
               </div>
             </div>
           </DialogHeader>
 
           <div className="px-4 py-2 overflow-y-auto flex-grow bg-muted/10 dark:bg-muted/20">
             {selectedSupervisor ? (
-              <div className="space-y-4 pr-4">
-                <Card>
+              <div className="space-y-4 ">
+                <Card className="rounded shadow-none">
                   <CardHeader>
                     <CardTitle className="text-base">Informações Básicas</CardTitle>
                   </CardHeader>
