@@ -12,7 +12,7 @@ import instance from "@/lib/api"
 import { GenericDetailModal } from "../generic-detail-modal"
 import { ptBR } from "date-fns/locale"
 import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory"
-import { extractColumnsForPDF, extractSectionsFromData } from "@/lib/pdfUtils"
+import { extractColumnsForPDF, extractSectionsFromData, extractSectionsWithTranslations } from "@/lib/pdfUtils"
 
 export type WorkerInfo = {
   name: string
@@ -61,6 +61,28 @@ type Column<TData, TValue> = {
 type Row<TData> = {
   original: TData
   getValue: (id: string) => any
+}
+
+const sectionTranslations = {
+  equipment: {
+    title: "Equipamentos",
+    fields: {
+      name: "Nome",
+      serialNumber: "Número de Série",
+      state: "Estado",
+      costCenter: "Centro de Custo",
+      obs: "Observação"
+    }
+  },
+  workerInformation: {
+    title: "Trabalhadores",
+    fields: {
+      name: "Nome",
+      employeeNumber: "Matrícula",
+      state: "Estado",
+      obs: "Observação"
+    }
+  }
 }
 
 export function NewSupervionTable() {
@@ -268,7 +290,7 @@ export function NewSupervionTable() {
                     columns={extractColumnsForPDF(columns)}
                     data={selectedNotification}
                     detailsField="details"
-                    sections={extractSectionsFromData(selectedNotification)}
+                    sections={extractSectionsWithTranslations(selectedNotification, sectionTranslations)}
                   />
                 }
                 fileName={`supervisao-${selectedNotification?.siteName}-${selectedNotification?._id}.pdf`}

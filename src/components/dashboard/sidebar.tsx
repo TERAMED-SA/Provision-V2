@@ -475,7 +475,7 @@ export function Sidebar({
 
           <div className="pt-4 pb-2 border-t border-gray-200 flex items-center justify-center dark:border-gray-700">
             <Image
-              src={isVisuallyExpanded ? "/prometeus-w-80.jpeg" : "/prometeus.jpeg"}
+              src={isVisuallyExpanded ? "/prometeus-w-80.jpeg" : "/Prometeus_logo.png"}
               alt="Prometeus"
               width={isVisuallyExpanded ? 120 : 32}
               height={isVisuallyExpanded ? 64 : 32}

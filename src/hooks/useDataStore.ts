@@ -2,18 +2,15 @@ import { create } from "zustand"
 import { devtools } from "zustand/middleware"
 import { isSameDay } from "date-fns"
 import toast from "react-hot-toast"
-import { CheckCircle, AlertCircle } from "lucide-react"
 
-// Sistema global de controle de toasts otimizado
 const createToastManager = () => {
   let shownToasts = new Set<string>()
   let lastClearTime = Date.now()
-  const CLEAR_INTERVAL = 30000 // 30 segundos
+  const CLEAR_INTERVAL = 3000 
 
   return {
     shouldShow: (id: string) => {
       const now = Date.now()
-      // Limpar cache periodicamente
       if (now - lastClearTime > CLEAR_INTERVAL) {
         shownToasts.clear()
         lastClearTime = now
@@ -72,28 +69,17 @@ export interface NotificationItem {
 }
 
 interface SupervisionStore {
-  // Data
   supervisions: SupervisionData[]
   occurrences: OccurrenceData[]
   notifications: NotificationItem[]
-
-  // Selected date for filtering
   selectedDate: Date
-
-  // Loading states
   isLoadingSupervisions: boolean
   isLoadingOccurrences: boolean
-
-  // Counters
   selectedDateSupervisionCount: number
   selectedDateOccurrenceCount: number
   unreadNotificationsCount: number
-
-  // Notification management
   lastNotificationCheck: Date | null
   shownNotificationIds: Set<string>
-
-  // Actions
   setSupervisions: (data: SupervisionData[]) => void
   setOccurrences: (data: OccurrenceData[]) => void
   setSelectedDate: (date: Date) => void
@@ -103,8 +89,6 @@ interface SupervisionStore {
   markAllNotificationsAsRead: () => void
   updateNotifications: () => void
   showNewNotifications: () => void
-
-  // Getters
   getRecentActivities: () => NotificationItem[]
   getSelectedDateCounts: () => { supervision: number; occurrence: number }
   getTodayCounts: () => { supervision: number; occurrence: number }
@@ -114,7 +98,6 @@ interface SupervisionStore {
 export const useSupervisionStore = create<SupervisionStore>()(
   devtools(
     (set, get) => ({
-      // Initial state - default to today
       supervisions: [],
       occurrences: [],
       notifications: [],
@@ -127,7 +110,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
       lastNotificationCheck: null,
       shownNotificationIds: new Set(),
 
-      // Actions
       setSupervisions: (data) => {
         set({ supervisions: data })
         get().updateNotifications()
@@ -167,10 +149,8 @@ export const useSupervisionStore = create<SupervisionStore>()(
       updateNotifications: () => {
         const { supervisions, occurrences, selectedDate } = get()
 
-        // Otimização: verificar se há dados antes de processar
         if (!supervisions.length && !occurrences.length) return
 
-        // Filter data for selected date - otimizado
         const selectedDateSupervisions = supervisions.filter((item) => 
           item.createdAtDate && isSameDay(item.createdAtDate, selectedDate)
         )
@@ -178,13 +158,11 @@ export const useSupervisionStore = create<SupervisionStore>()(
           item.createdAtDate && isSameDay(item.createdAtDate, selectedDate)
         )
 
-        // Update counts
         set({
           selectedDateSupervisionCount: selectedDateSupervisions.length,
           selectedDateOccurrenceCount: selectedDateOccurrences.length,
         })
 
-        // Create notifications from selected date's supervisions
         const supervisionNotifications: NotificationItem[] = selectedDateSupervisions.map((supervision) => ({
           id: `supervision-${supervision.id}`,
           type: "supervision" as const,
@@ -196,7 +174,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
           isNew: true,
         }))
 
-        // Create notifications from selected date's occurrences
         const occurrenceNotifications: NotificationItem[] = selectedDateOccurrences.map((occurrence) => ({
           id: `occurrence-${occurrence.id}`,
           type: "occurrence" as const,
@@ -208,7 +185,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
           isNew: true,
         }))
 
-        // Combine and sort by time (most recent first) - otimizado
         const allNotifications = [...supervisionNotifications, ...occurrenceNotifications].sort(
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
         )
@@ -224,19 +200,13 @@ export const useSupervisionStore = create<SupervisionStore>()(
       showNewNotifications: () => {
         const { notifications, shownNotificationIds, lastNotificationCheck } = get()
         const now = new Date()
-
-        // Otimização: verificar se há notificações
         if (!notifications.length) return
-
-        // Filter new notifications that haven't been shown yet - otimizado
         const newNotifications = notifications.filter((notif) => {
           const isNew = !shownNotificationIds.has(notif.id)
           const isRecent = !lastNotificationCheck || notif.createdAt > lastNotificationCheck
           const shouldShow = toastManager.shouldShow(notif.id)
           return isNew && isRecent && notif.isNew && shouldShow
         })
-
-        // Show toast for new notifications (max 3 at a time) - corrigido e otimizado
         if (newNotifications.length > 0) {
           newNotifications.slice(0, 3).forEach((notif) => {
             const hora = notif.createdAt
@@ -247,9 +217,8 @@ export const useSupervisionStore = create<SupervisionStore>()(
               ? ` Recebeste uma nova Supervisão às ${hora}`
               : ` Recebeste uma nova Ocorrência às ${hora}`
             
-            // Toast otimizado com melhor estilo
             toast(message, {
-              duration: 15000,
+              duration: 8000,
               position: "top-right",
               style: {
                 fontSize: "14px",
@@ -261,15 +230,10 @@ export const useSupervisionStore = create<SupervisionStore>()(
                 boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
                 padding: "12px 16px",
                 lineHeight: 1.4,
-              },
-              icon:
-                notif.type === "supervision"
-                  ? CheckCircle({ size: 22, color: "#0ea5e9" })
-                  : AlertCircle({ size: 22, color: "#eab308" }),
+              }
             })
           })
 
-          // Update shown notifications
           const newShownIds = new Set([...shownNotificationIds, ...newNotifications.map((n) => n.id)])
 
           set({
@@ -279,11 +243,9 @@ export const useSupervisionStore = create<SupervisionStore>()(
         }
       },
 
-      // Getters - otimizados
       getRecentActivities: () => {
         const { supervisions, occurrences, selectedDate } = get()
 
-        // Filter data for selected date - otimizado com slice antecipado
         const selectedDateSupervisions = supervisions
           .filter((item) => item.createdAtDate && isSameDay(item.createdAtDate, selectedDate))
           .slice(0, 5)
@@ -292,7 +254,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
           .filter((item) => item.createdAtDate && isSameDay(item.createdAtDate, selectedDate))
           .slice(0, 5)
 
-        // Get 5 most recent supervisions from selected date
         const recentSupervisions = selectedDateSupervisions.map((item) => ({
           id: `supervision-${item.id}`,
           type: "supervision" as const,
@@ -304,7 +265,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
           isNew: false,
         }))
 
-        // Get 5 most recent occurrences from selected date
         const recentOccurrences = selectedDateOccurrences.map((item) => ({
           id: `occurrence-${item.id}`,
           type: "occurrence" as const,
@@ -316,10 +276,9 @@ export const useSupervisionStore = create<SupervisionStore>()(
           isNew: false,
         }))
 
-        // Combine and sort by time (most recent first)
         return [...recentSupervisions, ...recentOccurrences]
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-          .slice(0, 10) // Return top 10 activities
+          .slice(0, 10)
       },
 
       getSelectedDateCounts: () => {
@@ -335,7 +294,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
       },
 
       getTodayCounts: () => {
-        // Sempre usar a data de hoje para os badges do sidebar
         const today = new Date()
         const { supervisions, occurrences } = get()
         return {
@@ -351,7 +309,6 @@ export const useSupervisionStore = create<SupervisionStore>()(
       getAvailableDates: () => {
         const { supervisions, occurrences } = get()
 
-        // Otimização: usar Set para datas únicas
         const dateSet = new Set<string>()
         
         supervisions.forEach(s => {
@@ -366,10 +323,9 @@ export const useSupervisionStore = create<SupervisionStore>()(
           }
         })
 
-        // Convert back to Date objects and sort
         return Array.from(dateSet)
           .map(dateStr => new Date(dateStr))
-          .sort((a, b) => b.getTime() - a.getTime()) // Most recent first
+          .sort((a, b) => b.getTime() - a.getTime())
       },
     }),
     {

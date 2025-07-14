@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,9 +29,10 @@ interface Equipment {
   name: string;
   serialNumber: string;
   state: string;
+  obs?: string; 
+  costCenter?: string; 
 }
 
-// Dados específicos para ocorrência
 interface OccurrenceData {
   _id: string;
   createdAt: string;
@@ -45,7 +45,6 @@ interface OccurrenceData {
   equipment?: Equipment[];
 }
 
-// Dados específicos para supervisão
 interface SupervisionData {
   _id: string;
   createdAt: string;
@@ -57,8 +56,6 @@ interface SupervisionData {
   workerInformation?: WorkerInformation[];
   equipment?: Equipment[];
 }
-
-type NotificationData = OccurrenceData | SupervisionData;
 
 interface GenericDetailModalProps {
   isOpen: boolean;
@@ -74,7 +71,6 @@ interface GenericDetailModalProps {
   priorityColor?: string;
   supervisionData?: SupervisionData;
 }
-
 export function GenericDetailModal({
   isOpen,
   onClose,
@@ -92,8 +88,6 @@ export function GenericDetailModal({
   const isOccurrence = type === "occurrence";
   const defaultIcon = isOccurrence ? AlertTriangle : Shield;
   const DisplayIcon = Icon || defaultIcon;
-
-  // Seleciona os dados baseado no tipo
   const notification = isOccurrence ? occurrenceData : supervisionData;
 
   if (!notification) {
@@ -104,7 +98,7 @@ export function GenericDetailModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          "p-0 max-h-[95vh] flex flex-col w-full max-w-[95vw] lg:max-w-lg  ",
+          "p-0 max-h-[85vh] flex flex-col w-full max-w-[95vw] lg:max-w-xl  ",
           className
         )}
       >
@@ -121,10 +115,8 @@ export function GenericDetailModal({
             </p>
           )}
         </DialogHeader>
-
         <div className="px-4 py-2 overflow-y-auto flex-grow bg-muted/10 dark:bg-muted/20">
           <div className="space-y-1 ">
-            {/* Header Information - Data, Supervisor, Prioridade/Cost Center em linha, Site embaixo */}
             <div className="p-2  bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 items-center">
                 <div>
@@ -178,7 +170,6 @@ export function GenericDetailModal({
               </div>
             </div>
 
-            {/* Details */}
             <div className="p-3 lg:p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <p className="text-xs lg:text-sm font-medium text-muted-foreground mb-2">
                 Detalhes
@@ -188,7 +179,6 @@ export function GenericDetailModal({
               </p>
             </div>
 
-            {/* Tabs for Workers and Equipment */}
             <Tabs defaultValue="workers" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="workers" className="text-xs lg:text-sm">
@@ -202,35 +192,33 @@ export function GenericDetailModal({
               <TabsContent value="workers" className="mt-3 lg:mt-4">
                 {notification.workerInformation &&
                 notification.workerInformation.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-2 lg:gap-3">
+                  <div className="flex flex-col gap-2 lg:gap-3">
                     {notification.workerInformation.map((worker, index) => (
                       <div
                         key={index}
                         className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
                       >
-                        <div className="flex items-center justify-between mb-2 gap-2">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="flex flex-col mb-2 gap-2">
+                          <div className="flex flex-col gap-2 min-w-0 flex-1">
                             <User className="h-3 w-3 lg:h-4 lg:w-4 flex-shrink-0" />
                             <h4 className="text-xs lg:text-sm font-medium truncate">
                               {worker.name}
                             </h4>
-                          </div>
-                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                            <p className="text-xs text-muted-foreground flex-shrink-0">
                             Nº {worker.employeeNumber}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium text-muted-foreground">
+                          </p>
+                          <div className="min-w-0 ">
+                            <p className=" font-medium text-muted-foreground">
                               Estado
                             </p>
                             <p className="text-xs lg:text-sm break-words">
                               {worker.state}
                             </p>
                           </div>
-                          {worker.obs && (
+                         <div>
+                         {worker.obs && (
                             <div className="min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground">
+                              <p className=" font-medium text-muted-foreground">
                                 Observações
                               </p>
                               <p className="text-xs break-words">
@@ -238,6 +226,8 @@ export function GenericDetailModal({
                               </p>
                             </div>
                           )}
+                         </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -267,11 +257,17 @@ export function GenericDetailModal({
                           <TableHead className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto">
                             Estado
                           </TableHead>
+                            <TableHead className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 bg-gray-50 dark:bg-gray-800/50 whitespace-nowrap w-auto">
+                            Observações
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {notification.equipment.map((equip, index) => (
                           <TableRow key={index}>
+                               <TableCell className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
+                              {equip.costCenter}
+                            </TableCell>
                             <TableCell className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
                               {equip.name}
                             </TableCell>
@@ -280,6 +276,9 @@ export function GenericDetailModal({
                             </TableCell>
                             <TableCell className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
                               {equip.state}
+                            </TableCell>
+                                 <TableCell className="py-0 px-2 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700 last:border-r-0 dark:bg-gray-800/50 whitespace-nowrap w-auto">
+                              {equip.obs || "Sem observações"}
                             </TableCell>
                           </TableRow>
                         ))}

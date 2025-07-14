@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { AlignLeft, FoldHorizontal, Menu } from "lucide-react";
+import { AlignLeft,  Menu } from "lucide-react";
 
 export interface SidebarToggleButtonProps {
   collapsed: boolean;
@@ -33,7 +33,7 @@ export function SidebarToggleButton({
       )}
     >
       {collapsed ? (
-        <FoldHorizontal  size={26} className="text-gray-700 dark:text-white" />
+        <AlignLeft   size={26} className="text-gray-700 dark:text-white" />
       ) : (
         <Menu size={26} className="text-gray-700 dark:text-white" />
       )}

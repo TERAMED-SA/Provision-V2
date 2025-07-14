@@ -3,7 +3,7 @@
 import { useCallback,  useState, useMemo } from "react"
 import { format, startOfDay, endOfDay, subDays, startOfWeek, startOfMonth } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import {  Activity, Shield, AlertTriangle,  FileSpreadsheet } from "lucide-react"
+import {  Activity, Shield, AlertTriangle } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart"
 import { Card, CardContent,  CardHeader } from "../ui/card"
@@ -11,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 import { useTranslations } from "next-intl"
 import { useSupervisionData } from "@/hooks/useDataQueries"
 import { useSupervisionStore } from "@/hooks/useDataStore"
-import * as XLSX from "xlsx"
 
 interface ChartData {
   hour: string;

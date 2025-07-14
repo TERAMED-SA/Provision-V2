@@ -13,8 +13,6 @@ export function useSupervisionData() {
   const queryClient = useQueryClient()
   const { setSupervisions, setOccurrences, setLoadingSupervisions, setLoadingOccurrences, showNewNotifications } =
     useSupervisionStore()
-
-  // Load supervisors
   const { data: supervisors } = useQuery({
     queryKey: ["supervisors"],
     queryFn: async () => {
@@ -28,10 +26,9 @@ export function useSupervisionData() {
 
       return supervisorMap
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   })
 
-  // Fetch supervisions
   const { data: supervisionData, isLoading: isLoadingSupervisions } = useQuery({
     queryKey: ["supervisions"],
     queryFn: async () => {
@@ -78,7 +75,6 @@ export function useSupervisionData() {
               time: formattedDuration,
             }
           })
-          // Sort by creation date/time (most recent first)
           .sort((a: SupervisionData, b: SupervisionData) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
 
         return formattedData
@@ -88,11 +84,10 @@ export function useSupervisionData() {
       }
     },
     enabled: !!supervisors,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 1000, // Consider data stale after 10 seconds
+    refetchInterval: 100000,
+    staleTime: 1000,
   })
 
-  // Fetch occurrences
   const { data: occurrenceData, isLoading: isLoadingOccurrences } = useQuery({
     queryKey: ["occurrences"],
     queryFn: async () => {
@@ -120,7 +115,6 @@ export function useSupervisionData() {
               description: notification.description || "Ocorrência registrada",
             }
           })
-          // Sort by creation date/time (most recent first)
           .sort((a: OccurrenceData, b: OccurrenceData) => b.createdAtDate.getTime() - a.createdAtDate.getTime())
 
         return formattedData
@@ -129,28 +123,39 @@ export function useSupervisionData() {
         throw error
       }
     },
-    refetchInterval: 30000, 
+    refetchInterval: 100000, 
     staleTime: 1000, 
   })
 
-  // Update store when data changes
+  const prevSupervisionIds = React.useRef<Set<string>>(new Set())
+  const prevOccurrenceIds = React.useRef<Set<string>>(new Set())
+
   React.useEffect(() => {
     if (supervisionData) {
       setSupervisions(supervisionData)
-      // Check for new notifications
-      setTimeout(() => {
-        showNewNotifications()
-      }, 1000)
+
+      const currentIds = new Set(supervisionData.map(s => s.id))
+      const newIds = [...currentIds].filter(id => !prevSupervisionIds.current.has(id))
+      if (newIds.length > 0) {
+        setTimeout(() => {
+          showNewNotifications()
+        }, 1000)
+      }
+      prevSupervisionIds.current = currentIds
     }
   }, [supervisionData, setSupervisions, showNewNotifications])
 
   React.useEffect(() => {
     if (occurrenceData) {
       setOccurrences(occurrenceData)
-      // Check for new notifications
-      setTimeout(() => {
-        showNewNotifications()
-      }, 1000)
+      const currentIds = new Set(occurrenceData.map(o => o.id))
+      const newIds = [...currentIds].filter(id => !prevOccurrenceIds.current.has(id))
+      if (newIds.length > 0) {
+        setTimeout(() => {
+          showNewNotifications()
+        }, 1000)
+      }
+      prevOccurrenceIds.current = currentIds
     }
   }, [occurrenceData, setOccurrences, showNewNotifications])
 
@@ -162,7 +167,6 @@ export function useSupervisionData() {
     setLoadingOccurrences(isLoadingOccurrences)
   }, [isLoadingOccurrences, setLoadingOccurrences])
 
-  // Manual refresh function
   const refreshData = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["supervisions"] })
     queryClient.invalidateQueries({ queryKey: ["occurrences"] })

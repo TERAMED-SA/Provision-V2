@@ -11,8 +11,8 @@ import {
   Building2,
   ArrowRightLeft,
   CheckCircle,
-  X,
   ArrowLeft,
+  Check,
 } from "lucide-react"
 import { DataTable } from "../../ulils/data-table"
 import { SupervisorAddForm } from "../supervisor/supervision-Add-Form"
@@ -325,7 +325,7 @@ export function SupervisorTable() {
                 e.stopPropagation()
                 handleFetchSupervisorSites(supervisor.employeeId)
               }}
-              className=" p-0 hover:bg-green-100"
+              className=" p-0 hover:bg-gray-100"
             >
               <MapPin className="h-4 w-4 text-gray-600" />
             </span>
@@ -454,7 +454,7 @@ export function SupervisorTable() {
                                     <span>{site.costCenter || "N/A"}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Users className="h-3 w-3" />
+                                    <Users className="h-4 w-4" />
                                     <span>{site.numberOfWorkers || "0"}</span>
                                   </div>
                                 </div>
@@ -463,7 +463,7 @@ export function SupervisorTable() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleAssignSite(site)}
-                                className=" text-sm"
+                                className="cursor-pointer text-sm"
                               >
                                 <ArrowRightLeft className="h-4 w-4 mr-1" />
                                 Atribuir Site
@@ -482,15 +482,15 @@ export function SupervisorTable() {
           {isAssignMode && (
             <div className="flex flex-col w-full h-full">
               <div className=" border-b flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => setIsAssignMode(false)} className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" onClick={() => setIsAssignMode(false)} className="h-8 w-8 p-0 cursor-pointer">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <h3 className="font-semibold">Atribuir Site</h3>
+                <h2 className="font-semibold">Atribuir Site</h2>
               </div>
 
               <div className="p-4 border-b bg-gray-50">
-                <p className="text-sm text-gray-600">
-                  Site: <span className="font-medium">{selectedSiteForAssign?.name}</span>
+                <p className=" text-gray-600">
+                  Site: <span className="font-medium"> {selectedSiteForAssign?.name}</span>
                 </p>
               </div>
 
@@ -533,7 +533,7 @@ export function SupervisorTable() {
                           <p className="text-xs text-gray-500">{supervisor.employeeId}</p>
                         </div>
                         {supervisorForAssign?.employeeId === supervisor.employeeId && (
-                          <CheckCircle className="h-4 w-4 text-blue-600" />
+                          <Check className="h-4 w-4 text-blue-600" />
                         )}
                       </div>
                     ))}
