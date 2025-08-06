@@ -268,7 +268,7 @@ export function OccurrenceTable() {
           <PDFDownloadLink
             document={
               <GenericPDF
-                title="Relatório de Ocorrência"
+                title="Ocorrência"
                 columns={extractColumnsForPDF(columns)}
                 data={selectedNotification}
                 detailsField="details"
@@ -279,7 +279,7 @@ export function OccurrenceTable() {
             style={{ textDecoration: "none" }}
           >
                   {({ loading: pdfLoading }) => (
-                  <Button variant="outline" disabled={pdfLoading}>
+                  <Button variant="outline" disabled={pdfLoading} className="cursor-pointer">
                     {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                     Baixar PDF
                   </Button>

@@ -322,6 +322,57 @@
       "supervisorCode": "Supervisor code",
       "zone": "Zone"
     }
+  },
+  "forgotPassword": {
+    "step1": {
+      "title": "Forgot password?",
+      "subtitle": "No worries, we'll send you reset instructions.",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "resetButton": "Reset password",
+      "sending": "Sending..."
+    },
+    "step2": {
+      "title": "Check your email",
+      "subtitle": "We sent a code to {{email}}",
+      "continueButton": "Continue",
+      "verifying": "Verifying...",
+      "didntReceive": "Didn't receive the email?",
+      "resendCode": "Click to resend"
+    },
+    "step3": {
+      "title": "Set new password",
+      "subtitle": "Must be at least 8 characters.",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your new password",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Confirm your new password",
+      "resetButton": "Reset password",
+      "resetting": "Resetting..."
+    },
+    "common": {
+      "backToLogin": "Back to log in"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email",
+      "codeLength": "Code must be 6 digits",
+      "codeDigits": "Code must contain only numbers",
+      "passwordMin": "Password must be at least 8 characters",
+      "confirmRequired": "Password confirmation is required",
+      "passwordMatch": "Passwords don't match"
+    },
+    "messages": {
+      "codeSent": "Code sent to your email",
+      "codeVerified": "Code verified successfully",
+      "passwordReset": "Password reset successfully",
+      "codeResent": "Code resent",
+      "emailError": "Error sending email",
+      "codeError": "Invalid code",
+      "passwordError": "Error resetting password",
+      "resendError": "Error resending code",
+      "codeIncomplete": "Please enter all 6 digits"
+    }
   }
    
 }

@@ -53,11 +53,6 @@ export type Notification = {
   report?: string
 }
 
-type Column<TData, TValue> = {
-  toggleSorting: (desc: boolean) => void
-  getIsSorted: () => "asc" | "desc" | false
-}
-
 type Row<TData> = {
   original: TData
   getValue: (id: string) => any
@@ -67,8 +62,7 @@ const sectionTranslations = {
   equipment: {
     title: "Equipamentos",
     fields: {
-      name: "Nome",
-      serialNumber: "Número de Série",
+      serialNumber: "Nº Série",
       state: "Estado",
       costCenter: "Centro de Custo",
       obs: "Observação"
@@ -77,8 +71,8 @@ const sectionTranslations = {
   workerInformation: {
     title: "Trabalhadores",
     fields: {
-      name: "Nome",
       employeeNumber: "Matrícula",
+      name: "Nome",
       state: "Estado",
       obs: "Observação"
     }
@@ -286,7 +280,7 @@ export function NewSupervionTable() {
               <PDFDownloadLink
                 document={
                   <GenericPDF
-                    title="Relatório de Supervisão"
+                    title="Supervisão"
                     columns={extractColumnsForPDF(columns)}
                     data={selectedNotification}
                     detailsField="details"
@@ -297,7 +291,7 @@ export function NewSupervionTable() {
                 style={{ textDecoration: "none" }}
               >
                 {({ loading: pdfLoading }) => (
-                  <Button variant="outline" disabled={pdfLoading}>
+                  <Button variant="outline" disabled={pdfLoading} className="cursor-pointer">
                     {pdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                     Baixar PDF
                   </Button>

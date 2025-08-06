@@ -1,7 +1,5 @@
 "use client";
-
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { format, isToday, isYesterday, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -48,6 +46,7 @@ import toast from "react-hot-toast";
 import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
 import instance from "@/lib/api";
+import { userAdapter } from "@/features/application/infrastructure/factories/UserFactory";
 
 interface Supervisor {
   employeeId: string;
@@ -262,7 +261,6 @@ const wasUserOnlineOnDate = (user: Supervisor, date: Date): boolean => {
 };
 
 export default function SupervisorMap() {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"routes" | "online">("routes");
   const [users, setUsers] = useState<Supervisor[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<Supervisor[]>([]);
@@ -275,18 +273,14 @@ export default function SupervisorMap() {
   const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [showOfflineOnly, setShowOfflineOnly] = useState(false);
-  const [showInfoCards, setShowInfoCards] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await instance.get(`/user?size=100`);
-
-      if (response.data && Array.isArray(response.data.data.data)) {
-        setUsers(response.data.data.data);
-        setFilteredUsers(response.data.data.data);
-      }
+      const response = await userAdapter.getUsers();
+      setUsers(response);
+      setFilteredUsers(response);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Erro ao carregar supervisores");
@@ -298,7 +292,7 @@ export default function SupervisorMap() {
   const fetchGeoLocation = useCallback(
     async (users: Supervisor) => {
       if (!users) return;
-
+      console.log("Fetching geolocation for:", users);
       try {
         setIsLoading(true);
         const response = await instance.get(
@@ -467,9 +461,6 @@ export default function SupervisorMap() {
     setShowOfflineOnly(false);
   };
 
-  const toggleInfoCards = () => {
-    setShowInfoCards(!showInfoCards);
-  };
 
   const setToday = () => {
     setSelectedDate(new Date());
@@ -507,8 +498,8 @@ export default function SupervisorMap() {
   }, [markers]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <header className="border-b bg-white shadow-sm z-10">
+    <div className="flex flex-col h-screen">
+      <header className="z-10">
         <div className="container flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -530,9 +521,9 @@ export default function SupervisorMap() {
               </SheetContent>
             </Sheet>
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
+            
                 <MapPin className="h-5 w-5 text-blue-600" />
-              </div>
+     
               <h1 className="text-lg font-semibold text-gray-800">
                 {activeTab === "routes"
                   ? "Rotas dos Supervisores"

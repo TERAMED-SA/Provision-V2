@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 export function GreetingMessage() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("");
+  const [dateString, setDateString] = useState("");
 
   useEffect(() => {
     const updateGreeting = () => {
@@ -22,6 +23,21 @@ export function GreetingMessage() {
       }
 
       setGreeting(timeGreeting);
+
+      const now = new Date();
+      const diasSemana = [
+        "Domingo",
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado"
+      ];
+      const diaSemana = diasSemana[now.getDay()];
+      const dia = now.getDate();
+      const ano = now.getFullYear();
+      setDateString(`${diaSemana}, ${dia}, ${ano}`);
     };
 
     updateGreeting();
@@ -39,10 +55,10 @@ export function GreetingMessage() {
       transition={{ duration: 0.5 }}
       
     >
-            <h1 className="text-lg md:text-2xl font-semibold text-gray-700 dark:text-white tracking-tight">
-              {greeting}, {user.name?.split(" ")[0]}!
-            </h1>
-       
+      <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">{dateString}</p>
+      <h1 className="text-lg md:text-2xl font-semibold text-gray-700 dark:text-white tracking-tight">
+        {greeting}, {user.name?.split(" ")[0]}!
+      </h1>
     </motion.div>
   );
 } 

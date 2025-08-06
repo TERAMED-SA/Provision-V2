@@ -3,215 +3,318 @@ import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/render
 
 const styles = StyleSheet.create({
   page: {
-    padding: 18,
+    padding: 28,
     fontFamily: "Helvetica",
-    backgroundColor: "#fafafa",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
-    borderBottom: "1px solid #bcd",
-    paddingBottom: 8,
+    marginBottom: 32,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 130,
+    height: 130,
+    objectFit: "contain",
   },
-  headerInfo: {
+  headerLeft: {
+    flex: 1,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+    paddingRight: 18,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    minWidth: 0,
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: "flex-end",
+    paddingLeft: 18,
+    flexDirection: "column",
+    justifyContent: "flex-start",
+  },
+  documentTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#23272a",
+    marginBottom: 4,
+    flexWrap: "wrap",
+    width: "100%",
+    maxWidth: 400,
+    alignSelf: "center",
+    letterSpacing: 0.5,
+  },
+  documentNumber: {
+    fontSize: 8,
+    textAlign: "center",
+    color: "#23272a",
+    marginBottom: 12,
+    width: "100%",
+    alignSelf: "center",
+    fontWeight: "bold",
+  },
+  dateLabel: {
+    fontSize: 11,
+    color: "#6b7280",
+    marginBottom: 2,
+  },
+  dateValue: {
+    fontSize: 8,
+    color: "#23272a",
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "right",
+    alignSelf: "flex-end",
+    width: "100%",
+  },
+  companyName: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#23272a",
+  },
+  companyInfo: {
+    marginTop: 10,
+    paddingTop: 10,
+
+
+  },
+  clientContainer: {
+    borderWidth: 1,
+    borderColor: "#23272a",
+    padding: 10,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  clientInfo: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 6,
+  },
+  clientField: {
+    width: "48%",
+    marginBottom: 6,
+  },
+  clientLabel: {
+    fontSize: 10,
+    color: "#6b7280",
+    marginBottom: 6,
+  },
+  clientValue: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#23272a",
+  },
+  serviceDetails: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    borderTopStyle: "solid",
+    paddingTop: 12,
+    marginBottom: 18,
+    marginTop: 12,
+  },
+  serviceDetailItem: {
     flex: 1,
     alignItems: "center",
   },
-  title: {
-    fontSize: 15,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#2d3a4a",
-    marginBottom: 3,
-  },
-  subtitle: {
+  serviceDetailLabel: {
     fontSize: 10,
-    textAlign: "center",
-    color: "#6b7280",
+    color: "#23272a",
+    marginBottom: 2,
+    fontWeight: "bold",
+  },
+  serviceDetailValue: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#1a1a1a",
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "bold",
     backgroundColor: "#f3f4f6",
-    color: "#2d3a4a",
-    padding: 7,
-    marginBottom: 8,
-    marginTop: 12,
-    borderLeft: "3px solid #bcd",
+    color: "#23272a",
+    padding: 12,
+    marginBottom: 16,
+    marginTop: 20,
+   
   },
   infoGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   infoItem: {
     width: "48%",
-    backgroundColor: "#f7f7f7",
-    padding: 6,
-    borderRadius: 3,
-    borderLeft: "2px solid #bcd",
+    backgroundColor: "#f8fafc",
+    padding: 8,
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: "#2563eb",
+    borderLeftStyle: "solid",
   },
   infoLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "bold",
-    color: "#555",
-    marginBottom: 2,
+    color: "#6b7280",
+    marginBottom: 3,
   },
   infoValue: {
-    fontSize: 9,
-    color: "#222",
-    fontWeight: "normal",
+    fontSize: 10,
+    color: "#1a1a1a",
+    fontWeight: "bold",
   },
   detailsContainer: {
-    backgroundColor: "#f7f7f7",
-    padding: 7,
-    marginBottom: 8,
-    borderRadius: 3,
-    border: "1px solid #eee",
+    backgroundColor: "#f8fafc",
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 4,
   },
   detailsTitle: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "bold",
-    color: "#2d3a4a",
-    marginBottom: 4,
+    color: "#1a1a1a",
+    marginBottom: 6,
   },
   detailsText: {
-    fontSize: 8,
-    lineHeight: 1.3,
-    color: "#555",
+    fontSize: 9,
+    lineHeight: 1.4,
+    color: "#6b7280",
   },
   tableContainer: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#e5e7eb",
-    paddingVertical: 4,
-    paddingHorizontal: 3,
+    backgroundColor: "#1a1a1a",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderRadius: 2,
   },
   tableHeaderText: {
-    color: "#222",
+    color: "#ffffff",
     fontWeight: "bold",
-    fontSize: 8,
+    fontSize: 9,
     flex: 1,
     textAlign: "center",
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingVertical: 3,
-    paddingHorizontal: 3,
-    backgroundColor: "#fff",
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    backgroundColor: "#ffffff",
   },
   tableRowAlt: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingVertical: 3,
-    paddingHorizontal: 3,
-    backgroundColor: "#f7f7f7",
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    backgroundColor: "#f8fafc",
   },
   tableCell: {
-    fontSize: 7,
+    fontSize: 8,
     flex: 1,
     textAlign: "center",
-    color: "#333",
+    color: "#1a1a1a",
+    fontWeight: "bold",
   },
   equipmentCard: {
-    backgroundColor: "#fff",
-    border: "1px solid #eee",
-    borderRadius: 3,
-    padding: 7,
-    marginBottom: 6,
+    backgroundColor: "#ffffff",
+    padding: 10,
+    marginBottom: 8,
   },
   equipmentHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
-    paddingBottom: 2,
+    marginBottom: 6,
+    paddingBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#e5e7eb",
   },
   equipmentName: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "bold",
-    color: "#2d3a4a",
+    color: "#1a1a1a",
   },
   equipmentStatus: {
     fontSize: 8,
-    padding: 2,
-    borderRadius: 2,
-    backgroundColor: "#e7fbe7",
-    color: "#228b22",
+    padding: 3,
+    borderRadius: 3,
+    backgroundColor: "#e5e7eb",
+    color: "#1a1a1a",
   },
   equipmentDetails: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 4,
   },
   equipmentDetailItem: {
     width: "30%",
-    marginBottom: 2,
+    marginBottom: 3,
   },
   equipmentDetailLabel: {
-    fontSize: 7,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#6b7280",
   },
   equipmentDetailValue: {
-    fontSize: 7,
-    color: "#374151",
+    fontSize: 8,
+    color: "#1a1a1a",
+    fontWeight: "bold",
   },
   observationSection: {
-    marginTop: 8,
-    backgroundColor: "#fffbe5",
-    padding: 6,
-    borderRadius: 2,
-    borderLeft: "2px solid #fbbf24",
+    marginTop: 10,
+    backgroundColor: "#f1f5f9",
+    padding: 8,
+    borderRadius: 3,
+    borderLeftWidth: 3,
+    borderLeftColor: "#6b7280",
+    borderLeftStyle: "solid",
   },
   observationTitle: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: "bold",
-    color: "#b45309",
-    marginBottom: 2,
+    color: "#1a1a1a",
+    marginBottom: 3,
   },
   observationText: {
-    fontSize: 7,
-    color: "#92400e",
-    lineHeight: 1.2,
+    fontSize: 8,
+    color: "#6b7280",
+    lineHeight: 1.3,
   },
   footer: {
     position: "absolute",
-    bottom: 10,
+    bottom: 15,
     left: 18,
     right: 18,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderTop: "1px solid #eee",
-    paddingTop: 6,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#23272a",
+    borderTopStyle: "solid",
   },
-  footerLogo: {
-    width: 40,
-    height: 20,
+  footerCompanyName: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#2563eb",
+    marginBottom: 2,
   },
-  footerText: {
-    fontSize: 7,
-    color: "#888",
-    textAlign: "center",
+  footerCompanyDetails: {
+    fontSize: 8,
+    marginTop: 4,
+    color: "#23272a",
+    fontStyle: "italic"
   },
-  pageNumber: {
-    fontSize: 7,
-    color: "#888",
+  footerCopyright: {
+    fontSize: 8,
+    color: "#23272a",
+    fontWeight: "bold"
   },
 })
 
@@ -230,8 +333,7 @@ interface GenericPDFProps {
 }
 
 const equipmentFieldLabels: Record<string, string> = {
-  name: "Nome",
-  serialNumber: "Número de Série",
+  serialNumber: "Nº Série",
   state: "Estado",
   costCenter: "Centro de Custo",
   obs: "Observação",
@@ -248,7 +350,6 @@ function translateFields(fields: { key: string; label: string }[]) {
     label: equipmentFieldLabels[field.key] || field.label
   }))
 }
-
 
 function RegularSection({ section }: { section: GenericPDFSection }) {
   const translatedFields = translateFields(section.itemFields)
@@ -273,11 +374,11 @@ function RegularSection({ section }: { section: GenericPDFSection }) {
             {section.items.map((item, i) => (
               <View key={i} style={styles.equipmentCard}>
                 {tableFields.map((field) => (
-                  <Text key={field.key} style={{ 
-                    fontSize: 10, 
-                    fontWeight: field.key === tableFields[0].key ? "bold" : "normal",
+                  <Text key={field.key} style={{
+                    fontSize: 10,
+                    fontWeight: field.key === tableFields[0].key ? "bold" : "bold",
                     marginBottom: 3,
-                    color: field.key === tableFields[0].key ? "#1e40af" : "#374151"
+                    color: field.key === tableFields[0].key ? "#2563eb" : "#1a1a1a"
                   }}>
                     {field.label}: {item[field.key] ?? "-"}
                   </Text>
@@ -378,31 +479,88 @@ function RegularSection({ section }: { section: GenericPDFSection }) {
 }
 
 export function GenericPDF({ title, columns, data, detailsField, sections }: GenericPDFProps) {
+  const formatDate = (date: Date = new Date()) => {
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
+  const formatDateTime = (date: Date = new Date()) => {
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const getDocumentNumber = () => {
+    const year = new Date().getFullYear()
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+    return `Nº ${title.substring(0, 3).toUpperCase()} Nº ${randomNum} /${year}`
+  }
+
+  const area = data.area || 'N/A'
+  const zona = data.zona || 'N/A'
+  const setor = data.setor || 'N/A'
+  const supervisor = data.supervisorName || 'N/A'
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Image src="/logo.png" style={styles.logo} />
-          <View style={styles.headerInfo}>
-            <Text style={styles.title}>{title}</Text>
-          </View>
-          <View style={{ width: 80 }} />
-        </View>
-
-        <Text style={styles.sectionTitle}>Informações Gerais</Text>
-        <View style={styles.infoGrid}>
-          {columns.map((col) => (
-            <View style={styles.infoItem} key={col.key}>
-              <Text style={styles.infoLabel}>{col.label}</Text>
-              <Text style={styles.infoValue}>{data[col.key] ?? "-"}</Text>
+        <View style={{ marginBottom: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 0 }}>
+            <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+              <Image src="/Prometeus_logo.png" style={{ width: 120, height: 60, objectFit: 'contain' }} />
+              <Text style={{ fontSize: 10, color: '#444', fontWeight: 'bold', marginTop: 2 }}>PROMETEUS - Serviços Esp. Limpeza e Higiene, Lda.</Text>
             </View>
-          ))}
+            <View style={{ flex: 1, flexDirection: "column", width: "100%" }}>
+              <View style={{ textAlign: "center", }}>
+                <View style={{}}>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#444', marginBottom: 4 }}>{title}</Text>
+                  <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#444', marginBottom: 6 }}>{getDocumentNumber()}</Text>
+                </View>
+                <View style={{textAlign: "right"}}>
+                  <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#23272a', marginBottom: 2 }}>Data: {formatDate()}</Text>
+                </View>
+              </View>
+                <View style={{ borderWidth: 1, borderColor: '#23272a', padding: 10, borderRadius: 4, width: '100%' }}>
+                  <Text style={{ fontSize: 10, fontWeight: 'bold', marginBottom: 4 }}>Cliente: <Text style={{ fontWeight: 'bold' }}>{data.d || data.d || 'N/A'}</Text></Text>
+                  <Text style={{ fontSize: 9, marginBottom: 4 }}>{data.d2 || data.d2 || 'N/A'}</Text>
+                  <Text style={{ fontSize: 10, fontWeight: 'bold', marginBottom: 4 }}>Site/Posição: <Text style={{ fontWeight: 'bold' }}>{data.costCenter || data.costCenter || 'N/A'}</Text></Text>
+                  <Text style={{ fontSize: 9, marginBottom: 4 }}>{data.siteName || data.siteName || 'N/A'}</Text>
+                  <Text style={{ fontSize: 10, fontWeight: 'bold', marginBottom: 4 }}>Morada: <Text style={{ fontWeight: 'bold' }}>{data.morada || data.address || 'N/A'}</Text></Text>
+              </View>
+
+            </View>
+          </View>
+
+          <View style={{ borderBottomWidth: 1, borderBottomColor: '#23272a', borderBottomStyle: 'solid', marginTop: 24, marginBottom: 2 }} />
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, marginBottom: 8 }}>
+            <Text style={{ fontSize: 10, marginRight: 8 }}>Area: <Text style={{ fontWeight: 'bold' }}>{area}</Text></Text>
+            <Text style={{ fontSize: 10, marginRight: 8 }}>Zona: <Text style={{ fontWeight: 'bold' }}>{zona}</Text></Text>
+            <Text style={{ fontSize: 10, marginRight: 8 }}>Sector: <Text style={{ fontWeight: 'bold' }}>{setor}</Text></Text>
+            <Text style={{ fontSize: 10, marginRight: 8 }}>Supervisor: <Text style={{ fontWeight: 'bold' }}>{supervisor}</Text></Text>
+          </View>
+          <View style={{ borderBottomWidth: 1, borderBottomColor: '#23272a', borderBottomStyle: 'solid', marginBottom: 24 }} />
         </View>
 
         {sections && sections.map((section, idx) => (
           <RegularSection key={idx} section={section} />
         ))}
 
+        <View style={styles.footer}>
+            <Text style={styles.footerCopyright}>
+              © Provision {new Date().getFullYear()} - PROMETEUS - Serviços Esp. Limpeza e Higiene, Lda.
+            </Text>
+            <Text style={styles.footerCompanyDetails}>
+              {data.siteName || "N/A"} {getDocumentNumber()} {formatDateTime()}
+            </Text>
+        </View>
       </Page>
     </Document>
   )

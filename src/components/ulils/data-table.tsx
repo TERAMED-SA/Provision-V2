@@ -56,7 +56,6 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   title = "",
-  description,
   filterOptions = {},
   onAddClick,
   onRowClick,
@@ -333,13 +332,10 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
-      {/* Container isolado para a tabela, para evitar quebra do layout externo */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-x-auto" style={{ width: '100%', maxWidth: '100vw' }}>
-        {/* Header fixo */}
         <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           {table.getHeaderGroups().map((headerGroup) => (
             <div key={headerGroup.id}>
-              {/* Header das colunas */}
               <div className="flex bg-gray-50 dark:bg-gray-800/50">
                 {headerGroup.headers.map((header, idx) => {
                   const columnWidth = columnWidths[header.id] || getFixedColumnWidth(header.id);
@@ -370,7 +366,6 @@ export function DataTable<TData, TValue>({
                 })}
               </div>
 
-              {/* Linha dos filtros */}
               <div className="flex bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
                 {headerGroup.headers.map((header) => {
                   const columnWidth = columnWidths[header.id] || getFixedColumnWidth(header.id);
@@ -406,7 +401,7 @@ export function DataTable<TData, TValue>({
           ))}
         </div>
 
-        <div className="max-h-[640px] overflow-y-auto">
+        <div className="max-h-[700px] overflow-y-auto">
           {(loading || isFiltering) ? (
             <motion.div
               className="h-64 flex flex-col items-center justify-center gap-2"

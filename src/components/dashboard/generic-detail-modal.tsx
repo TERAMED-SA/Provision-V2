@@ -181,10 +181,10 @@ export function GenericDetailModal({
 
             <Tabs defaultValue="workers" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="workers" className="text-xs lg:text-sm">
+                <TabsTrigger value="workers" className="text-xs lg:text-sm cursor-pointer">
                   Trabalhadores
                 </TabsTrigger>
-                <TabsTrigger value="equipment" className="text-xs lg:text-sm">
+                <TabsTrigger value="equipment" className="text-xs lg:text-sm cursor-pointer">
                   Equipamentos
                 </TabsTrigger>
               </TabsList>

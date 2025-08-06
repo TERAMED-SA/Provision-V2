@@ -11,6 +11,7 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  
 };
 
 export default withNextIntl(nextConfig);

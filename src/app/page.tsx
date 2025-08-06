@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import LocaleSwitcher from "../components/dashboard/locale-switcher";
 import { useAuth } from "@/hooks/useAuth";
+import { Mode } from "@/components/dashboard/header/mode";
 
 const createSchema = (t: any) =>
   z.object({
@@ -161,7 +162,7 @@ export default function Login() {
 
               <div className="flex justify-between items-center mb-4">
                 <Link
-                  href="#"
+                  href="/forgot-password"
                   className="text-sm text-gray-700 font-medium dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200"
                 >
                   {t("form.forgotPassword")}
@@ -189,8 +190,9 @@ export default function Login() {
         </div>
       </div>
       <div className="bg-muted  relative hidden lg:block">
-          <div className="absolute top-4 left-6 flex justify-between items-center z-20">
+          <div className="absolute top-4 left-6 flex justify-between items-center gap-4 z-20">
           <LocaleSwitcher className="shadow-sm" showLabel />
+          <Mode />
         </div>
         <Image
         width={1000}
