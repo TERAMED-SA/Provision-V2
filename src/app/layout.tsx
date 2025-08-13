@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     "supervisão",
     "ocorrências",
     "gestão",
+    "teramed",
   ],
   authors: [{ name: "TERAMED", url: "https://teramed.ao/" }],
   creator: "TERAMED",
@@ -29,7 +30,7 @@ export default async function RootLayout({
   const messages = await getMessages();
   
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} >
       <body className={``}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <QueryProvider>

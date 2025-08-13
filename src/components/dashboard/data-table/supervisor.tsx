@@ -404,10 +404,8 @@ export function SupervisorTable() {
     >
       <DialogContent className="max-w-7xl overflow-y-auto h-[75vh] flex items-center justify-center">
         <div className="flex h-full w-full">
-          {/* Sites List Page */}
           {!isAssignMode && (
             <div className="flex flex-col w-full">
-              {/* Header */}
               <div className="flex items-center gap-4 p-2 border-b bg-white">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback>{selectedSupervisor?.name?.charAt(0)?.toUpperCase() || "S"}</AvatarFallback>

@@ -20,6 +20,7 @@
     "Relatorio": "Análise",
     "Menu": "Menu",
     "Mais": "Mais"
+    
   },
    "SectionCards": {
     "supervisores": "Supervisores",
@@ -323,31 +324,56 @@
     }
     
   },
-   "step1": {
-    "title": "Forgot password?",
-    "subtitle": "No worries, we'll send you reset instructions.",
-    "email": "Email",
-    "emailPlaceholder": "Enter your email",
-    "resetButton": "Reset password",
-    "sending": "Sending..."
-  },
-  "step2": {
-    "title": "Password reset",
-    "subtitle": "We sent a code to {{email}}",
-    "continueButton": "Continue",
-    "verifying": "Verifying...",
-    "didntReceive": "Didn't receive the email?",
-    "resendCode": "Click"
-  },
-  "step3": {
-    "title": "Set new password",
-    "subtitle": "Must be at least 8 characters.",
-    "password": "Password",
-    "passwordPlaceholder": "Enter your new password",
-    "confirmPassword": "Confirm password",
-    "confirmPasswordPlaceholder": "Confirm your new password",
-    "resetButton": "Reset password",
-    "resetting": "Resetting..."
+  "forgotPassword": {
+    "step1": {
+      "title": "Esqueceu a senha?",
+      "subtitle": "Sem problemas, enviaremos instruções para redefinir.",
+      "email": "Email",
+      "emailPlaceholder": "Digite seu email",
+      "resetButton": "Redefinir senha",
+      "sending": "Enviando..."
+    },
+    "step2": {
+      "title": "Verifique seu email",
+      "subtitle": "TESTE DE TRADUÇÃO: Enviamos um código para {{email}}",
+      "continueButton": "Continuar",
+      "verifying": "Verificando...",
+      "didntReceive": "Não recebeu o email?",
+      "resendCode": "Clique para reenviar"
+    },
+    "step3": {
+      "title": "Defina uma nova senha",
+      "subtitle": "Deve ter pelo menos 8 caracteres.",
+      "password": "Senha",
+      "passwordPlaceholder": "Digite sua nova senha",
+      "confirmPassword": "Confirmar senha",
+      "confirmPasswordPlaceholder": "Confirme sua nova senha",
+      "resetButton": "Redefinir senha",
+      "resetting": "Redefinindo..."
+    },
+    "common": {
+      "backToLogin": "Voltar para login"
+    },
+    "validation": {
+      "emailRequired": "O email é obrigatório",
+      "emailInvalid": "Digite um email válido",
+      "codeLength": "O código deve ter 6 dígitos",
+      "codeDigits": "O código deve conter apenas números",
+      "passwordMin": "A senha deve ter pelo menos 8 caracteres",
+      "confirmRequired": "A confirmação da senha é obrigatória",
+      "passwordMatch": "As senhas não coincidem"
+    },
+    "messages": {
+      "codeSent": "Código enviado para seu email",
+      "codeVerified": "Código verificado com sucesso",
+      "passwordReset": "Senha redefinida com sucesso",
+      "codeResent": "Código reenviado",
+      "emailError": "Erro ao enviar email",
+      "codeError": "Código inválido",
+      "passwordError": "Erro ao redefinir senha",
+      "resendError": "Erro ao reenviar código",
+      "codeIncomplete": "Digite todos os 6 dígitos"
+    }
   },
   "common": {
     "backToLogin": "Back to log in"

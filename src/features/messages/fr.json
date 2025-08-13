@@ -28,6 +28,7 @@
     "totalClientes": "Total de clients",
     "equipamentos": "Équipements",
     "totalEquipamentos": "Total d'équipements"
+    
   },
    "analytics": {
     "occurrences": {
@@ -113,6 +114,57 @@
       "invalidCredentials": "Identifiants invalides",
       "loginError": "Erreur de connexion. Veuillez réessayer.",
       "serverConnectionError": "Erreur de connexion au serveur."
+    }
+  },
+  "forgotPassword": {
+    "step1": {
+      "title": "Mot de passe oublié ?",
+      "subtitle": "Pas de souci, nous vous enverrons les instructions de réinitialisation.",
+      "email": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "resetButton": "Réinitialiser le mot de passe",
+      "sending": "Envoi..."
+    },
+    "step2": {
+      "title": "Vérifiez votre email",
+      "subtitle": "Nous avons envoyé un code à {{email}}",
+      "continueButton": "Continuer",
+      "verifying": "Vérification...",
+      "didntReceive": "Vous n'avez pas reçu l'email ?",
+      "resendCode": "Cliquez pour renvoyer"
+    },
+    "step3": {
+      "title": "Définir un nouveau mot de passe",
+      "subtitle": "Doit contenir au moins 8 caractères.",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre nouveau mot de passe",
+      "resetButton": "Réinitialiser le mot de passe",
+      "resetting": "Réinitialisation..."
+    },
+    "common": {
+      "backToLogin": "Retour à la connexion"
+    },
+    "validation": {
+      "emailRequired": "L'email est requis",
+      "emailInvalid": "Veuillez entrer un email valide",
+      "codeLength": "Le code doit comporter 6 chiffres",
+      "codeDigits": "Le code ne doit contenir que des chiffres",
+      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères",
+      "confirmRequired": "La confirmation du mot de passe est requise",
+      "passwordMatch": "Les mots de passe ne correspondent pas"
+    },
+    "messages": {
+      "codeSent": "Code envoyé à votre email",
+      "codeVerified": "Code vérifié avec succès",
+      "passwordReset": "Mot de passe réinitialisé avec succès",
+      "codeResent": "Code renvoyé",
+      "emailError": "Erreur lors de l'envoi de l'email",
+      "codeError": "Code invalide",
+      "passwordError": "Erreur lors de la réinitialisation du mot de passe",
+      "resendError": "Erreur lors du renvoi du code",
+      "codeIncomplete": "Veuillez entrer les 6 chiffres"
     }
   },
   "map": {
