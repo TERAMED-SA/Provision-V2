@@ -72,7 +72,7 @@ function SimpleMetricsCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-4 transition-all duration-500 ease-out transform ${
+      className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-all duration-500 ease-out transform ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       } hover:shadow-md hover:border-gray-200 dark:hover:border-gray-500`}
     >
